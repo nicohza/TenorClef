@@ -449,6 +449,9 @@ package adris.altoclef.benchmark;
 //$$                 {"diag1", 2, 0, 2, 0}, {"diag2", 3, 0, 3, 0}, {"knight", 3, 0, 1, 0},
 //$$                 {"neo1", 2, 0, 0, 1}, {"neo2", 3, 0, 0, 2}, {"neo1down", 2, -1, 0, 1},
 //$$         };
+//$$         // build out of view distance so the client receives whole fresh chunks instead of a partial update stream
+//$$         teleport(mc, new BlockPos(ox + 1000, by, oz + 1000));
+//$$         Thread.sleep(2000);
 //$$         java.util.concurrent.CompletableFuture<Void> built = new java.util.concurrent.CompletableFuture<>();
 //$$         mc.getServer().execute(() -> {
 //$$             net.minecraft.server.world.ServerWorld w = mc.getServer().getOverworld();
@@ -469,6 +472,10 @@ package adris.altoclef.benchmark;
 //$$         boolean parkour = BaritoneAPI.getSettings().allowParkour.value, ascend = BaritoneAPI.getSettings().allowParkourAscend.value;
 //$$         BaritoneAPI.getSettings().allowParkour.value = true;
 //$$         BaritoneAPI.getSettings().allowParkourAscend.value = true;
+//$$         // no digging or pillaring: every station must be crossed by jumping (a neo wall would otherwise be mined through)
+//$$         boolean brk = BaritoneAPI.getSettings().allowBreak.value, place = BaritoneAPI.getSettings().allowPlace.value;
+//$$         BaritoneAPI.getSettings().allowBreak.value = false;
+//$$         BaritoneAPI.getSettings().allowPlace.value = false;
 //$$         BaritoneAPI.getSettings().kinematicTravel.value = mover.equals("kinematic");
 //$$         PrintWriter csv = open("parkour_" + mover);
 //$$         csv.println("mover,jump,rep,result,ticks");
@@ -481,6 +488,7 @@ package adris.altoclef.benchmark;
 //$$                 for (int r = 0; r < reps; r++) {
 //$$                     teleport(mc, new BlockPos(sx - 4, by, oz));
 //$$                     Thread.sleep(300);
+//$$                     for (int t = 0; t < 100 && !synced(mc, sx, by, oz); t++) Thread.sleep(50);
 //$$                     long t0 = worldTime(mc);
 //$$                     startBaritone(mc, baritone, g);
 //$$                     String result = "NOPATH";
@@ -503,6 +511,8 @@ package adris.altoclef.benchmark;
 //$$             csv.close();
 //$$             BaritoneAPI.getSettings().allowParkour.value = parkour;
 //$$             BaritoneAPI.getSettings().allowParkourAscend.value = ascend;
+//$$             BaritoneAPI.getSettings().allowBreak.value = brk;
+//$$             BaritoneAPI.getSettings().allowPlace.value = place;
 //$$             BaritoneAPI.getSettings().kinematicTravel.value = false;
 //$$         }
 //$$         Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH SUMMARY mode=parkour mover=%s goalRate=%d/%d%s", mover, ok, n, per));
@@ -1076,6 +1086,15 @@ package adris.altoclef.benchmark;
 //$$             baritone.api.pathing.movement.IMovement m = ex.getPath().movements().get(ex.getPosition());
 //$$             return m.getClass().getSimpleName().replace("Movement", "") + m.getSrc().toShortString() + ">" + m.getDest().toShortString() + "[" + net.minecraft.client.MinecraftClient.getInstance().world.getBlockState(m.getDest()).toString().replace("Block{minecraft:", "").replace("}", "") + "]";
 //$$         } catch (Exception e) { return "?"; }
+//$$     }
+//$$
+//$$     /** True once the client world matches the server around a parkour station (big edits can arrive late). */
+//$$     private static boolean synced(MinecraftClient mc, int sx, int by, int oz) {
+//$$         for (int x = -5; x <= 6; x++) for (int z = -5; z <= 1; z++) for (int y = by - 1; y <= by + 2; y++) {
+//$$             BlockPos q = new BlockPos(sx + x, y, oz + z);
+//$$             if (mc.world.getBlockState(q).isAir() != mc.getServer().getOverworld().getBlockState(q).isAir()) return false;
+//$$         }
+//$$         return true;
 //$$     }
 //$$
 //$$     private static void teleport(MinecraftClient mc, BlockPos p) throws InterruptedException {
