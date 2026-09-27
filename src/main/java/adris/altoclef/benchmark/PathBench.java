@@ -448,6 +448,10 @@ package adris.altoclef.benchmark;
 //$$                 {"down1", 2, -1, 0, 0}, {"down2", 3, -1, 0, 0}, {"down3", 4, -1, 0, 0}, {"down4", 5, -1, 0, 0},
 //$$                 {"diag1", 2, 0, 2, 0}, {"diag2", 3, 0, 3, 0}, {"knight", 3, 0, 1, 0},
 //$$                 {"neo1", 2, 0, 0, 1}, {"neo2", 3, 0, 0, 2}, {"neo1down", 2, -1, 0, 1},
+//$$                 // odd landings: a lone iron bars post, a fence (top 0.5 higher), a ladder on a wall (caught mid-air)
+//$$                 {"bars1", 2, 0, 0, 0, "bars"}, {"bars2", 3, 0, 0, 0, "bars"}, {"bars3", 4, 0, 0, 0, "bars"},
+//$$                 {"fence1", 2, 0, 0, 0, "fence"}, {"fence2", 3, 0, 0, 0, "fence"},
+//$$                 {"ladder1", 2, 0, 0, 0, "ladder"}, {"ladder2", 3, 0, 0, 0, "ladder"}, {"ladder3", 4, 0, 0, 0, "ladder"},
 //$$         };
 //$$         // build out of view distance so the client receives whole fresh chunks instead of a partial update stream
 //$$         teleport(mc, new BlockPos(ox + 1000, by, oz + 1000));
@@ -461,7 +465,17 @@ package adris.altoclef.benchmark;
 //$$             for (int i = 0; i < st.length; i++) {
 //$$                 int sx = ox + i * 16, dx = (Integer) st[i][1], dy = (Integer) st[i][2], dz = (Integer) st[i][3], wall = (Integer) st[i][4];
 //$$                 for (int x = -5; x <= 0; x++) w.setBlockState(new BlockPos(sx + x, by - 1, oz), stone, 2);
-//$$                 w.setBlockState(new BlockPos(sx + dx, by - 1 + dy, oz + dz), stone, 2);
+//$$                 String land = st[i].length > 5 ? (String) st[i][5] : "stone";
+//$$                 if (land.equals("ladder")) {
+//$$                     // ladder column hanging on the far side of a wall, nothing to stand on below it
+//$$                     for (int y = by - 1; y <= by + 2; y++) {
+//$$                         w.setBlockState(new BlockPos(sx + dx + 1, y, oz + dz), stone, 2);
+//$$                         w.setBlockState(new BlockPos(sx + dx, y, oz + dz), net.minecraft.block.Blocks.LADDER.getDefaultState().with(net.minecraft.block.LadderBlock.FACING, net.minecraft.util.math.Direction.WEST), 2);
+//$$                     }
+//$$                 } else {
+//$$                     w.setBlockState(new BlockPos(sx + dx, by - 1 + dy, oz + dz), land.equals("bars") ? net.minecraft.block.Blocks.IRON_BARS.getDefaultState()
+//$$                             : land.equals("fence") ? net.minecraft.block.Blocks.OAK_FENCE.getDefaultState() : stone, 2);
+//$$                 }
 //$$                 for (int x = 1; x <= wall; x++) for (int z = -5; z <= 0; z++) for (int y = by; y <= by + 2; y++)
 //$$                     w.setBlockState(new BlockPos(sx + x, y, oz + z), stone, 2);
 //$$             }
@@ -494,7 +508,7 @@ package adris.altoclef.benchmark;
 //$$                     String result = "NOPATH";
 //$$                     while (true) {
 //$$                         Thread.sleep(25);
-//$$                         if (dist3(mc, g) < 0.8 && mc.player.isOnGround()) { result = "GOAL"; break; }
+//$$                         if (dist3(mc, g) < 0.8 && (mc.player.isOnGround() || mc.player.isClimbing())) { result = "GOAL"; break; }
 //$$                         if (mc.player.getY() < by + Math.min(dy, 0) - 2) { result = "FALL"; break; }
 //$$                         if (worldTime(mc) - t0 > 20 * 20) break;
 //$$                     }
