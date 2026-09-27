@@ -79,7 +79,7 @@ Results are written as CSV to `run/pathbench/`. Latest 1.16.1 travel runs (16 go
 | Mover | Goals reached | Avg ticks (reached goals) |
 | --- | --- | --- |
 | Baritone | 48/48 | 418 |
-| Kinematic (experimental) | 46/48 | 456 |
+| Kinematic (experimental) | 47/48 | 457 |
 | Physics search (experimental, `physicsTravel`) | 15/16 | 401 |
 
 The averages only cover goals each mover reached. The bench origin moves between runs, so
