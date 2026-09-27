@@ -84,7 +84,10 @@ Results are written as CSV to `run/pathbench/`. Latest 1.16.1 travel runs (16 go
 
 The averages only cover goals each mover reached. The bench origin moves between runs, so
 compare runs taken together; Baritone's misses here include all three tries at one goal
-where it stops 3 blocks short. Single-rep runs are noisy; re-run with 3 reps before drawing conclusions.
+where it stops 3 blocks short.
+
+`@pathbench gaps [baritone|kinematic] [reps]` runs a runway with 1–3 block gaps (parkour on):
+Baritone 3/3 (avg 250 ticks), kinematic 3/3 (avg 217 ticks), 0 falls. Single-rep runs are noisy; re-run with 3 reps before drawing conclusions.
 
 ## Project guides
 

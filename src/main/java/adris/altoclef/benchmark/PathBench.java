@@ -65,6 +65,7 @@ package adris.altoclef.benchmark;
 //$$         Thread t = new Thread(() -> {
 //$$             try {
 //$$                 if (mode.equalsIgnoreCase("wreck")) wreck(mc, origin, Math.max(1, reps));
+//$$                 else if (mode.equalsIgnoreCase("gaps")) for (String m : (opt == null ? "baritone" : opt).split("[;+]")) gaps(mc, origin, m, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("column")) column(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("flow")) flow(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("boat")) boat(mc, origin, Math.max(1, reps));
@@ -368,6 +369,66 @@ package adris.altoclef.benchmark;
 //$$      * Roofed water tunnel (no surface to breathe at) 120 long: a magma column at +40 and a soul-sand
 //$$      * column at +80 are the only air. Goal at the far end; without using the columns the bot drowns.
 //$$      */
+//$$     /** Stone runway in the air with 1-, 2- and 3-wide gaps (floor 4 below); mover baritone or kinematic, parkour on. */
+//$$     private static void gaps(MinecraftClient mc, BlockPos origin, String mover, int reps) throws Exception {
+//$$         IBaritone baritone = BaritoneAPI.getProvider().getPrimaryBaritone();
+//$$         int L = 60, by = 140, ox = origin.getX(), oz = origin.getZ();
+//$$         int[] gapAt = {10, 11, 22, 23, 24, 36, 37, 38, 48, 49};
+//$$         java.util.concurrent.CompletableFuture<Void> built = new java.util.concurrent.CompletableFuture<>();
+//$$         mc.getServer().execute(() -> {
+//$$             net.minecraft.server.world.ServerWorld w = mc.getServer().getOverworld();
+//$$             for (int x = -2; x <= L + 2; x++) for (int z = -3; z <= 3; z++) for (int y = by - 5; y <= by + 4; y++) {
+//$$                 boolean floor = y == by - 5, run = y == by - 1 && Math.abs(z) <= 1 && x >= 0 && x <= L && Arrays.binarySearch(gapAt, x) < 0;
+//$$                 w.setBlockState(new BlockPos(ox + x, y, oz + z), floor || run ? net.minecraft.block.Blocks.STONE.getDefaultState() : net.minecraft.block.Blocks.AIR.getDefaultState(), 2);
+//$$             }
+//$$             built.complete(null);
+//$$         });
+//$$         built.get();
+//$$         Thread.sleep(3000);
+//$$         boolean parkour = BaritoneAPI.getSettings().allowParkour.value;
+//$$         BaritoneAPI.getSettings().allowParkour.value = true;
+//$$         BaritoneAPI.getSettings().kinematicTravel.value = mover.equals("kinematic");
+//$$         java.util.function.BiConsumer<String, String> prevFault = BaritoneAPI.getSettings().movementFault.value;
+//$$         java.util.concurrent.atomic.AtomicInteger faults = new java.util.concurrent.atomic.AtomicInteger();
+//$$         BaritoneAPI.getSettings().movementFault.value = (c, e) -> { faults.incrementAndGet(); prevFault.accept(c, e); };
+//$$         BlockPos start = new BlockPos(ox + 1, by, oz), g = new BlockPos(ox + L - 1, by, oz);
+//$$         PrintWriter csv = open("gaps_" + mover);
+//$$         csv.println("mover,rep,result,ticks,falls,kinTicks,faults");
+//$$         int ok = 0, n = 0;
+//$$         try {
+//$$             for (int r = 0; r < reps; r++) {
+//$$                 teleport(mc, start);
+//$$                 Thread.sleep(200);
+//$$                 long t0 = worldTime(mc), k0 = KinematicController.drivenTicks;
+//$$                 int f0 = faults.get(), falls = 0;
+//$$                 boolean low = false;
+//$$                 startBaritone(mc, baritone, g);
+//$$                 String result = "TIMEOUT";
+//$$                 while (true) {
+//$$                     Thread.sleep(25);
+//$$                     long el = worldTime(mc) - t0;
+//$$                     boolean nowLow = mc.player.getY() < by - 2;
+//$$                     if (nowLow && !low) falls++;
+//$$                     low = nowLow;
+//$$                     if (dist3(mc, g) < 1.5) { result = "GOAL"; break; }
+//$$                     if (el > 20 * 60) break;
+//$$                 }
+//$$                 mc.execute(() -> baritone.getPathingBehavior().cancelEverything());
+//$$                 csv.printf(Locale.ROOT, "%s,%d,%s,%d,%d,%d,%d%n", mover, r, result, worldTime(mc) - t0, falls, KinematicController.drivenTicks - k0, faults.get() - f0);
+//$$                 csv.flush();
+//$$                 n++;
+//$$                 if (result.equals("GOAL")) ok++;
+//$$                 Thread.sleep(500);
+//$$             }
+//$$         } finally {
+//$$             csv.close();
+//$$             BaritoneAPI.getSettings().allowParkour.value = parkour;
+//$$             BaritoneAPI.getSettings().kinematicTravel.value = false;
+//$$             BaritoneAPI.getSettings().movementFault.value = prevFault;
+//$$         }
+//$$         Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH SUMMARY mode=gaps mover=%s goalRate=%d/%d", mover, ok, n));
+//$$     }
+//$$
 //$$     private static void column(MinecraftClient mc, BlockPos origin, int reps) throws Exception {
 //$$         IBaritone baritone = BaritoneAPI.getProvider().getPrimaryBaritone();
 //$$         BaritoneAPI.getSettings().chatDebug.value = true;
