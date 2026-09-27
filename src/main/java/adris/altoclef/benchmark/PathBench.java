@@ -215,9 +215,12 @@ package adris.altoclef.benchmark;
 //$$         boolean viaCustom = mover.equals("baritone") || mover.equals("ostinato") || mover.equals("kinematic") || mover.equals("physics");
 //$$         BaritoneAPI.getSettings().movementBackend.value = mover.equals("ostinato") ? "tungsten" : "baritone";
 //$$         BaritoneAPI.getSettings().kinematicTravel.value = mover.equals("kinematic");
+//$$         java.util.function.BiConsumer<String, String> prevFault = BaritoneAPI.getSettings().movementFault.value;
+//$$         java.util.concurrent.atomic.AtomicInteger faults = new java.util.concurrent.atomic.AtomicInteger();
+//$$         BaritoneAPI.getSettings().movementFault.value = (c, e) -> { faults.incrementAndGet(); prevFault.accept(c, e); };
 //$$         BaritoneAPI.getSettings().physicsTravel.value = mover.equals("physics");
 //$$         PrintWriter csv = open("travel_" + mover);
-//$$         csv.println("mover,goal,dx,dz,dist,rep,result,ticks,endDist,firstMoveTicks,kinTicks");
+//$$         csv.println("mover,goal,dx,dz,dist,rep,result,ticks,endDist,firstMoveTicks,kinTicks,faults");
 //$$         int ok = 0, n = 0, moved = 0; long sumTicks = 0, sumFirst = 0; double sumEnd = 0;
 //$$         try {
 //$$             for (int gi = 0; gi < goals.size(); gi++) {
@@ -227,6 +230,7 @@ package adris.altoclef.benchmark;
 //$$                     teleport(mc, origin);
 //$$                     long t0 = worldTime(mc);
 //$$                     long k0 = KinematicController.drivenTicks;
+//$$                     int f0 = faults.get();
 //$$                     boolean started = mover.equals("tungsten") ? TungstenMovement.requestPathTo(g) : mover.equals("guided") ? startGuided(mc, baritone, g) : startBaritone(mc, baritone, g);
 //$$                     long firstMove = -1;
 //$$                     double startD = dist(mc, g);
@@ -258,8 +262,8 @@ package adris.altoclef.benchmark;
 //$$                     else mc.execute(() -> baritone.getPathingBehavior().cancelEverything());
 //$$                     long ticks = worldTime(mc) - t0;
 //$$                     double end = dist(mc, g);
-//$$                     csv.printf(Locale.ROOT, "%s,%d,%d,%d,%d,%d,%s,%d,%.2f,%d,%d%n", mover, gi, g.getX() - origin.getX(), g.getZ() - origin.getZ(),
-//$$                             (int) Math.round(Math.sqrt(g.getSquaredDistance(origin))), r, result, ticks, end, firstMove, KinematicController.drivenTicks - k0);
+//$$                     csv.printf(Locale.ROOT, "%s,%d,%d,%d,%d,%d,%s,%d,%.2f,%d,%d,%d%n", mover, gi, g.getX() - origin.getX(), g.getZ() - origin.getZ(),
+//$$                             (int) Math.round(Math.sqrt(g.getSquaredDistance(origin))), r, result, ticks, end, firstMove, KinematicController.drivenTicks - k0, faults.get() - f0);
 //$$                     csv.flush();
 //$$                     n++;
 //$$                     if (result.equals("GOAL")) { ok++; sumTicks += ticks; }
@@ -271,6 +275,7 @@ package adris.altoclef.benchmark;
 //$$         } finally {
 //$$             BaritoneAPI.getSettings().movementBackend.value = "baritone";
 //$$             BaritoneAPI.getSettings().kinematicTravel.value = false;
+//$$             BaritoneAPI.getSettings().movementFault.value = prevFault;
 //$$             BaritoneAPI.getSettings().physicsTravel.value = false;
 //$$             csv.close();
 //$$         }

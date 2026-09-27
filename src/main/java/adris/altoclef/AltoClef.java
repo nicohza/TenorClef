@@ -387,6 +387,9 @@ public class AltoClef implements ModInitializer {
         getExtraBaritoneSettings().canWalkOnEndPortal(false);
         getClientBaritoneSettings().freeLook.value = false;
         getClientBaritoneSettings().overshootTraverse.value = false;
+        //#if MC <= 11601
+        //$$ getClientBaritoneSettings().movementFault.value = adris.altoclef.tasks.speedrun.testrun2.T2Fault::record;
+        //#endif
         getClientBaritoneSettings().allowOvershootDiagonalDescend.value = true;
         getClientBaritoneSettings().allowInventory.value = true;
         getClientBaritoneSettings().allowParkour.value = false;
