@@ -10,6 +10,7 @@ package adris.altoclef.benchmark;
 //$$ import baritone.api.utils.PathCalculationResult;
 //$$ import baritone.api.utils.SettingsUtil;
 //$$ import baritone.pathing.calc.AStarPathFinder;
+//$$ import baritone.pathing.kinematic.KinematicController;
 //$$ import baritone.pathing.movement.CalculationContext;
 //$$ import baritone.utils.pathing.Favoring;
 //$$ import net.minecraft.client.MinecraftClient;
@@ -216,7 +217,7 @@ package adris.altoclef.benchmark;
 //$$         BaritoneAPI.getSettings().kinematicTravel.value = mover.equals("kinematic");
 //$$         BaritoneAPI.getSettings().physicsTravel.value = mover.equals("physics");
 //$$         PrintWriter csv = open("travel_" + mover);
-//$$         csv.println("mover,goal,dx,dz,dist,rep,result,ticks,endDist,firstMoveTicks");
+//$$         csv.println("mover,goal,dx,dz,dist,rep,result,ticks,endDist,firstMoveTicks,kinTicks");
 //$$         int ok = 0, n = 0, moved = 0; long sumTicks = 0, sumFirst = 0; double sumEnd = 0;
 //$$         try {
 //$$             for (int gi = 0; gi < goals.size(); gi++) {
@@ -225,6 +226,7 @@ package adris.altoclef.benchmark;
 //$$                 for (int r = 0; r < reps; r++) {
 //$$                     teleport(mc, origin);
 //$$                     long t0 = worldTime(mc);
+//$$                     long k0 = KinematicController.drivenTicks;
 //$$                     boolean started = mover.equals("tungsten") ? TungstenMovement.requestPathTo(g) : mover.equals("guided") ? startGuided(mc, baritone, g) : startBaritone(mc, baritone, g);
 //$$                     long firstMove = -1;
 //$$                     double startD = dist(mc, g);
@@ -256,8 +258,8 @@ package adris.altoclef.benchmark;
 //$$                     else mc.execute(() -> baritone.getPathingBehavior().cancelEverything());
 //$$                     long ticks = worldTime(mc) - t0;
 //$$                     double end = dist(mc, g);
-//$$                     csv.printf(Locale.ROOT, "%s,%d,%d,%d,%d,%d,%s,%d,%.2f,%d%n", mover, gi, g.getX() - origin.getX(), g.getZ() - origin.getZ(),
-//$$                             (int) Math.round(Math.sqrt(g.getSquaredDistance(origin))), r, result, ticks, end, firstMove);
+//$$                     csv.printf(Locale.ROOT, "%s,%d,%d,%d,%d,%d,%s,%d,%.2f,%d,%d%n", mover, gi, g.getX() - origin.getX(), g.getZ() - origin.getZ(),
+//$$                             (int) Math.round(Math.sqrt(g.getSquaredDistance(origin))), r, result, ticks, end, firstMove, KinematicController.drivenTicks - k0);
 //$$                     csv.flush();
 //$$                     n++;
 //$$                     if (result.equals("GOAL")) { ok++; sumTicks += ticks; }
