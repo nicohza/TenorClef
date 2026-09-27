@@ -435,19 +435,19 @@ package adris.altoclef.benchmark;
 //$$
 //$$     /**
 //$$      * One isolated jump per station over the void: flat gaps 1-4, gaps up 1 (1-3), gaps down 1 (1-4), diagonal gaps
-//$$      * and neos (around a 3-high wall whose end is level with the takeoff block). Each station has a 5-block runway,
+//$$      * and neos (round the end of a 3-high wall straight ahead of the takeoff block). Each station has a 5-block runway,
 //$$      * a single landing block and nothing else, so the only way to the goal is that jump. A fall ends the trial.
 //$$      */
 //$$     private static void parkour(MinecraftClient mc, BlockPos origin, String mover, int reps) throws Exception {
 //$$         IBaritone baritone = BaritoneAPI.getProvider().getPrimaryBaritone();
 //$$         int by = 150, ox = origin.getX(), oz = origin.getZ();
-//$$         // name, landing dx, dy, dz, neo wall thickness (wall along z = 1..w for x <= 0)
+//$$         // name, landing dx, dy, dz, neo wall thickness (wall across x = 1..w for z <= 0)
 //$$         Object[][] st = {
 //$$                 {"flat1", 2, 0, 0, 0}, {"flat2", 3, 0, 0, 0}, {"flat3", 4, 0, 0, 0}, {"flat4", 5, 0, 0, 0},
 //$$                 {"up1", 2, 1, 0, 0}, {"up2", 3, 1, 0, 0}, {"up3", 4, 1, 0, 0},
 //$$                 {"down1", 2, -1, 0, 0}, {"down2", 3, -1, 0, 0}, {"down3", 4, -1, 0, 0}, {"down4", 5, -1, 0, 0},
 //$$                 {"diag1", 2, 0, 2, 0}, {"diag2", 3, 0, 3, 0}, {"knight", 3, 0, 1, 0},
-//$$                 {"neo1", 0, 0, 2, 1}, {"neo2", 0, 0, 3, 2}, {"neo1far", 1, 0, 2, 1},
+//$$                 {"neo1", 2, 0, 0, 1}, {"neo2", 3, 0, 0, 2}, {"neo1down", 2, -1, 0, 1},
 //$$         };
 //$$         java.util.concurrent.CompletableFuture<Void> built = new java.util.concurrent.CompletableFuture<>();
 //$$         mc.getServer().execute(() -> {
@@ -459,7 +459,7 @@ package adris.altoclef.benchmark;
 //$$                 int sx = ox + i * 16, dx = (Integer) st[i][1], dy = (Integer) st[i][2], dz = (Integer) st[i][3], wall = (Integer) st[i][4];
 //$$                 for (int x = -5; x <= 0; x++) w.setBlockState(new BlockPos(sx + x, by - 1, oz), stone, 2);
 //$$                 w.setBlockState(new BlockPos(sx + dx, by - 1 + dy, oz + dz), stone, 2);
-//$$                 for (int z = 1; z <= wall; z++) for (int x = -5; x <= 0; x++) for (int y = by; y <= by + 2; y++)
+//$$                 for (int x = 1; x <= wall; x++) for (int z = -5; z <= 0; z++) for (int y = by; y <= by + 2; y++)
 //$$                     w.setBlockState(new BlockPos(sx + x, y, oz + z), stone, 2);
 //$$             }
 //$$             built.complete(null);
