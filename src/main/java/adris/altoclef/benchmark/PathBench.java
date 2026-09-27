@@ -1126,6 +1126,7 @@ package adris.altoclef.benchmark;
 //$$                 sp.fallDistance = 0;
 //$$                 sp.setAir(sp.getMaxAir());
 //$$                 sp.setHealth(sp.getMaxHealth());
+//$$                 sp.getHungerManager().add(20, 20f); // full food each run, or late goals lose sprint (food <= 6)
 //$$                 sp.networkHandler.requestTeleport(p.getX() + 0.5, p.getY(), p.getZ() + 0.5, sp.yaw, sp.pitch);
 //$$             }
 //$$         });
