@@ -62,17 +62,20 @@ package adris.altoclef.benchmark;
 //$$         MinecraftClient mc = MinecraftClient.getInstance();
 //$$         if (mc.player == null || mc.world == null) return "PATHBENCH needs a loaded world";
 //$$         BlockPos origin = mc.player.getBlockPos();
+//$$         // travel and gaps start from the world spawn, not wherever the last bench left the player, so runs compare
+//$$         int sx = mc.world.getLevelProperties().getSpawnX(), sz = mc.world.getLevelProperties().getSpawnZ();
+//$$         BlockPos spawn = new BlockPos(sx, surfaceY(mc, sx, sz), sz);
 //$$         Thread t = new Thread(() -> {
 //$$             try {
 //$$                 if (mode.equalsIgnoreCase("wreck")) wreck(mc, origin, Math.max(1, reps));
-//$$                 else if (mode.equalsIgnoreCase("gaps")) for (String m : (opt == null ? "baritone" : opt).split("[;+]")) gaps(mc, origin, m, Math.max(1, reps));
+//$$                 else if (mode.equalsIgnoreCase("gaps")) for (String m : (opt == null ? "baritone" : opt).split("[;+]")) gaps(mc, spawn.add(400, 0, 0), m, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("column")) column(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("flow")) flow(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("boat")) boat(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("cliff")) cliff(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("swim")) swim(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("elytra")) elytra(mc, origin, opt, Math.max(1, reps));
-//$$                 else if (mode.equalsIgnoreCase("travel")) for (String m : (opt == null ? "-" : opt).split("[;+]")) travel(mc, origin, m, Math.max(1, reps));
+//$$                 else if (mode.equalsIgnoreCase("travel")) for (String m : (opt == null ? "-" : opt).split("[;+]")) travel(mc, spawn, m, Math.max(1, reps));
 //$$                 else for (String sweep : (opt == null ? "-" : opt).split("[;+]")) search(mc, origin, sweep, Math.max(1, reps));
 //$$             } catch (Throwable e) {
 //$$                 Debug.logHarness("PATHBENCH failed: " + e);
@@ -369,11 +372,11 @@ package adris.altoclef.benchmark;
 //$$      * Roofed water tunnel (no surface to breathe at) 120 long: a magma column at +40 and a soul-sand
 //$$      * column at +80 are the only air. Goal at the far end; without using the columns the bot drowns.
 //$$      */
-//$$     /** Stone runway in the air with 1-, 2- and 3-wide gaps (floor 4 below); mover baritone or kinematic, parkour on. */
+//$$     /** Stone runway in the air with 2-, 3-, 4- and 2-wide gaps (floor 4 below); mover baritone or kinematic, parkour on. */
 //$$     private static void gaps(MinecraftClient mc, BlockPos origin, String mover, int reps) throws Exception {
 //$$         IBaritone baritone = BaritoneAPI.getProvider().getPrimaryBaritone();
 //$$         int L = 60, by = 140, ox = origin.getX(), oz = origin.getZ();
-//$$         int[] gapAt = {10, 11, 22, 23, 24, 36, 37, 38, 48, 49};
+//$$         int[] gapAt = {10, 11, 22, 23, 24, 36, 37, 38, 39, 50, 51};
 //$$         java.util.concurrent.CompletableFuture<Void> built = new java.util.concurrent.CompletableFuture<>();
 //$$         mc.getServer().execute(() -> {
 //$$             net.minecraft.server.world.ServerWorld w = mc.getServer().getOverworld();
