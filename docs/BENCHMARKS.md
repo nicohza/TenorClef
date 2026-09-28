@@ -58,3 +58,18 @@ immediately. Gameplay paths must not depend on an active bench session.
 Live exports use `BenchmarkJson.toLiveJson` →
 `altoclef/bench/<timestamp>-<name>.json` with `type=live`, peak threat, pause/fail
 counts, and a nested `result` (same shape as Phase 10 `BenchmarkResult`).
+
+## Travel misses, 2026-09-28 (3 reps each, seed 12345)
+
+Source: `pathbench_travel_baritone_20260928_205606.csv` (47/48) and
+`pathbench_travel_kinematic_20260928_203533.csv` (46/48). CSVs are local, not committed.
+
+| mover | goal | offset (dx,dz) | rep | result | ticks | endDist |
+|---|---|---|---|---|---|---|
+| baritone | 15 | 68,-68 | 0 | STALLED | 715 | 44.2 |
+| kinematic | 12 | -96,0 | 0 | STALLED | 967 | 17.3 |
+| kinematic | 14 | 0,-96 | 1 | STALLED | 704 | 47.7 |
+
+Every miss is one rep of a 96-block goal; the other reps of the same goal reached it, and no goal
+failed for both movers. So there is no repeat trouble spot in these runs. The bench log records only the
+summary line, so the stall causes are unknown. Per-trial logging would be needed to diagnose them.
