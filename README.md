@@ -82,11 +82,13 @@ historical, not reproducible from the repo. A local kinematic run at 09:34 on 20
 never started moving (`firstMoveTicks=-1`), which points to the mover not starting, not to pathing. It did not reproduce:
 a fresh run on the same day, 1 rep, reached 16/16 (avg 415 ticks, first move 8.5 ticks).
 The kinematic row comes from a 3-rep run at 20:35 the same day (`pathbench_travel_kinematic_20260928_203533.csv`,
-first move after 8.9 ticks on average, 0 runs that never moved). Earlier 1.16.1 travel runs (16 goals; baritone and kinematic × 3 reps, physics × 1; kinematic from a later run):
+first move after 8.9 ticks on average, 0 runs that never moved).
+The Baritone row comes from a 3-rep run at 20:56 the same day (`pathbench_travel_baritone_20260928_205606.csv`;
+the one miss was goal 15 rep 0, which stalled 44 blocks away). The physics row is still historical. Earlier 1.16.1 travel runs (16 goals; baritone and kinematic × 3 reps, physics × 1; kinematic from a later run):
 
 | Mover | Goals reached | Avg ticks (reached goals) |
 | --- | --- | --- |
-| Baritone | 48/48 | 418 |
+| Baritone | 47/48 | 368 |
 | Kinematic (experimental) | 46/48 | 383 |
 | Physics search (experimental, `physicsTravel`) | 15/16 | 401 |
 
