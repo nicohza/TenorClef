@@ -23,20 +23,21 @@ import java.util.List;
  */
 public class PvpBenchTask extends Task {
 
-    private static final String ARMOR = "ArmorItems:[{id:\"iron_boots\",count:1},{id:\"iron_leggings\",count:1},{id:\"iron_chestplate\",count:1},{id:\"iron_helmet\",count:1}]";
-    // name, summon commands (relative to the arena origin, bot at 0 0)
+    private static final String P = "{PersistenceRequired:1b,Tags:[\"pvpb\"]}";
+    private static final String[] GEAR = {"weapon.mainhand with iron_sword", "armor.head with iron_helmet",
+            "armor.chest with iron_chestplate", "armor.legs with iron_leggings", "armor.feet with iron_boots"};
+    // name, summon commands (absolute, bot at 0 0); summoned mobs are geared by gear()
     private static final String[][] SCENARIOS = {
-            {"husk_iron", "summon husk 8 ~ 0 {HandItems:[{id:\"iron_sword\",count:1},{}]," + ARMOR + ",PersistenceRequired:1b}"},
-            {"vindicator", "summon vindicator 8 ~ 0 {PersistenceRequired:1b}"},
-            {"skeleton", "summon skeleton 14 ~ 0 {HandItems:[{id:\"bow\",count:1},{}],ArmorItems:[{},{},{},{id:\"iron_helmet\",count:1}],PersistenceRequired:1b}"},
-            {"husk_trio", "summon husk 8 ~ 2 {HandItems:[{id:\"iron_sword\",count:1},{}]," + ARMOR + ",PersistenceRequired:1b}",
-                    "summon husk 8 ~ -2 {HandItems:[{id:\"iron_sword\",count:1},{}]," + ARMOR + ",PersistenceRequired:1b}",
-                    "summon husk 10 ~ 0 {HandItems:[{id:\"iron_sword\",count:1},{}]," + ARMOR + ",PersistenceRequired:1b}"},
+            {"husk_iron", "summon husk 8 ~ 0 " + P},
+            {"vindicator", "summon vindicator 8 ~ 0 " + P},
+            {"skeleton", "summon skeleton 14 ~ 0 " + P},
+            {"husk_trio", "summon husk 8 ~ 2 " + P, "summon husk 8 ~ -2 " + P, "summon husk 10 ~ 0 " + P},
     };
     private static final int ROUND_TICKS = 20 * 60;
 
     private final int rounds;
     private int round = -1, ticks, wait;
+    private boolean seen;
     private PvpTask fight;
     private final List<String> rows = new ArrayList<>();
     private int wins;
@@ -48,6 +49,7 @@ public class PvpBenchTask extends Task {
 
     @Override
     protected void onStart() {
+        if (round >= 0) return; // restarted after an interrupt: keep the current round
         run("gamerule doMobSpawning false", "gamerule doImmediateRespawn true", "gamerule keepInventory true",
                 "gamerule doDaylightCycle false", "time set day", "difficulty hard", "gamemode survival @a");
         nextRound();
@@ -74,14 +76,22 @@ public class PvpBenchTask extends Task {
         String[] summons = new String[sc.length - 1];
         System.arraycopy(sc, 1, summons, 0, summons.length);
         run(summons);
+        for (String g : GEAR) {
+            if (g.startsWith("weapon") && sc[0].equals("skeleton")) continue;
+            run("item replace entity @e[type=husk,tag=pvpb] " + g);
+        }
+        run("item replace entity @e[type=skeleton,tag=pvpb] weapon.mainhand with bow",
+                "item replace entity @e[type=skeleton,tag=pvpb] armor.head with iron_helmet");
         fight = PvpTask.hostiles();
         ticks = 0;
+        seen = false;
         wait = 10;
     }
 
     @Override
     protected Task onTick() {
         if (done) return null;
+        PvpTask.touch();
         PlayerEntity me = AltoClef.getInstance().getPlayer();
         if (me == null) return null;
         if (wait > 0) {
@@ -90,14 +100,16 @@ public class PvpBenchTask extends Task {
         }
         ticks++;
         boolean dead = me.isDead() || me.getHealth() <= 0;
-        boolean cleared = ticks > 20 && fight.getTarget() == null && noHostiles(me);
+        boolean none = noHostiles(me);
+        if (!none) seen = true;
+        boolean cleared = (seen || ticks > 200) && fight.getTarget() == null && none;
         if (dead || cleared || ticks >= ROUND_TICKS) {
             String result = dead ? "death" : cleared ? "win" : "timeout";
             if (cleared) wins++;
             String row = String.format("%d,%s,%s,%d,%.1f,%d,%d,%d,%d,%d,%d,%d", round, SCENARIOS[round % SCENARIOS.length][0], result, ticks,
                     fight.damageTaken, fight.attacks, fight.crits, fight.sprintHits, fight.axeHits, fight.blocks, fight.gapples, fight.pots);
             rows.add(row);
-            Debug.logMessage("PVPBENCH " + row);
+            Debug.logHarness("PVPBENCH " + row);
             nextRound();
             return null;
         }
@@ -122,9 +134,9 @@ public class PvpBenchTask extends Task {
         } catch (IOException e) {
             Debug.logWarning("pvpbench csv: " + e);
         }
-        Debug.logMessage("PVPBENCH SUMMARY wins=" + wins + "/" + rows.size());
+        Debug.logHarness("PVPBENCH SUMMARY wins=" + wins + "/" + rows.size());
         if (Boolean.getBoolean("tenorclef.pathbench.exit")) {
-            Debug.logMessage("PVPBENCH exit requested");
+            Debug.logHarness("PVPBENCH exit requested");
             MinecraftClient.getInstance().scheduleStop();
         }
     }
