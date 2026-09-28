@@ -213,8 +213,8 @@ public class GetToBlockTask extends CustomBaritoneGoalTask implements ITaskRequi
     @Override
     protected void onStop(Task interruptTask) {
         if (trace != null && !trace.isFinished()) {
-            // isFinished() is the world check: cachedGoal.isInGoal(player block pos) in the right dimension.
-            boolean arrived = isFinished();
+            // World check only; isFinished() is also true after a terminal recovery abort.
+            boolean arrived = isInGoal() && (_dimension == null || _dimension == WorldHelper.getCurrentDimension());
             String reason = getLastFailure() != null ? String.valueOf(getLastFailure().getReason())
                     : interruptTask != null ? "INTERRUPTED" : null;
             Debug.logMessage(trace.finish(arrived, arrived ? null : reason));

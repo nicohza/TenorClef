@@ -18,7 +18,7 @@ TRAVEL goal=GetToBlock start=x,y,z target=x,y,z requested=<backend> executed=<ba
 | `traveled` | Summed per-tick movement; jumps ≥10 blocks (teleport/respawn) are excluded |
 | `remaining` | Distance from the final position to the target **block centre**. `GetToBlock` accepts nearby positions, so an ARRIVED run can show 1–3 blocks here |
 | `stallTicks` | Ticks with movement < 0.01 blocks (includes planning time) |
-| `verified` | `GetToBlockTask.isFinished()`, a world-position check — not engine status (Ostinato's `HybridMovementEngine.status()` never reports ARRIVED) |
+| `verified` | `CustomBaritoneGoalTask.isInGoal()` + dimension, a world-position check (false after an abort) — not engine status (Ostinato's `HybridMovementEngine.status()` never reports ARRIVED) |
 
 ## Reproducing
 
@@ -39,7 +39,8 @@ Only runs actually executed (2026-09-28). Nothing extrapolated.
 | tungsten | 986 | 42.1 | 47.8 | 862 | 134 | true |
 
 Tungsten runs all took ≈49 s and each logged ~420 Tungsten `search start` lines from a standing position.
-**Open contradiction:** two tungsten runs report `verified=true` with `remaining` of 19.5 and 47.8 —
-the world check and the final position disagree. Not yet diagnosed; do not treat tungsten
-`verified` as trustworthy until it is. Tungsten is parked (not a target backend for now); Baritone and
+**Resolved contradiction:** two tungsten runs reported `verified=true` with `remaining` 19.5 and 47.8.
+Cause: `verified` used `isFinished()`, which is also true after a terminal recovery abort. Fixed to a
+pure world check (`CustomBaritoneGoalTask.isInGoal()`); those runs were aborts, not arrivals. The
+table rows above predate the fix, so `verified` there is unreliable for aborted runs. Tungsten is parked (not a target backend for now); Baritone and
 the kinematic mover are the supported travel paths.
