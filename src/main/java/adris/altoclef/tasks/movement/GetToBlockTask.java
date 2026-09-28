@@ -50,6 +50,10 @@ public class GetToBlockTask extends CustomBaritoneGoalTask implements ITaskRequi
         return true;
     }
 
+    // Vertical-slice telemetry: one TRAVEL line per run (see docs/TRAVEL_TELEMETRY.md).
+    private adris.altoclef.movement.TravelTrace trace;
+    private int traceDispatches;
+
     private adris.altoclef.tasks.movement.TungstenGotoTask tungstenLeg;
     private boolean tungstenGaveUp;
     // Current long leg (> 16 blocks) being timed for MoverStats; legStartMs == 0 means none.
@@ -142,6 +146,7 @@ public class GetToBlockTask extends CustomBaritoneGoalTask implements ITaskRequi
         // last blocks, portals and non-standable targets (tables, ore) since Tungsten cannot
         // mine or place. One Tungsten give-up hands this instance to Baritone for good.
         Task tung = tungstenLeg(modEarly, world, isPortal);
+        traceTick(modEarly, tung != null);
         if (tung != null) return tung;
 
         if (isFinished()) {
@@ -171,9 +176,33 @@ public class GetToBlockTask extends CustomBaritoneGoalTask implements ITaskRequi
         return super.onTick();
     }
 
+    private void traceTick(AltoClef mod, boolean tungstenLegActive) {
+        if (trace == null || mod.getPlayer() == null) return;
+        if (tungstenLegActive) {
+            trace.dispatched("TUNGSTEN_TASK", false);
+        } else if (tungstenGaveUp && "TUNGSTEN_TASK".equals(trace.executed())) {
+            trace.dispatched(null, true);
+        }
+        int n = adris.altoclef.movement.MovementEngineAdapter.dispatchCount();
+        if (n != traceDispatches) {
+            traceDispatches = n;
+            trace.dispatched(adris.altoclef.movement.MovementEngineAdapter.lastBackend(),
+                    adris.altoclef.movement.MovementEngineAdapter.lastFellBack());
+        }
+        boolean pathing = tungstenLegActive || mod.getClientBaritone().getPathingBehavior().isPathing();
+        trace.tick(mod.getPlayer().getX(), mod.getPlayer().getY(), mod.getPlayer().getZ(), pathing);
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
+        AltoClef mod = AltoClef.getInstance();
+        if (mod.getPlayer() != null) {
+            trace = new adris.altoclef.movement.TravelTrace("GetToBlock", mod.getPlayer().getX(), mod.getPlayer().getY(),
+                    mod.getPlayer().getZ(), _position.getX() + 0.5, _position.getY(), _position.getZ() + 0.5,
+                    adris.altoclef.movement.MovementEngineAdapter.requestedBackend());
+            traceDispatches = adris.altoclef.movement.MovementEngineAdapter.dispatchCount();
+        }
         if (_preferStairs) {
             AltoClef.getInstance().getBehaviour().push();
             AltoClef.getInstance().getBehaviour().setPreferredStairs(true);
@@ -183,6 +212,13 @@ public class GetToBlockTask extends CustomBaritoneGoalTask implements ITaskRequi
 
     @Override
     protected void onStop(Task interruptTask) {
+        if (trace != null && !trace.isFinished()) {
+            // isFinished() is the world check: cachedGoal.isInGoal(player block pos) in the right dimension.
+            boolean arrived = isFinished();
+            String reason = getLastFailure() != null ? String.valueOf(getLastFailure().getReason())
+                    : interruptTask != null ? "INTERRUPTED" : null;
+            Debug.logMessage(trace.finish(arrived, arrived ? null : reason));
+        }
         super.onStop(interruptTask);
         if (_preferStairs) {
             AltoClef.getInstance().getBehaviour().pop();
