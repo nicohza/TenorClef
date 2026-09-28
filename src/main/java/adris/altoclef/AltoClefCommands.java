@@ -49,6 +49,7 @@ public class AltoClefCommands {
                 new CycleTestCommand(),
                 new DummyTaskCommand(),
                 new FollowCommand(),
+                new PvpCommand(),
                 new ScanCommand(),
                 new GiveCommand(),
                 new TungstenGotoCommand(),
