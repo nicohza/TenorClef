@@ -252,6 +252,7 @@ package adris.altoclef.benchmark;
 //$$                         }
 //$$                         if (el > limitTicks) break;
 //$$                     }
+//$$                     boolean activeAtEnd = !viaCustom ? TungstenMovement.isPathing() : baritone.getCustomGoalProcess().isActive();
 //$$                     if (!viaCustom) TungstenMovement.cancel();
 //$$                     else mc.execute(() -> baritone.getPathingBehavior().cancelEverything());
 //$$                     long ticks = worldTime(mc) - t0;
@@ -259,6 +260,10 @@ package adris.altoclef.benchmark;
 //$$                     csv.printf(Locale.ROOT, "%s,%d,%d,%d,%d,%d,%s,%d,%.2f,%d%n", mover, gi, g.getX() - origin.getX(), g.getZ() - origin.getZ(),
 //$$                             (int) Math.round(Math.sqrt(g.getSquaredDistance(origin))), r, result, ticks, end, firstMove);
 //$$                     csv.flush();
+//$$                     // Per-trial diagnostics so a stall can be located after the fact (CSV lacks position/progress history).
+//$$                     BlockPos endPos = mc.player == null ? BlockPos.ORIGIN : mc.player.getBlockPos();
+//$$                     Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH TRIAL mover=%s goal=%d rep=%d result=%s ticks=%d end=%s endDist=%.1f bestDist=%.1f bestAt=%d lastMoveAt=%d firstMove=%d activeAtEnd=%s",
+//$$                             mover, gi, r, result, ticks, endPos.toShortString(), end, bestD, bestAt, lastMoveAt, firstMove, activeAtEnd));
 //$$                     n++;
 //$$                     if (result.equals("GOAL")) { ok++; sumTicks += ticks; }
 //$$                     if (firstMove >= 0) { moved++; sumFirst += firstMove; }

@@ -71,5 +71,17 @@ Source: `pathbench_travel_baritone_20260928_205606.csv` (47/48) and
 | kinematic | 14 | 0,-96 | 1 | STALLED | 704 | 47.7 |
 
 Every miss is one rep of a 96-block goal; the other reps of the same goal reached it, and no goal
-failed for both movers. So there is no repeat trouble spot in these runs. The bench log records only the
-summary line, so the stall causes are unknown. Per-trial logging would be needed to diagnose them.
+failed for both movers. So there is no repeat trouble spot in these runs. Those runs logged only the summary line, so
+their stall causes are unknown.
+
+Since then each travel trial also logs one line (`grep -a "PATHBENCH TRIAL" run/logs/latest.log`):
+
+```
+PATHBENCH TRIAL mover=kinematic goal=14 rep=0 result=GOAL ticks=338 end=53, 74, -217 endDist=1.9 bestDist=3.0 bestAt=335 lastMoveAt=337 firstMove=11 activeAtEnd=true
+```
+
+`end` is the final block position; `bestDist`/`bestAt` are the closest approach and when it happened
+(only gains over 1 block count); `lastMoveAt` is the last tick with movement over 0.3 blocks;
+`activeAtEnd` is whether the mover was still running before the bench cancelled it. A stall shows as
+a large `bestDist` with `bestAt` well before `ticks`, and `end` gives the place to inspect.
+Tested in-game on goals 12, 14, 15 (kinematic, 1 rep): 3/3 reached, one line per trial.
