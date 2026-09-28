@@ -74,7 +74,7 @@ package adris.altoclef.benchmark;
 //$$                 else if (mode.equalsIgnoreCase("flow")) flow(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("boat")) boat(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("cliff")) cliff(mc, origin, Math.max(1, reps));
-//$$                 else if (mode.equalsIgnoreCase("swim")) swim(mc, origin, Math.max(1, reps));
+//$$                 else if (mode.equalsIgnoreCase("swim")) for (String m : (opt == null ? "baritone" : opt).split("[;+]")) swim(mc, origin, m, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("elytra")) elytra(mc, origin, opt, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("travel")) for (String m : (opt == null ? "-" : opt).split("[;+]")) travel(mc, spawn, m, Math.max(1, reps));
 //$$                 else for (String sweep : (opt == null ? "-" : opt).split("[;+]")) search(mc, origin, sweep, Math.max(1, reps));
@@ -855,37 +855,100 @@ package adris.altoclef.benchmark;
 //$$         Debug.logHarness("PATHBENCH SUMMARY mode=elytra_osc");
 //$$     }
 //$$
-//$$     private static void swim(MinecraftClient mc, BlockPos origin, int reps) throws Exception {
+//$$     /**
+//$$      * Swim courses: 0 open surface, 1 open deep, 2 kelp, 3 pillars+wall, 4 1x2 tunnel, 5 shore entry, 6 ledge exit,
+//$$      * 7 cross-current, 8 long sealed tunnel with one air pocket. Mover baritone, physics or kinematic.
+//$$      */
+//$$     private static void swim(MinecraftClient mc, BlockPos origin, String mover, int reps) throws Exception {
 //$$         IBaritone baritone = BaritoneAPI.getProvider().getPrimaryBaritone();
-//$$         BaritoneAPI.getSettings().chatDebug.value = true;
-//$$         int R = 12, H = 12, by = 200, ox = origin.getX(), oz = origin.getZ();
+//$$         int by = 150, ox = origin.getX(), oz = origin.getZ();
+//$$         String[] names = {"surface", "deep", "kelp", "obstacles", "tunnel", "shore", "ledge", "current", "air"};
+//$$         int[][] se = {{0, 5, 0, 54, 5, 0}, {0, 1, 0, 54, 1, 0}, {0, 6, 0, 38, 3, 0}, {0, 4, 0, 34, 4, 0}, {2, 6, 0, 34, 4, 0},
+//$$                 {-8, 10, 0, 24, 2, 0}, {2, 6, 0, 26, 10, 0}, {-14, 2, 0, 14, 2, 0}, {1, 5, 0, 73, 1, 0}};
 //$$         java.util.concurrent.CompletableFuture<Void> built = new java.util.concurrent.CompletableFuture<>();
 //$$         mc.getServer().execute(() -> {
-//$$             net.minecraft.server.world.ServerWorld w = mc.getServer().getOverworld();
-//$$             for (int x = -R - 1; x <= R + 1; x++) for (int z = -R - 1; z <= R + 1; z++) for (int y = by - 1; y < by + H; y++) {
-//$$                 boolean wall = Math.abs(x) > R || Math.abs(z) > R || y < by;
-//$$                 w.setBlockState(new BlockPos(ox + x, y, oz + z), wall ? net.minecraft.block.Blocks.GLASS.getDefaultState() : net.minecraft.block.Blocks.WATER.getDefaultState(), 2);
-//$$             }
-//$$             built.complete(null);
+//$$             try {
+//$$                 net.minecraft.server.world.ServerWorld w = mc.getServer().getOverworld();
+//$$                 net.minecraft.block.BlockState G = net.minecraft.block.Blocks.GLASS.getDefaultState(), S = net.minecraft.block.Blocks.STONE.getDefaultState(),
+//$$                         W = net.minecraft.block.Blocks.WATER.getDefaultState(), A = net.minecraft.block.Blocks.AIR.getDefaultState();
+//$$                 for (int i = 0; i < names.length; i++) {
+//$$                     BlockPos b = new BlockPos(ox, by, oz + i * 40);
+//$$                     swimFill(w, b, -16, -2, -8, 80, 14, 8, A);
+//$$                     switch (i) {
+//$$                         case 0: swimPool(w, b, -2, 56, -4, 4, 0, 5, G, W); break;
+//$$                         case 1: swimPool(w, b, -2, 56, -4, 4, 0, 11, G, W); break;
+//$$                         case 2:
+//$$                             swimPool(w, b, -2, 40, -5, 5, 0, 9, G, W);
+//$$                             for (int x = 4; x <= 34; x++) for (int z = -5; z <= 5; z++) {
+//$$                                 if (x % 3 == 0 && z % 3 == 0) {
+//$$                                     swimFill(w, b, x, 0, z, x, 7, z, net.minecraft.block.Blocks.KELP_PLANT.getDefaultState());
+//$$                                     swimFill(w, b, x, 8, z, x, 8, z, net.minecraft.block.Blocks.KELP.getDefaultState());
+//$$                                 } else if ((x + z) % 2 == 0) swimFill(w, b, x, 0, z, x, 0, z, net.minecraft.block.Blocks.SEAGRASS.getDefaultState());
+//$$                             }
+//$$                             break;
+//$$                         case 3:
+//$$                             swimPool(w, b, -2, 40, -6, 6, 0, 9, G, W);
+//$$                             for (int x = 6; x <= 18; x += 4) for (int z = -5; z <= 5; z += 3) swimFill(w, b, x, 0, z + (x / 4) % 2, x, 9, z + (x / 4) % 2, S);
+//$$                             swimFill(w, b, 24, 0, -6, 24, 9, 4, S);
+//$$                             break;
+//$$                         case 4:
+//$$                             swimFill(w, b, -2, -1, -4, 40, 9, 4, S);
+//$$                             swimFill(w, b, 0, 0, -3, 10, 9, -3 + 6, W);
+//$$                             swimFill(w, b, 11, 1, 0, 24, 2, 0, W);
+//$$                             swimFill(w, b, 25, 0, -3, 38, 9, 3, W);
+//$$                             break;
+//$$                         case 5:
+//$$                             swimPool(w, b, 0, 30, -4, 4, 0, 9, G, W);
+//$$                             swimFill(w, b, -12, 0, -4, -1, 9, 4, S);
+//$$                             break;
+//$$                         case 6:
+//$$                             swimPool(w, b, -2, 20, -4, 4, 0, 8, G, W);
+//$$                             swimFill(w, b, 21, 0, -4, 30, 9, 4, S);
+//$$                             break;
+//$$                         case 7:
+//$$                             swimPool(w, b, -10, 10, -4, 3, 1, 1, G, A);
+//$$                             swimFill(w, b, -18, 0, -4, 18, 0, 4, S);
+//$$                             swimFill(w, b, -18, 1, -4, -11, 1, 4, S);
+//$$                             swimFill(w, b, 11, 1, -4, 18, 1, 4, S);
+//$$                             swimFill(w, b, -10, 1, -4, 10, 1, -4, W); // sources; flow pushes +z across the route
+//$$                             break;
+//$$                         case 8:
+//$$                             swimFill(w, b, -2, -1, -3, 76, 6, 3, S);
+//$$                             swimFill(w, b, 0, 0, -1, 74, 2, 1, W);
+//$$                             swimFill(w, b, 0, 3, -1, 2, 6, 1, W);
+//$$                             swimFill(w, b, 72, 3, -1, 74, 6, 1, W);
+//$$                             swimFill(w, b, 36, 1, -1, 38, 2, 1, A); // the only air on the way
+//$$                             break;
+//$$                     }
+//$$                 }
+//$$                 built.complete(null);
+//$$             } catch (Throwable t) { built.completeExceptionally(t); }
 //$$         });
 //$$         built.get();
-//$$         Thread.sleep(3000);
-//$$         BlockPos start = new BlockPos(ox, by + H - 2, oz);
-//$$         int[][] offs = {{10, 0, 10}, {-10, 0, 10}, {-10, 0, -10}, {10, 0, -10}, {10, 5, 0}, {0, 5, -10}, {-10, 9, 0}, {0, 2, 10}};
+//$$         Thread.sleep(5000);
 //$$         long limitTicks = Long.getLong("tenorclef.pathbench.travelTicks", 20L * 90);
-//$$         PrintWriter csv = open("swim_baritone");
-//$$         csv.println("mover,goal,dx,dy,dz,dist,rep,result,ticks,endDist,firstMoveTicks");
-//$$         int ok = 0, n = 0;
+//$$         String goalSel = System.getProperty("tenorclef.pathbench.goals", "").trim();
+//$$         java.util.Set<Integer> only = new java.util.HashSet<>();
+//$$         if (!goalSel.isEmpty()) for (String x : goalSel.split(",")) only.add(Integer.parseInt(x.trim()));
+//$$         BaritoneAPI.getSettings().kinematicTravel.value = mover.equals("kinematic");
+//$$         BaritoneAPI.getSettings().physicsTravel.value = mover.equals("physics");
+//$$         java.util.function.BiConsumer<String, String> prevFault = BaritoneAPI.getSettings().movementFault.value;
+//$$         java.util.concurrent.atomic.AtomicInteger faults = new java.util.concurrent.atomic.AtomicInteger();
+//$$         BaritoneAPI.getSettings().movementFault.value = (c, e) -> { faults.incrementAndGet(); prevFault.accept(c, e); };
+//$$         PrintWriter csv = open("swim_" + mover);
+//$$         csv.println("mover,goal,course,dist,rep,result,ticks,endDist,firstMoveTicks,kinTicks,faults,minAir,minHealth");
+//$$         int ok = 0, n = 0; long sumTicks = 0;
 //$$         try {
-//$$             for (int gi = 0; gi < offs.length; gi++) {
-//$$                 BlockPos g = new BlockPos(ox + offs[gi][0], by + offs[gi][1], oz + offs[gi][2]);
+//$$             for (int gi = 0; gi < names.length; gi++) {
+//$$                 if (!only.isEmpty() && !only.contains(gi)) continue;
+//$$                 BlockPos b = new BlockPos(ox, by, oz + gi * 40);
+//$$                 BlockPos start = b.add(se[gi][0], se[gi][1], se[gi][2]), g = b.add(se[gi][3], se[gi][4], se[gi][5]);
 //$$                 for (int r = 0; r < reps; r++) {
 //$$                     teleport(mc, start);
-//$$                     // every rep starts on the same breath (full by default), otherwise results depend on the previous rep
-//$$                     int air0 = Integer.getInteger("tenorclef.pathbench.swimAir", 300);
-//$$                     mc.getServer().execute(() -> mc.getServer().getPlayerManager().getPlayerList().forEach(p -> p.setAir(Math.min(air0, p.getMaxAir()))));
 //$$                     Thread.sleep(200);
-//$$                     long t0 = worldTime(mc);
+//$$                     long t0 = worldTime(mc), k0 = KinematicController.drivenTicks;
+//$$                     int f0 = faults.get(), minAir = mc.player.getAir();
+//$$                     float minHp = mc.player.getHealth();
 //$$                     startBaritone(mc, baritone, g);
 //$$                     double startD = dist3(mc, g), bestD = startD; long bestAt = 0, firstMove = -1;
 //$$                     String result = "TIMEOUT";
@@ -893,10 +956,11 @@ package adris.altoclef.benchmark;
 //$$                         Thread.sleep(25);
 //$$                         long el = worldTime(mc) - t0;
 //$$                         double d = dist3(mc, g);
+//$$                         minAir = Math.min(minAir, mc.player.getAir());
+//$$                         minHp = Math.min(minHp, mc.player.getHealth());
 //$$                         if (firstMove < 0 && Math.abs(d - startD) > 0.5) firstMove = el;
 //$$                         if (d < 1.5) { result = "GOAL"; break; }
 //$$                         if (mc.player.isDead()) { result = "DIED"; break; }
-//$$                         if (el % 20 == 0) { Object cur = baritone.getPathingBehavior().getCurrent(); Debug.logHarness(String.format(Locale.ROOT, "SWIM t=%d pos=%.1f,%.1f,%.1f d=%.1f seg=%s", el, mc.player.getX(), mc.player.getY(), mc.player.getZ(), d, cur == null ? "none" : ((baritone.api.pathing.path.IPathExecutor) cur).getPath().movements().get(Math.min(((baritone.api.pathing.path.IPathExecutor) cur).getPosition(), ((baritone.api.pathing.path.IPathExecutor) cur).getPath().movements().size() - 1)).getClass().getSimpleName())); }
 //$$                         if (d < bestD - 1.0) { bestD = d; bestAt = el; }
 //$$                         if (el - bestAt > 400) { result = "STALLED"; break; }
 //$$                         if (el > 40 && !baritone.getCustomGoalProcess().isActive()) { result = "STOPPED"; break; }
@@ -904,18 +968,31 @@ package adris.altoclef.benchmark;
 //$$                     }
 //$$                     mc.execute(() -> baritone.getPathingBehavior().cancelEverything());
 //$$                     long ticks = worldTime(mc) - t0;
-//$$                     csv.printf(Locale.ROOT, "baritone,%d,%d,%d,%d,%d,%d,%s,%d,%.2f,%d%n", gi, offs[gi][0], offs[gi][1] - (H - 2), offs[gi][2],
-//$$                             (int) Math.round(Math.sqrt(g.getSquaredDistance(start))), r, result, ticks, dist3(mc, g), firstMove);
+//$$                     csv.printf(Locale.ROOT, "%s,%d,%s,%d,%d,%s,%d,%.2f,%d,%d,%d,%d,%.0f%n", mover, gi, names[gi], (int) Math.round(Math.sqrt(g.getSquaredDistance(start))),
+//$$                             r, result, ticks, dist3(mc, g), firstMove, KinematicController.drivenTicks - k0, faults.get() - f0, minAir, minHp);
 //$$                     csv.flush();
 //$$                     n++;
-//$$                     if (result.equals("GOAL")) ok++;
+//$$                     if (result.equals("GOAL")) { ok++; sumTicks += ticks; }
 //$$                     Thread.sleep(500);
 //$$                 }
 //$$             }
 //$$         } finally {
+//$$             BaritoneAPI.getSettings().kinematicTravel.value = false;
+//$$             BaritoneAPI.getSettings().physicsTravel.value = false;
+//$$             BaritoneAPI.getSettings().movementFault.value = prevFault;
 //$$             csv.close();
 //$$         }
-//$$         Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH SUMMARY mode=swim goalRate=%d/%d", ok, n));
+//$$         Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH SUMMARY mode=swim mover=%s goalRate=%d/%d avgGoalTicks=%.0f", mover, ok, n, ok == 0 ? 0 : sumTicks / (double) ok));
+//$$     }
+//$$
+//$$     private static void swimFill(net.minecraft.server.world.ServerWorld w, BlockPos b, int x0, int y0, int z0, int x1, int y1, int z1, net.minecraft.block.BlockState s) {
+//$$         for (int x = x0; x <= x1; x++) for (int y = y0; y <= y1; y++) for (int z = z0; z <= z1; z++) w.setBlockState(b.add(x, y, z), s, 3);
+//$$     }
+//$$
+//$$     /** Fluid box with a glass floor and walls, open on top. */
+//$$     private static void swimPool(net.minecraft.server.world.ServerWorld w, BlockPos b, int x0, int x1, int z0, int z1, int y0, int y1, net.minecraft.block.BlockState wall, net.minecraft.block.BlockState fluid) {
+//$$         swimFill(w, b, x0 - 1, y0 - 1, z0 - 1, x1 + 1, y1, z1 + 1, wall);
+//$$         swimFill(w, b, x0, y0, z0, x1, y1, z1, fluid);
 //$$     }
 //$$
 //$$     private static double dist3(MinecraftClient mc, BlockPos g) {
