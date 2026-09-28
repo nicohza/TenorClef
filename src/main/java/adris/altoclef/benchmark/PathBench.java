@@ -456,6 +456,10 @@ package adris.altoclef.benchmark;
 //$$                 {"bars1", 2, 0, 0, 0, "bars"}, {"bars2", 3, 0, 0, 0, "bars"}, {"bars3", 4, 0, 0, 0, "bars"},
 //$$                 {"fence1", 2, 0, 0, 0, "fence"}, {"fence2", 3, 0, 0, 0, "fence"},
 //$$                 {"ladder1", 2, 0, 0, 0, "ladder"}, {"ladder2", 3, 0, 0, 0, "ladder"}, {"ladder3", 4, 0, 0, 0, "ladder"},
+//$$                 // long drops: 3 down, and 5-block gaps dropping 2 and 3
+//$$                 {"drop3", 4, -3, 0, 0}, {"drop2far", 6, -2, 0, 0}, {"drop3far", 6, -3, 0, 0},
+//$$                 // slime: walk off onto a pad (dx, dy of the pad block from the feet) and ride the bounce onto the landing
+//$$                 {"slime1", 7, -3, 0, 0, "slime", 3, -5}, {"slime2", 9, -2, 0, 0, "slime", 5, -8}, {"slime3", 9, -4, 0, 0, "slime", 5, -10},
 //$$         };
 //$$         // build out of view distance so the client receives whole fresh chunks instead of a partial update stream
 //$$         teleport(mc, new BlockPos(ox + 1000, by, oz + 1000));
@@ -477,6 +481,7 @@ package adris.altoclef.benchmark;
 //$$                         w.setBlockState(new BlockPos(sx + dx, y, oz + dz), net.minecraft.block.Blocks.LADDER.getDefaultState().with(net.minecraft.block.LadderBlock.FACING, net.minecraft.util.math.Direction.WEST), 2);
 //$$                     }
 //$$                 } else {
+//$$                     if (land.equals("slime")) w.setBlockState(new BlockPos(sx + (Integer) st[i][6], by + (Integer) st[i][7], oz), net.minecraft.block.Blocks.SLIME_BLOCK.getDefaultState(), 2);
 //$$                     w.setBlockState(new BlockPos(sx + dx, by - 1 + dy, oz + dz), land.equals("bars") ? net.minecraft.block.Blocks.IRON_BARS.getDefaultState()
 //$$                             : land.equals("fence") ? net.minecraft.block.Blocks.OAK_FENCE.getDefaultState() : stone, 2);
 //$$                 }
@@ -513,7 +518,7 @@ package adris.altoclef.benchmark;
 //$$                     while (true) {
 //$$                         Thread.sleep(25);
 //$$                         if (dist3(mc, g) < 0.8 && (mc.player.isOnGround() || mc.player.isClimbing())) { result = "GOAL"; break; }
-//$$                         if (mc.player.getY() < by + Math.min(dy, 0) - 2) { result = "FALL"; break; }
+//$$                         if (mc.player.getY() < by + Math.min(dy, st[i].length > 7 ? (Integer) st[i][7] : 0) - 2) { result = "FALL"; break; }
 //$$                         if (worldTime(mc) - t0 > 20 * 20) break;
 //$$                     }
 //$$                     mc.execute(() -> baritone.getPathingBehavior().cancelEverything());
