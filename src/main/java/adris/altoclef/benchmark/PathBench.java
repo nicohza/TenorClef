@@ -857,14 +857,16 @@ package adris.altoclef.benchmark;
 //$$
 //$$     /**
 //$$      * Swim courses: 0 open surface, 1 open deep, 2 kelp, 3 pillars+wall, 4 1x2 tunnel, 5 shore entry, 6 ledge exit,
-//$$      * 7 cross-current, 8 long sealed tunnel with one air pocket. Mover baritone, physics or kinematic.
+//$$      * 7 cross-current, 8 long sealed tunnel with one air pocket,
+//$$      * 9 forced fall from a tower into a pool (1-deep straight ahead, 2-deep to the side). Mover baritone, physics or kinematic.
 //$$      */
 //$$     private static void swim(MinecraftClient mc, BlockPos origin, String mover, int reps) throws Exception {
 //$$         IBaritone baritone = BaritoneAPI.getProvider().getPrimaryBaritone();
 //$$         int by = 150, ox = origin.getX(), oz = origin.getZ();
-//$$         String[] names = {"surface", "deep", "kelp", "obstacles", "tunnel", "shore", "ledge", "current", "air"};
+//$$         String[] names = {"surface", "deep", "kelp", "obstacles", "tunnel", "shore", "ledge", "current", "air", "dive"};
 //$$         int[][] se = {{0, 5, 0, 54, 5, 0}, {0, 1, 0, 54, 1, 0}, {0, 6, 0, 38, 3, 0}, {0, 4, 0, 34, 4, 0}, {2, 6, 0, 34, 4, 0},
-//$$                 {-8, 10, 0, 24, 2, 0}, {2, 6, 0, 26, 10, 0}, {-14, 2, 0, 14, 2, 0}, {1, 5, 0, 73, 1, 0}};
+//$$                 {-8, 10, 0, 24, 2, 0}, {2, 6, 0, 26, 10, 0}, {-14, 2, 0, 14, 2, 0}, {1, 5, 0, 73, 1, 0},
+//$$                 {-3, 10, 0, 28, 1, 0}};
 //$$         java.util.concurrent.CompletableFuture<Void> built = new java.util.concurrent.CompletableFuture<>();
 //$$         mc.getServer().execute(() -> {
 //$$             try {
@@ -919,6 +921,11 @@ package adris.altoclef.benchmark;
 //$$                             swimFill(w, b, 72, 3, -1, 74, 6, 1, W);
 //$$                             swimFill(w, b, 36, 1, -1, 38, 2, 1, A); // the only air on the way
 //$$                             break;
+//$$                         case 9:
+//$$                             swimPool(w, b, 0, 30, -4, 4, 0, 1, G, W);
+//$$                             swimFill(w, b, -6, -1, -4, -1, 9, 4, S); // sheer tower: the only way down is a fall into the pool
+//$$                             swimFill(w, b, 0, 0, -4, 1, 0, 0, S); // 1-deep landing straight ahead; 2-deep one step to the side
+//$$                             break;
 //$$                     }
 //$$                 }
 //$$                 built.complete(null);
@@ -936,7 +943,7 @@ package adris.altoclef.benchmark;
 //$$         java.util.concurrent.atomic.AtomicInteger faults = new java.util.concurrent.atomic.AtomicInteger();
 //$$         BaritoneAPI.getSettings().movementFault.value = (c, e) -> { faults.incrementAndGet(); prevFault.accept(c, e); };
 //$$         PrintWriter csv = open("swim_" + mover);
-//$$         csv.println("mover,goal,course,dist,rep,result,ticks,endDist,firstMoveTicks,kinTicks,faults,minAir,minHealth,swimPct");
+//$$         csv.println("mover,goal,course,dist,rep,result,ticks,endDist,firstMoveTicks,kinTicks,faults,minAir,minHealth,swimPct,entryDepth");
 //$$         int ok = 0, n = 0; long sumTicks = 0;
 //$$         try {
 //$$             for (int gi = 0; gi < names.length; gi++) {
@@ -946,10 +953,11 @@ package adris.altoclef.benchmark;
 //$$                 for (int r = 0; r < reps; r++) {
 //$$                     teleport(mc, start);
 //$$                     Thread.sleep(200);
+//$$                     for (int wt = 0; wt < 30 && !(mc.world.isChunkLoaded(start) && mc.player.isOnGround()); wt++) Thread.sleep(100);
 //$$                     long t0 = worldTime(mc), k0 = KinematicController.drivenTicks;
 //$$                     int f0 = faults.get(), minAir = mc.player.getAir();
 //$$                     float minHp = mc.player.getHealth();
-//$$                     int wet = 0, swimming = 0;
+//$$                     int wet = 0, swimming = 0, entryDepth = -1;
 //$$                     startBaritone(mc, baritone, g);
 //$$                     double startD = dist3(mc, g), bestD = startD; long bestAt = 0, firstMove = -1;
 //$$                     String result = "TIMEOUT";
@@ -960,6 +968,12 @@ package adris.altoclef.benchmark;
 //$$                         minAir = Math.min(minAir, mc.player.getAir());
 //$$                         minHp = Math.min(minHp, mc.player.getHealth());
 //$$                         if (mc.player.isTouchingWater()) { wet++; if (mc.player.isSwimming()) swimming++; }
+//$$                         if (entryDepth < 0 && mc.player.isTouchingWater()) { // water depth where the bot first got wet
+//$$                             BlockPos q = mc.player.getBlockPos();
+//$$                             while (mc.world.getFluidState(q.up()).isIn(net.minecraft.tag.FluidTags.WATER)) q = q.up();
+//$$                             entryDepth = 0;
+//$$                             while (entryDepth < 16 && mc.world.getFluidState(q.down(entryDepth)).isIn(net.minecraft.tag.FluidTags.WATER)) entryDepth++;
+//$$                         }
 //$$                         if (firstMove < 0 && Math.abs(d - startD) > 0.5) firstMove = el;
 //$$                         if (d < 1.5) { result = "GOAL"; break; }
 //$$                         if (mc.player.isDead()) { result = "DIED"; break; }
@@ -970,8 +984,8 @@ package adris.altoclef.benchmark;
 //$$                     }
 //$$                     mc.execute(() -> baritone.getPathingBehavior().cancelEverything());
 //$$                     long ticks = worldTime(mc) - t0;
-//$$                     csv.printf(Locale.ROOT, "%s,%d,%s,%d,%d,%s,%d,%.2f,%d,%d,%d,%d,%.0f,%d%n", mover, gi, names[gi], (int) Math.round(Math.sqrt(g.getSquaredDistance(start))),
-//$$                             r, result, ticks, dist3(mc, g), firstMove, KinematicController.drivenTicks - k0, faults.get() - f0, minAir, minHp, wet == 0 ? -1 : 100 * swimming / wet);
+//$$                     csv.printf(Locale.ROOT, "%s,%d,%s,%d,%d,%s,%d,%.2f,%d,%d,%d,%d,%.0f,%d,%d%n", mover, gi, names[gi], (int) Math.round(Math.sqrt(g.getSquaredDistance(start))),
+//$$                             r, result, ticks, dist3(mc, g), firstMove, KinematicController.drivenTicks - k0, faults.get() - f0, minAir, minHp, wet == 0 ? -1 : 100 * swimming / wet, entryDepth);
 //$$                     csv.flush();
 //$$                     n++;
 //$$                     if (result.equals("GOAL")) { ok++; sumTicks += ticks; }
