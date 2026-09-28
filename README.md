@@ -78,8 +78,9 @@ The in-game `@pathbench` command measures the pathfinder and the movement layer:
 
 Results are written as CSV to `versions/<mc>/run/pathbench/` (not committed). The table below was
 recorded in earlier sessions; its Baritone and physics source CSVs were not retained, so treat it as
-historical, not reproducible from the repo. A later local kinematic run (2026-09-28 09:34, 38 trials)
-reached only 11/38 and was not investigated, so the kinematic row may be stale. Earlier 1.16.1 travel runs (16 goals; baritone and kinematic × 3 reps, physics × 1; kinematic from a later run):
+historical, not reproducible from the repo. A local kinematic run at 09:34 on 2026-09-28 reached only 11/38; every miss
+never started moving (`firstMoveTicks=-1`), which points to the mover not starting, not to pathing. It did not reproduce:
+a fresh run on the same day, 1 rep, reached 16/16 (avg 415 ticks, first move 8.5 ticks). Earlier 1.16.1 travel runs (16 goals; baritone and kinematic × 3 reps, physics × 1; kinematic from a later run):
 
 | Mover | Goals reached | Avg ticks (reached goals) |
 | --- | --- | --- |
