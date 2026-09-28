@@ -85,3 +85,22 @@ PATHBENCH TRIAL mover=kinematic goal=14 rep=0 result=GOAL ticks=338 end=53, 74, 
 `activeAtEnd` is whether the mover was still running before the bench cancelled it. A stall shows as
 a large `bestDist` with `bestAt` well before `ticks`, and `end` gives the place to inspect.
 Tested in-game on goals 12, 14, 15 (kinematic, 1 rep): 3/3 reached, one line per trial.
+
+## Travel re-run with per-trial lines, 2026-09-28 21:30–22:05 (3 reps each)
+
+| mover | goals reached | avg ticks (reached) | avg ticks to first move |
+|---|---|---|---|
+| baritone | 48/48 | 362 | 8.8 |
+| kinematic | 46/48 | 393 | 10.5 |
+
+Kinematic stalls, from the `PATHBENCH TRIAL` lines:
+
+| goal | rep | end | endDist | bestDist | bestAt | lastMoveAt | ticks | reading |
+|---|---|---|---|---|---|---|---|---|
+| 11 (-68,68) | 0 | 57, 88, -27 | 68.4 | 66.2 | 546 | 925 | 949 | kept moving for ~380 ticks without getting closer: wandering, at y=88 (well above the ~70 start) |
+| 13 | 2 | -4, 83, -171 | 11.4 | 11.9 | 660 | 664 | 1063 | stopped moving 11 blocks short and stayed put for ~400 ticks |
+
+In both, `activeAtEnd=true`: the mover still reported itself active, so these are silent stalls, not
+aborts. Goals 11 and 13 did not stall in the earlier 20:35 run, so neither is a repeat spot yet. The
+client log has no kinematic-mover output around either trial. Kinematic movement changes are frozen,
+so these are recorded, not fixed.
