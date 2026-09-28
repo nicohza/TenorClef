@@ -364,6 +364,8 @@ package adris.altoclef.benchmark;
 //$$     private static void column(MinecraftClient mc, BlockPos origin, int reps) throws Exception {
 //$$         IBaritone baritone = BaritoneAPI.getProvider().getPrimaryBaritone();
 //$$         BaritoneAPI.getSettings().chatDebug.value = true;
+//$$         // doorCourse: no columns, one oak door carried; the only air is a door pocket (Ostinato allowDoorAirPockets).
+//$$         boolean doorCourse = Boolean.getBoolean("tenorclef.pathbench.doorCourse");
 //$$         int L = 120, by = 100, ox = origin.getX(), oz = origin.getZ();
 //$$         java.util.concurrent.CompletableFuture<Void> built = new java.util.concurrent.CompletableFuture<>();
 //$$         mc.getServer().execute(() -> {
@@ -372,25 +374,43 @@ package adris.altoclef.benchmark;
 //$$                 boolean wall = x < 0 || x > L || Math.abs(z) > 1 || y < by || y > by + 3;
 //$$                 w.setBlockState(new BlockPos(ox + x, y, oz + z), wall ? net.minecraft.block.Blocks.GLASS.getDefaultState() : net.minecraft.block.Blocks.WATER.getDefaultState(), 2);
 //$$             }
-//$$             w.setBlockState(new BlockPos(ox + 40, by - 1, oz), net.minecraft.block.Blocks.MAGMA_BLOCK.getDefaultState(), 3);
-//$$             w.setBlockState(new BlockPos(ox + 80, by - 1, oz), net.minecraft.block.Blocks.SOUL_SAND.getDefaultState(), 3);
+//$$             if (!doorCourse) {
+//$$                 w.setBlockState(new BlockPos(ox + 40, by - 1, oz), net.minecraft.block.Blocks.MAGMA_BLOCK.getDefaultState(), 3);
+//$$                 w.setBlockState(new BlockPos(ox + 80, by - 1, oz), net.minecraft.block.Blocks.SOUL_SAND.getDefaultState(), 3);
+//$$             }
 //$$             built.complete(null);
 //$$         });
 //$$         built.get();
 //$$         Thread.sleep(3000);
 //$$         BlockPos start = new BlockPos(ox + 1, by + 1, oz), g = new BlockPos(ox + L - 1, by, oz), mag = new BlockPos(ox + 40, by - 1, oz);
 //$$         Debug.logHarness("PATHBENCH column cells magma=" + mc.world.getBlockState(mag.up(2)).getBlock() + " soul=" + mc.world.getBlockState(mag.add(40, 2, 0)).getBlock());
-//$$         PrintWriter csv = open("column_baritone");
-//$$         csv.println("rep,result,ticks,minAir,minHealth,onMagma,onMagmaUnsneaked,colTicks");
+//$$         PrintWriter csv = open(doorCourse ? "door_baritone" : "column_baritone");
+//$$         csv.println("rep,result,ticks,minAir,minHealth,onMagma,onMagmaUnsneaked,colTicks,doorTicks,doorsLeft,doorBlocksLeft");
 //$$         int ok = 0, n = 0;
 //$$         try {
 //$$             for (int r = 0; r < reps; r++) {
 //$$                 teleport(mc, start);
 //$$                 mc.execute(() -> { mc.player.setAir(120); mc.player.setHealth(20); });
+//$$                 if (doorCourse) {
+//$$                     java.util.concurrent.CompletableFuture<Void> inv = new java.util.concurrent.CompletableFuture<>();
+//$$                     mc.getServer().execute(() -> {
+//$$                         net.minecraft.server.world.ServerWorld w = mc.getServer().getOverworld();
+//$$                         for (int x = 0; x <= L; x++) for (int z = -1; z <= 1; z++) for (int y = by; y <= by + 3; y++) {
+//$$                             BlockPos q = new BlockPos(ox + x, y, oz + z);
+//$$                             if (!w.getBlockState(q).isOf(net.minecraft.block.Blocks.WATER)) w.setBlockState(q, net.minecraft.block.Blocks.WATER.getDefaultState(), 2);
+//$$                         }
+//$$                         w.getEntities(net.minecraft.entity.ItemEntity.class, new net.minecraft.util.math.Box(ox - 2, by - 2, oz - 3, ox + L + 2, by + 5, oz + 3), e -> true).forEach(net.minecraft.entity.Entity::remove);
+//$$                         net.minecraft.server.network.ServerPlayerEntity sp = mc.getServer().getPlayerManager().getPlayerList().get(0);
+//$$                         sp.inventory.clear();
+//$$                         sp.inventory.insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.OAK_DOOR, 1));
+//$$                         inv.complete(null);
+//$$                     });
+//$$                     inv.get();
+//$$                 }
 //$$                 Thread.sleep(200);
 //$$                 long t0 = worldTime(mc), last = -1;
 //$$                 startBaritone(mc, baritone, g);
-//$$                 int minAir = 300, onMagma = 0, bad = 0, col = 0; float minHp = 20;
+//$$                 int minAir = 300, onMagma = 0, bad = 0, col = 0, doorT = 0; float minHp = 20;
 //$$                 String result = "TIMEOUT";
 //$$                 while (true) {
 //$$                     Thread.sleep(25);
@@ -401,13 +421,17 @@ package adris.altoclef.benchmark;
 //$$                     minHp = Math.min(minHp, mc.player.getHealth());
 //$$                     if (mc.world.getBlockState(mc.player.getBlockPos().down()).getBlock() == net.minecraft.block.Blocks.MAGMA_BLOCK && mc.player.isOnGround()) { onMagma++; if (!mc.player.isSneaking()) bad++; }
 //$$                     if (mc.world.getBlockState(new BlockPos(mc.player.getCameraPosVec(1))).getBlock() == net.minecraft.block.Blocks.BUBBLE_COLUMN) col++;
+//$$                     if (mc.world.getBlockState(new BlockPos(mc.player.getCameraPosVec(1))).getBlock() instanceof net.minecraft.block.DoorBlock) doorT++;
 //$$                     if (dist3(mc, g) < 1.5) { result = "GOAL"; break; }
 //$$                     if (mc.player.isDead()) { result = "DIED"; break; }
 //$$                     if (el % 40 == 0) Debug.logHarness(String.format(Locale.ROOT, "COLUMN t=%d x=%.1f y=%.1f air=%d hp=%.0f", el, mc.player.getX() - ox, mc.player.getY(), mc.player.getAir(), mc.player.getHealth()));
 //$$                     if (el > 20 * 120) break;
 //$$                 }
 //$$                 mc.execute(() -> baritone.getPathingBehavior().cancelEverything());
-//$$                 csv.printf(Locale.ROOT, "%d,%s,%d,%d,%.0f,%d,%d,%d%n", r, result, worldTime(mc) - t0, minAir, minHp, onMagma, bad, col);
+//$$                 int doorsLeft = mc.player.inventory.count(net.minecraft.item.Items.OAK_DOOR), doorBlocks = 0;
+//$$                 for (int x = 0; x <= L; x++) for (int z = -1; z <= 1; z++) for (int y = by; y <= by + 3; y++)
+//$$                     if (mc.world.getBlockState(new BlockPos(ox + x, y, oz + z)).getBlock() instanceof net.minecraft.block.DoorBlock) doorBlocks++;
+//$$                 csv.printf(Locale.ROOT, "%d,%s,%d,%d,%.0f,%d,%d,%d,%d,%d,%d%n", r, result, worldTime(mc) - t0, minAir, minHp, onMagma, bad, col, doorT, doorsLeft, doorBlocks);
 //$$                 csv.flush();
 //$$                 n++;
 //$$                 if (result.equals("GOAL")) ok++;
