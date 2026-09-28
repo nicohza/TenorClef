@@ -27,5 +27,18 @@ TRAVEL goal=GetToBlock start=x,y,z target=x,y,z requested=<backend> executed=<ba
 
 ## Observed results (1.16.1, seed 12345, `goto 87 69 -115`, spawn ≈ 57–63,68–71,-110–-112)
 
-See the table in the commit that added this file / the session report; only runs actually executed
-are listed there. Nothing here is extrapolated.
+Only runs actually executed (2026-09-28). Nothing extrapolated.
+
+| backend | ticks | traveled | remaining | stallTicks | pathFoundTick | verified |
+|---|---|---|---|---|---|---|
+| baritone | 169 | 43.4 | 1.0 | 37 | 3 | true |
+| baritone | 164 | 46.6 | 1.0 | 35 | 3 | true |
+| baritone | 126 | 32.3 | 1.0 | 36 | 4 | true |
+| tungsten | 972 | 38.3 | 3.3 | 853 | 130 | true |
+| tungsten | 974 | 43.3 | 19.5 | 836 | 132 | true |
+| tungsten | 986 | 42.1 | 47.8 | 862 | 134 | true |
+
+Tungsten runs all took ≈49 s and each logged ~420 Tungsten `search start` lines from a standing position.
+**Open contradiction:** two tungsten runs report `verified=true` with `remaining` of 19.5 and 47.8 —
+the world check and the final position disagree. Not yet diagnosed; do not treat tungsten
+`verified` as trustworthy until it is.
