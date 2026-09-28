@@ -936,7 +936,7 @@ package adris.altoclef.benchmark;
 //$$         java.util.concurrent.atomic.AtomicInteger faults = new java.util.concurrent.atomic.AtomicInteger();
 //$$         BaritoneAPI.getSettings().movementFault.value = (c, e) -> { faults.incrementAndGet(); prevFault.accept(c, e); };
 //$$         PrintWriter csv = open("swim_" + mover);
-//$$         csv.println("mover,goal,course,dist,rep,result,ticks,endDist,firstMoveTicks,kinTicks,faults,minAir,minHealth");
+//$$         csv.println("mover,goal,course,dist,rep,result,ticks,endDist,firstMoveTicks,kinTicks,faults,minAir,minHealth,swimPct");
 //$$         int ok = 0, n = 0; long sumTicks = 0;
 //$$         try {
 //$$             for (int gi = 0; gi < names.length; gi++) {
@@ -949,6 +949,7 @@ package adris.altoclef.benchmark;
 //$$                     long t0 = worldTime(mc), k0 = KinematicController.drivenTicks;
 //$$                     int f0 = faults.get(), minAir = mc.player.getAir();
 //$$                     float minHp = mc.player.getHealth();
+//$$                     int wet = 0, swimming = 0;
 //$$                     startBaritone(mc, baritone, g);
 //$$                     double startD = dist3(mc, g), bestD = startD; long bestAt = 0, firstMove = -1;
 //$$                     String result = "TIMEOUT";
@@ -958,6 +959,7 @@ package adris.altoclef.benchmark;
 //$$                         double d = dist3(mc, g);
 //$$                         minAir = Math.min(minAir, mc.player.getAir());
 //$$                         minHp = Math.min(minHp, mc.player.getHealth());
+//$$                         if (mc.player.isTouchingWater()) { wet++; if (mc.player.isSwimming()) swimming++; }
 //$$                         if (firstMove < 0 && Math.abs(d - startD) > 0.5) firstMove = el;
 //$$                         if (d < 1.5) { result = "GOAL"; break; }
 //$$                         if (mc.player.isDead()) { result = "DIED"; break; }
@@ -968,8 +970,8 @@ package adris.altoclef.benchmark;
 //$$                     }
 //$$                     mc.execute(() -> baritone.getPathingBehavior().cancelEverything());
 //$$                     long ticks = worldTime(mc) - t0;
-//$$                     csv.printf(Locale.ROOT, "%s,%d,%s,%d,%d,%s,%d,%.2f,%d,%d,%d,%d,%.0f%n", mover, gi, names[gi], (int) Math.round(Math.sqrt(g.getSquaredDistance(start))),
-//$$                             r, result, ticks, dist3(mc, g), firstMove, KinematicController.drivenTicks - k0, faults.get() - f0, minAir, minHp);
+//$$                     csv.printf(Locale.ROOT, "%s,%d,%s,%d,%d,%s,%d,%.2f,%d,%d,%d,%d,%.0f,%d%n", mover, gi, names[gi], (int) Math.round(Math.sqrt(g.getSquaredDistance(start))),
+//$$                             r, result, ticks, dist3(mc, g), firstMove, KinematicController.drivenTicks - k0, faults.get() - f0, minAir, minHp, wet == 0 ? -1 : 100 * swimming / wet);
 //$$                     csv.flush();
 //$$                     n++;
 //$$                     if (result.equals("GOAL")) { ok++; sumTicks += ticks; }
