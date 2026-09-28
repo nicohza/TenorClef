@@ -41,4 +41,5 @@ Only runs actually executed (2026-09-28). Nothing extrapolated.
 Tungsten runs all took ≈49 s and each logged ~420 Tungsten `search start` lines from a standing position.
 **Open contradiction:** two tungsten runs report `verified=true` with `remaining` of 19.5 and 47.8 —
 the world check and the final position disagree. Not yet diagnosed; do not treat tungsten
-`verified` as trustworthy until it is.
+`verified` as trustworthy until it is. Tungsten is parked (not a target backend for now); Baritone and
+the kinematic mover are the supported travel paths.
