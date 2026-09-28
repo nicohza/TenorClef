@@ -76,7 +76,10 @@ The in-game `@pathbench` command measures the pathfinder and the movement layer:
 - `@pathbench travel [baritone|tungsten|kinematic] [reps]` runs end-to-end trials over a fixed
   set of goals and records reached/stalled and ticks per goal.
 
-Results are written as CSV to `run/pathbench/`. Latest 1.16.1 travel runs (16 goals; baritone and kinematic × 3 reps, physics × 1; kinematic from a later run):
+Results are written as CSV to `versions/<mc>/run/pathbench/` (not committed). The table below was
+recorded in earlier sessions; its Baritone and physics source CSVs were not retained, so treat it as
+historical, not reproducible from the repo. A later local kinematic run (2026-09-28 09:34, 38 trials)
+reached only 11/38 and was not investigated, so the kinematic row may be stale. Earlier 1.16.1 travel runs (16 goals; baritone and kinematic × 3 reps, physics × 1; kinematic from a later run):
 
 | Mover | Goals reached | Avg ticks (reached goals) |
 | --- | --- | --- |
