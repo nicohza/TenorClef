@@ -128,6 +128,16 @@ public class AltoClef implements ModInitializer {
         instance = this;
     }
 
+    private static boolean globalInitDone = false;
+
+    /** Publishes {@link TitleScreenEntryEvent} once per JVM (title screen or first in-world tick). */
+    public static void globalInitOnce() {
+        if (globalInitDone) return;
+        globalInitDone = true;
+        Debug.logHarness("Global Init");
+        EventBus.publish(new TitleScreenEntryEvent());
+    }
+
     public void onInitializeLoad() {
         // This code should be run after Minecraft loads everything else in.
         // This is the actual start point, controlled by a mixin.

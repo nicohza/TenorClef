@@ -136,6 +136,7 @@ public class MobDefenseChain extends SingleTaskChain {
 
     @Override
     public float getPriority() {
+        if (adris.altoclef.tasks.pvp.PvpTask.anyActive()) return 0;
         cachedLastPriority = getPriorityInner();
         cachedLastPriority = S222holdBudget(cachedLastPriority);
         prevHealth = AltoClef.getInstance().getPlayer().getHealth();

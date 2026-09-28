@@ -86,6 +86,8 @@ public final class ClientTickMixin {
         try {
             adris.altoclef.tasks.speedrun.testrun2.T2Deadman.clientTickAlive();
         } catch (Throwable ignored) {}
+        // --quickPlaySingleplayer skips the title screen, so init from the first in-world tick.
+        if (net.minecraft.client.MinecraftClient.getInstance().player != null) adris.altoclef.AltoClef.globalInitOnce();
         EventBus.publish(new ClientTickEvent());
     }
 }

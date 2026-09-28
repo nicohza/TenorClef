@@ -72,6 +72,19 @@ public class PvpTask extends Task {
         return new PvpTask(e -> e instanceof net.minecraft.entity.mob.HostileEntity, "hostiles");
     }
 
+    private int groundedJumps;
+    private static volatile long lastTickMs;
+
+    /** True while a PvpTask is ticking; MobDefense/Food chains stand down so it keeps control. */
+    /** Marks PvP as active for this tick (the bench calls it between rounds too). */
+    public static void touch() {
+        lastTickMs = System.currentTimeMillis();
+    }
+
+    public static boolean anyActive() {
+        return System.currentTimeMillis() - lastTickMs < 500;
+    }
+
     @Override
     protected void onStart() {
         target = null;
@@ -80,6 +93,7 @@ public class PvpTask extends Task {
 
     @Override
     protected Task onTick() {
+        lastTickMs = System.currentTimeMillis();
         AltoClef mod = AltoClef.getInstance();
         PlayerEntity me = mod.getPlayer();
         if (me == null) return null;
@@ -145,13 +159,13 @@ public class PvpTask extends Task {
         float cd = me.getAttackCooldownProgress(0.5f);
         boolean inReach = dist <= REACH;
         boolean immune = target.hurtTime > 1; // hit select: swinging now would be absorbed by hurt immunity
-        boolean falling = !me.isOnGround() && me.getVelocity().y < 0 && me.fallDistance > 0;
+        boolean falling = !me.isOnGround() && me.getVelocity().y < -0.05;
         boolean canJump = me.isOnGround() && !me.isTouchingWater() && !me.isInLava() && !me.isClimbing();
 
         steer(me, in, dist);
 
         // jump reset: jump the tick we get hit to eat less knockback
-        if (me.hurtTime == me.maxHurtTime - 1 && canJump) in.tryPress(Input.JUMP);
+        if (me.hurtTime == me.maxHurtTime - 1 && canJump) me.jump();
 
         if (axeTime && inReach && cd >= 0.9f) {
             hit(mod, me);
@@ -174,15 +188,18 @@ public class PvpTask extends Task {
             critArmed = true;
         }
         if (me.isOnGround()) critArmed = false;
+        else groundedJumps = 0;
 
-        if (canJump && dist <= REACH + 0.8 && cd >= 0.55f && !immune) {
-            // wind up a crit: by the time we fall the cooldown is full
-            in.tryPress(Input.JUMP);
+        if (canJump && dist <= REACH + 0.8 && cd >= 0.55f && !immune && groundedJumps < 4) {
+            // wind up a crit: by the time we fall the cooldown is full. Direct jump: the keybind
+            // gets overridden by Baritone's input handler while no path is running.
+            me.jump();
+            groundedJumps++;
             setDebugState("Crit jump");
             return null;
         }
 
-        if (me.isOnGround() && inReach && cd >= 0.95f && !immune && !canJump) {
+        if (me.isOnGround() && inReach && cd >= 0.95f && !immune && (!canJump || groundedJumps >= 4)) {
             // can't jump (water, ladder, low ceiling): plain sprint hit + W-tap
             boolean sprint = me.isSprinting();
             hit(mod, me);
@@ -190,6 +207,7 @@ public class PvpTask extends Task {
                 sprintHits++;
                 wtap = 2;
             }
+            groundedJumps = 0;
         }
         setDebugState(String.format("Melee d=%.1f cd=%.2f", dist, cd));
         return null;
@@ -329,9 +347,9 @@ public class PvpTask extends Task {
     }
 
     private LivingEntity pick(AltoClef mod, PlayerEntity me) {
-        List<LivingEntity> list = mod.getEntityTracker().getTrackedEntities(LivingEntity.class);
+        List<LivingEntity> list = me.getWorld().getEntitiesByClass(LivingEntity.class, me.getBoundingBox().expand(CHASE),
+                e -> e != me && e.isAlive() && !e.isRemoved() && filter.test(e));
         return list.stream()
-                .filter(e -> e != me && e.isAlive() && !e.isRemoved() && filter.test(e))
                 .filter(e -> me.distanceTo(e) <= CHASE)
                 .min(Comparator.comparingDouble(me::squaredDistanceTo))
                 .orElse(null);
