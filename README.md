@@ -93,8 +93,7 @@ the one miss was goal 15 rep 0, which stalled 44 blocks away). The physics row i
 | Physics search (experimental, `physicsTravel`) | 15/16 | 401 |
 
 The averages only cover goals each mover reached. The bench origin moves between runs, so
-compare runs taken together; Baritone's misses here include all three tries at one goal
-where it stops 3 blocks short. Single-rep runs are noisy; re-run with 3 reps before drawing conclusions.
+compare runs taken together. Single-rep runs are noisy; re-run with 3 reps before drawing conclusions.
 
 ## Project guides
 
