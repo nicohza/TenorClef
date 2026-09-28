@@ -80,12 +80,14 @@ Results are written as CSV to `versions/<mc>/run/pathbench/` (not committed). Th
 recorded in earlier sessions; its Baritone and physics source CSVs were not retained, so treat it as
 historical, not reproducible from the repo. A local kinematic run at 09:34 on 2026-09-28 reached only 11/38; every miss
 never started moving (`firstMoveTicks=-1`), which points to the mover not starting, not to pathing. It did not reproduce:
-a fresh run on the same day, 1 rep, reached 16/16 (avg 415 ticks, first move 8.5 ticks). Earlier 1.16.1 travel runs (16 goals; baritone and kinematic × 3 reps, physics × 1; kinematic from a later run):
+a fresh run on the same day, 1 rep, reached 16/16 (avg 415 ticks, first move 8.5 ticks).
+The kinematic row comes from a 3-rep run at 20:35 the same day (`pathbench_travel_kinematic_20260928_203533.csv`,
+first move after 8.9 ticks on average, 0 runs that never moved). Earlier 1.16.1 travel runs (16 goals; baritone and kinematic × 3 reps, physics × 1; kinematic from a later run):
 
 | Mover | Goals reached | Avg ticks (reached goals) |
 | --- | --- | --- |
 | Baritone | 48/48 | 418 |
-| Kinematic (experimental) | 46/48 | 456 |
+| Kinematic (experimental) | 46/48 | 383 |
 | Physics search (experimental, `physicsTravel`) | 15/16 | 401 |
 
 The averages only cover goals each mover reached. The bench origin moves between runs, so
