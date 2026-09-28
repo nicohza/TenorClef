@@ -104,3 +104,19 @@ In both, `activeAtEnd=true`: the mover still reported itself active, so these ar
 aborts. Goals 11 and 13 did not stall in the earlier 20:35 run, so neither is a repeat spot yet. The
 client log has no kinematic-mover output around either trial. Kinematic movement changes are frozen,
 so these are recorded, not fixed.
+
+### Kinematic after merging Ostinato `origin/1.16.1` (2026-09-28 23:18)
+
+Ostinato's `claude/blissful-keller-dyrn6h` merged 12 kinematic/jump/slime commits from `origin/1.16.1`.
+
+- **Full run `pathbench travel kinematic 3`:** 42/48 goals, average 389 ticks. The previous result was 46/48.
+  - Four trials stalled motionless, with the custom goal process still active and nothing logged:
+    - goal 4, reps 1 and 2, both at 46,73,-102;
+    - goal 6, rep 0;
+    - goal 7, rep 0.
+  - Two misses followed a player death: goal 11 rep 1 and goal 13 rep 1. In each, `Death position saved.` appeared about 20 s before the trial ended. The cause of death was not captured.
+- **Subset rerun of goals 4, 6, 7, 11 and 13 (3 reps each):** 12/15.
+  - Goals 4, 7, 11 and 13 reached the goal 3/3, so none of the stalls reproduced deterministically.
+  - Goal 6 ended `STOPPED` 2.9 blocks from the goal in all 3 reps: the process finished, `activeAtEnd=false`.
+- **Movement faults:** Ostinato's `movementFault` sink defaults to a no-op, so PathBench now logs each fault as a `PATHBENCH FAULT <code> <evidence>` line during travel runs. No faults fired in the subset rerun. The kinematic M01 watchdog (motionless for more than 20 ticks while the controller is driving) was therefore never triggered.
+- **Open:** in these runs the silent stalls come from a path where the kinematic controller is not driving, since M01 never fired. That points at Baritone's own executor, or at the controller returning -1 every tick, not at the M01 watchdog. The runs do not yet show which.

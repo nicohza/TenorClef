@@ -215,6 +215,9 @@ package adris.altoclef.benchmark;
 //$$         BaritoneAPI.getSettings().movementBackend.value = mover.equals("ostinato") ? "tungsten" : "baritone";
 //$$         BaritoneAPI.getSettings().kinematicTravel.value = mover.equals("kinematic");
 //$$         BaritoneAPI.getSettings().physicsTravel.value = mover.equals("physics");
+//$$         // surface movement faults (e.g. M01 kinematic hand-back); the default sink discards them
+//$$         java.util.function.BiConsumer<String, String> prevFault = BaritoneAPI.getSettings().movementFault.value;
+//$$         BaritoneAPI.getSettings().movementFault.value = (code, evidence) -> Debug.logHarness("PATHBENCH FAULT " + code + " " + evidence);
 //$$         PrintWriter csv = open("travel_" + mover);
 //$$         csv.println("mover,goal,dx,dz,dist,rep,result,ticks,endDist,firstMoveTicks");
 //$$         int ok = 0, n = 0, moved = 0; long sumTicks = 0, sumFirst = 0; double sumEnd = 0;
@@ -275,6 +278,7 @@ package adris.altoclef.benchmark;
 //$$             BaritoneAPI.getSettings().movementBackend.value = "baritone";
 //$$             BaritoneAPI.getSettings().kinematicTravel.value = false;
 //$$             BaritoneAPI.getSettings().physicsTravel.value = false;
+//$$             BaritoneAPI.getSettings().movementFault.value = prevFault;
 //$$             csv.close();
 //$$         }
 //$$         Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH SUMMARY mode=travel mover=%s goalRate=%d/%d avgGoalTicks=%.0f avgFirstMoveTicks=%.1f avgEndDist=%.1f",
