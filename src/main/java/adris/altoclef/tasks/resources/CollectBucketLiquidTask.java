@@ -223,16 +223,13 @@ public class CollectBucketLiquidTask extends ResourceTask {
                 // S330: s328o flipped Interact <-> GetClose every tick (isSafeToCancel toggles mid-path),
                 // restarting the search ~20x/s for 45s at 188,48,103. Keep a scoop attempt for 2s.
                 if (scoopTask != null && scoopPos != null && scoopPos.equals(blockPos) && !scoopTask.isFinished()
-                        && (toCollect != Blocks.LAVA || playerGround)
                         && System.currentTimeMillis() - scoopSinceMs < 2000) {
                     return scoopTask;
                 }
                 // Prefer scooping from shore/edge: grounded + reach beats swimming into the column.
                 if (LookHelper.getReach(blockPos).isPresent() &&
                         mod.getClientBaritone().getPathingBehavior().isSafeToCancel()
-                        && ShoreStandSelector.canScoopFromFooting(playerWet, playerGround)
-                        // Lava: scooping mid-jump at a pool edge leaves momentum that carries us into the pool.
-                        && (toCollect != Blocks.LAVA || playerGround)) {
+                        && ShoreStandSelector.canScoopFromFooting(playerWet, playerGround)) {
                     tries++;
                     scoopTask = new InteractWithBlockTask(new ItemTarget(Items.BUCKET, 1), blockPos, toCollect != Blocks.LAVA, new Vec3i(0, 1, 0));
                     scoopPos = blockPos;
