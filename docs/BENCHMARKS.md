@@ -213,3 +213,9 @@ Fix: a move now also counts as done once the player's position along the path is
 
 Goal 2 went from 323 to 131 ticks (Baritone 140), and goal 10 from 660 to 387 (Baritone 388). Other goals moved by less than 20 ticks, except 12 (350→310) and 15 (359→321). The M03 faults are gone. One M04 on goal 8 was present before too.
 Caveat: this is one run, and a hit is still counted on XZ distance only.
+
+### Sync fix with mobs (difficulty easy, pinned origin)
+
+The full run scored **47/48** at an average of 378 ticks, against 407 before the fix. The single miss was goal 15 rep 0 (STALLED), and it came after a death (`missesAfterDeath=1`), so the score is 47/47 with deaths excluded, the same as before the fix. No M03 fault appeared on the goal 2/10 traverse. One run of each, and mob variance is large.
+
+The run also logged one M03 on a diagonal at 109,71,-172 (goals 12–15 heading), together with 3× M01 at 110,71,-172. The peaceful run did not log these, so it may be mob-related. This is not investigated.
