@@ -263,6 +263,8 @@ package adris.altoclef.benchmark;
 //$$                     // -Dtenorclef.pathbench.trace=x,z logs every poll while the player is within 3 blocks of (x, z)
 //$$                     String tr = System.getProperty("tenorclef.pathbench.trace");
 //$$                     double[] trace = tr == null ? null : java.util.Arrays.stream(tr.split(",")).mapToDouble(Double::parseDouble).toArray();
+//$$                     // -Dtenorclef.pathbench.route=N logs a breadcrumb every N ticks so routes can be compared across runs
+//$$                     long routeEvery = Long.getLong("tenorclef.pathbench.route", 0L), lastRoute = -1;
 //$$                     int deaths = 0; boolean wasDead = false; // mob kills are bench noise, not a mover fault; count them so misses can be attributed
 //$$                     while (started) {
 //$$                         Thread.sleep(25);
@@ -277,6 +279,10 @@ package adris.altoclef.benchmark;
 //$$                             net.minecraft.util.math.Vec3d v = mc.player.getVelocity();
 //$$                             Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH TRACE t=%d pos=%.2f,%.2f,%.2f vel=%.2f,%.2f,%.2f ground=%s hcoll=%s yaw=%.0f %s",
 //$$                                     el, mc.player.getX(), mc.player.getY(), mc.player.getZ(), v.x, v.y, v.z, mc.player.isOnGround(), mc.player.horizontalCollision, mc.player.yaw, execState(baritone)));
+//$$                         }
+//$$                         if (routeEvery > 0 && mc.player != null && el / routeEvery != lastRoute) {
+//$$                             lastRoute = el / routeEvery;
+//$$                             Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH ROUTE t=%d pos=%.1f,%.1f,%.1f d=%.1f %s", el, mc.player.getX(), mc.player.getY(), mc.player.getZ(), d, execState(baritone)));
 //$$                         }
 //$$                         if (d < bestD - 1.0) { bestD = d; bestAt = el; kinAtBest = kinTicks(); }
 //$$                         if (stallTicks > 0 && el - bestAt > stallTicks) { result = "STALLED"; break; }

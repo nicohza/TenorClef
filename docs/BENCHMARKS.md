@@ -229,9 +229,19 @@ Follow-up on the M01/M03 seen at 109–110,71,-172 in the mobs-on run.
 | Peaceful | 12/12 | 342 | none; route never comes within 3 blocks of 110,-172 |
 | Mobs on | 12/12 | 498 | none |
 
-- With mobs on, goals 14 and 15 take a longer route (584–661 ticks vs 306–358 in peaceful) that goes through 110,-172.
+- With mobs on, goals 14 and 15 took 584–661 ticks (306–358 in peaceful). 110,-172 is on the way to goal 15 (133,-178). *Correction below: nothing shows goal 14 going through it.*
 - On that route the trace shows:
   - a 3–4 tick Baritone takeover on the diagonal 109,71,-172;
   - about 10 ticks of horizontal collision at 110.7,72,-173.5 while stepping down to the traverse at y=70.
 - The mover recovers on its own both times.
 - The earlier M01/M03 did not reproduce, so it is not attributed to the mover or to mobs. It is still unexplained.
+
+### Goal 14 alone (route breadcrumbs, `-Dtenorclef.pathbench.route=20`)
+
+| Run | Ticks | Route |
+|---|---|---|
+| Peaceful | 356 | 65,-110 → 73,-121 → 71,-137 → 68,-160 → 72,-195 → goal |
+| Mobs on | 345 | the same corridor, finishing along x=65 |
+
+- Run by itself, goal 14 takes the direct route in both modes and costs no extra time with mobs on.
+- So the 584–661 ticks for goals 14 and 15 in the 12–15 mobs run are not a route choice caused by mobs. They depend on state left by the earlier trials (for example world time or mobs that have gathered). That part is not yet measured.
