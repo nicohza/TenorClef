@@ -108,7 +108,13 @@ package adris.altoclef.benchmark;
 //$$
 //$$     private static int surfaceY(MinecraftClient mc, int x, int z) {
 //$$         int y = mc.world.getTopY(Heightmap.Type.MOTION_BLOCKING, x, z);
-//$$         if (y > 0) return y;
+//$$         if (y > 0) {
+//$$             // MOTION_BLOCKING counts leaves; drop through canopies so goals sit on the ground.
+//$$             BlockPos.Mutable q = new BlockPos.Mutable(x, y - 1, z);
+//$$             while (q.getY() > 0 && (mc.world.getBlockState(q).getBlock() instanceof net.minecraft.block.LeavesBlock
+//$$                     || mc.world.getBlockState(q).getCollisionShape(mc.world, q).isEmpty())) q.move(0, -1, 0);
+//$$             return q.getY() + 1;
+//$$         }
 //$$         BlockPos.Mutable p = new BlockPos.Mutable(x, 255, z);
 //$$         while (p.getY() > 0 && mc.world.getBlockState(p).getCollisionShape(mc.world, p).isEmpty()) p.move(0, -1, 0);
 //$$         return p.getY() + 1;
