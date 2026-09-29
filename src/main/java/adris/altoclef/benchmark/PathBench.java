@@ -537,10 +537,12 @@ package adris.altoclef.benchmark;
 //$$                            net.minecraft.block.BlockState st = y < y0 ? net.minecraft.block.Blocks.STONE.getDefaultState() : net.minecraft.block.Blocks.AIR.getDefaultState();
 //$$                            if (y == y0 - 1 && x >= 8 && x <= 12 && Math.abs(z) <= 2) st = net.minecraft.block.Blocks.LAVA.getDefaultState();
 //$$                            if (y == y0 - 1 && x >= -9 && x <= -7 && Math.abs(z) <= 1) st = net.minecraft.block.Blocks.WATER.getDefaultState();
+//$$                            // Bedrock rim: an open sky-pad edge is a 50-block drop real terrain never has (trace rep0 died walking off it).
+//$$                            if ((x == -16 || x == 26 || Math.abs(z) == 14) && y >= y0 && y <= y0 + 3) st = net.minecraft.block.Blocks.BEDROCK.getDefaultState();
 //$$                            w.setBlockState(new BlockPos(ox + x, y, oz + z), st, 2);
 //$$                        }
 //$$                    }
-//$$                    w.getEntities(net.minecraft.entity.ItemEntity.class, new net.minecraft.util.math.Box(ox - 17, y0 - 4, oz - 15, ox + 27, y0 + 11, oz + 15), e -> true).forEach(net.minecraft.entity.Entity::remove);
+//$$                    w.getEntities(net.minecraft.entity.ItemEntity.class, new net.minecraft.util.math.Box(ox - 64, 0, oz - 64, ox + 64, y0 + 11, oz + 64), e -> true).forEach(net.minecraft.entity.Entity::remove);
 //$$                    ServerPlayerEntity sp = mc.getServer().getPlayerManager().getPlayerList().get(0);
 //$$                    sp.inventory.clear();
 //$$                    sp.inventory.insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_PICKAXE));
