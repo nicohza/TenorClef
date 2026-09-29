@@ -530,6 +530,7 @@ package adris.altoclef.benchmark;
 //$$        try {
 //$$            for (int r = 0; r < reps; r++) {
 //$$                java.util.concurrent.CompletableFuture<Void> built = new java.util.concurrent.CompletableFuture<>();
+//$$                final int r0 = r;
 //$$                mc.getServer().execute(() -> {
 //$$                    net.minecraft.server.world.ServerWorld w = mc.getServer().getOverworld();
 //$$                    for (int x = -16; x <= 26; x++) for (int z = -14; z <= 14; z++) {
@@ -542,6 +543,12 @@ package adris.altoclef.benchmark;
 //$$                            w.setBlockState(new BlockPos(ox + x, y, oz + z), st, 2);
 //$$                        }
 //$$                    }
+//$$                    // Seed 12345 has natural lava below the pad (y=52, y=71) that the task preferred over the pad pool.
+//$$                    // Replace all lava within 64 blocks below the pad with stone so the pad pool is the only lake.
+//$$                    if (r0 == 0) for (int x = -64; x <= 64; x++) for (int z = -64; z <= 64; z++) for (int y = 1; y < y0 - 3; y++) {
+//$$                        BlockPos lp = new BlockPos(ox + x, y, oz + z);
+//$$                        if (w.getBlockState(lp).getBlock() == net.minecraft.block.Blocks.LAVA) w.setBlockState(lp, net.minecraft.block.Blocks.STONE.getDefaultState(), 2);
+//$$                    }
 //$$                    w.getEntities(net.minecraft.entity.ItemEntity.class, new net.minecraft.util.math.Box(ox - 64, 0, oz - 64, ox + 64, y0 + 11, oz + 64), e -> true).forEach(net.minecraft.entity.Entity::remove);
 //$$                    ServerPlayerEntity sp = mc.getServer().getPlayerManager().getPlayerList().get(0);
 //$$                    sp.inventory.clear();
@@ -553,6 +560,8 @@ package adris.altoclef.benchmark;
 //$$                });
 //$$                built.get();
 //$$                teleport(mc, new BlockPos(ox, y0, oz));
+//$$                // Fresh scanner per rep: its blacklist and cached positions otherwise carry over from the previous rep.
+//$$                mc.execute(() -> adris.altoclef.AltoClef.getInstance().getBlockScanner().reset());
 //$$                // Wait until the scanner knows the pad lava; 1.5s was not enough and the task picked a natural lake below.
 //$$                final BlockPos padLava = new BlockPos(ox + 10, y0 - 1, oz);
 //$$                boolean seen = false;
