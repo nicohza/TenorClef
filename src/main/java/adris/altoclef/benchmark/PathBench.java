@@ -574,6 +574,7 @@ package adris.altoclef.benchmark;
 //$$                mc.execute(() -> adris.altoclef.AltoClef.getInstance().runUserTask(task));
 //$$                long t0 = worldTime(mc), last = -1;
 //$$                String result = "TIMEOUT", state = "", lastLogged = "", lastChain = "", lastHazard = "";
+//$$                int lavaBuckets = 0; long traceUntil = -1;
 //$$                while (true) {
 //$$                    Thread.sleep(25);
 //$$                    long el = worldTime(mc) - t0;
@@ -585,6 +586,23 @@ package adris.altoclef.benchmark;
 //$$                    StringBuilder chain = new StringBuilder();
 //$$                    for (adris.altoclef.tasksystem.Task c = task.getSub(); c != null && chain.length() < 400; c = c.getSub()) chain.append(c.getClass().getSimpleName()).append('>');
 //$$                    if (!chain.toString().equals(lastChain)) { Debug.logHarness("PORTAL t=" + el + " chain=" + chain); lastChain = chain.toString(); }
+//$$                    // Per-tick trace from each lava pickup until lava entry (or 60 ticks): which movement puts us in the pool?
+//$$                    int lb = mc.player.inventory.count(net.minecraft.item.Items.LAVA_BUCKET);
+//$$                    if (lb > lavaBuckets) traceUntil = el + 60;
+//$$                    lavaBuckets = lb;
+//$$                    if (el <= traceUntil) {
+//$$                        String mv = "none";
+//$$                        try {
+//$$                            baritone.api.pathing.calc.IPathExecutor ex = baritone.api.BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().getCurrent();
+//$$                            if (ex != null && ex.getPosition() < ex.getPath().movements().size()) {
+//$$                                baritone.api.pathing.movement.IMovement m = ex.getPath().movements().get(ex.getPosition());
+//$$                                mv = m.getClass().getSimpleName() + " " + m.getSrc().toShortString() + "->" + m.getDest().toShortString();
+//$$                            }
+//$$                        } catch (Throwable ignored) { mv = "err"; }
+//$$                        net.minecraft.util.math.Vec3d v = mc.player.getVelocity();
+//$$                        Debug.logHarness(String.format(Locale.ROOT, "TICK t=%d xyz=%.2f,%.2f,%.2f vel=%.2f,%.2f,%.2f ground=%b fwd=%b sneak=%b lava=%b mv=%s chain=%s", el, mc.player.getX(), mc.player.getY(), mc.player.getZ(), v.x, v.y, v.z, mc.player.isOnGround(), mc.options.keyForward.isPressed(), mc.options.keySneak.isPressed(), mc.player.isInLava(), mv, chain));
+//$$                        if (mc.player.isInLava()) traceUntil = -1;
+//$$                    }
 //$$                    if (mc.player.isOnFire() || mc.player.isInLava() || mc.player.getHealth() < 20) {
 //$$                        String hz = String.format(Locale.ROOT, "hp=%.0f fire=%b lava=%b pos=%s", mc.player.getHealth(), mc.player.isOnFire(), mc.player.isInLava(), mc.player.getBlockPos().toShortString());
 //$$                        if (!hz.equals(lastHazard)) { Debug.logHarness("PORTAL t=" + el + " " + hz + " chain=" + chain); lastHazard = hz; }
