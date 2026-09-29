@@ -269,8 +269,8 @@ package adris.altoclef.benchmark;
 //$$                     csv.flush();
 //$$                     // Per-trial diagnostics so a stall can be located after the fact (CSV lacks position/progress history).
 //$$                     BlockPos endPos = mc.player == null ? BlockPos.ORIGIN : mc.player.getBlockPos();
-//$$                     Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH TRIAL mover=%s goal=%d rep=%d result=%s ticks=%d end=%s endDist=%.1f bestDist=%.1f bestAt=%d lastMoveAt=%d firstMove=%d activeAtEnd=%s pathAtEnd=%s calcAtEnd=%s kinDriven=%d kinSinceBest=%d",
-//$$                             mover, gi, r, result, ticks, endPos.toShortString(), end, bestD, bestAt, lastMoveAt, firstMove, activeAtEnd, pathAtEnd, calcAtEnd, kinNow - kin0, kinNow - kinAtBest));
+//$$                     Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH TRIAL mover=%s goal=%d rep=%d result=%s ticks=%d target=%s end=%s endDist=%.1f bestDist=%.1f bestAt=%d lastMoveAt=%d firstMove=%d activeAtEnd=%s pathAtEnd=%s calcAtEnd=%s kinDriven=%d kinSinceBest=%d",
+//$$                             mover, gi, r, result, ticks, g.toShortString() + "(" + (mc.world == null ? "?" : mc.world.getBlockState(g.down()).getBlock().getTranslationKey()) + ")", endPos.toShortString(), end, bestD, bestAt, lastMoveAt, firstMove, activeAtEnd, pathAtEnd, calcAtEnd, kinNow - kin0, kinNow - kinAtBest));
 //$$                     n++;
 //$$                     if (result.equals("GOAL")) { ok++; sumTicks += ticks; }
 //$$                     if (firstMove >= 0) { moved++; sumFirst += firstMove; }

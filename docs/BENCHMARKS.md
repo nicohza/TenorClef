@@ -143,3 +143,7 @@ Full `pathbench travel kinematic 3`: 46/48, average 459 ticks.
   No M01 (kinematic stuck) fired.
 
 Kinematic across two full runs after the merge: 42/48, 46/48. The last run before the merge was 46/48. The silent motionless stalls from the 23:18 run did not recur, so their driver is still unattributed.
+
+### Goal 12 rerun with target logging
+
+A goal-12-only rerun scored 3/3 GOAL, averaging 445 ticks. The TRIAL `target=` field shows the goal is `-36,75,-121` on `grass_block`, not on a leaf canopy, so the canopy hypothesis is refuted. The earlier STOPPED misses followed a 7.2-block partial path and then M04 (MovementDiagonal UNREACHABLE). That makes them intermittent Baritone partial-path endings, not a bad goal.
