@@ -81,6 +81,18 @@ public class EscapeFromLavaTask extends CustomBaritoneGoalTask {
         }
 
 
+        // Water bucket reflex: pour straight down to replace the lava cell we stand in with water.
+        // Jumping out of a 1-deep pit from inside lava often fails (portal bench burn deaths).
+        if (mod.getPlayer().isInLava() && mod.getItemStorage().hasItem(Items.WATER_BUCKET)
+                && !mod.getWorld().getDimension().ultrawarm()) {
+            setDebugState("pouring water on lava");
+            LookHelper.lookAt(new Rotation(LookHelper.getLookRotation().getYaw(), 90));
+            if (mod.getSlotHandler().forceEquipItem(Items.WATER_BUCKET)) {
+                mod.getInputControls().tryPress(Input.CLICK_RIGHT);
+            }
+            return null;
+        }
+
         // Sprint through lava + jump, it's faster
         if (mod.getPlayer().isInLava() || mod.getWorld().getBlockState(mod.getPlayer().getBlockPos().down()).getBlock() == Blocks.LAVA) {
 
