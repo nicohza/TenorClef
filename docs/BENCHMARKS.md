@@ -120,3 +120,26 @@ Ostinato's `claude/blissful-keller-dyrn6h` merged 12 kinematic/jump/slime commit
   - Goal 6 ended `STOPPED` 2.9 blocks from the goal in all 3 reps: the process finished, `activeAtEnd=false`.
 - **Movement faults:** Ostinato's `movementFault` sink defaults to a no-op, so PathBench now logs each fault as a `PATHBENCH FAULT <code> <evidence>` line during travel runs. No faults fired in the subset rerun. The kinematic M01 watchdog (motionless for more than 20 ticks while the controller is driving) was therefore never triggered.
 - **Open:** in these runs the silent stalls come from a path where the kinematic controller is not driving, since M01 never fired. That points at Baritone's own executor, or at the controller returning -1 every tick, not at the M01 watchdog. The runs do not yet show which.
+
+### Kinematic re-run with driver attribution (2026-09-29)
+
+`PATHBENCH TRIAL` lines now also carry these fields:
+
+- `pathAtEnd`: whether Baritone held a path when the trial ended.
+- `calcAtEnd`: whether a path calculation was still in progress.
+- `kinDriven`: ticks the kinematic controller drove during the trial. It is read reflectively from `KinematicController.drivenTicks`.
+- `kinSinceBest`: driven ticks after the last progress gain of more than 1 block. 0 means Baritone, not the kinematic controller, had the wheel during a stall.
+
+Full `pathbench travel kinematic 3`: 46/48, average 459 ticks.
+
+- No trial was `STALLED`.
+- Both misses were goal 12: reps 0 and 2 ended `STOPPED` at -34,75,-122, 2.7–2.8 blocks out. The goal process finished (`activeAtEnd=false`, no path) and `kinSinceBest=0`. The bench needs d < 2.0.
+- Two mob deaths were logged ("slain by Spider", "slain by Zombie"), and neither cost a goal. Earlier deaths were creepers. Mobs are bench noise, not movement faults.
+- Faults are now visible:
+  - M04 (movement UNREACHABLE, mostly `MovementDiagonal`)
+  - M03 (a traverse took 104 ticks)
+  - M02 (too far from path)
+
+  No M01 (kinematic stuck) fired.
+
+Kinematic across three full runs after the merge: 42/48, 46/48, 46/48. The silent motionless stalls from the 23:18 run did not recur, so their driver is still unattributed.
