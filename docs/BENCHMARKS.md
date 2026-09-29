@@ -189,3 +189,13 @@ Hits are still scored on XZ distance only (see the caveat above).
 Travel trials now run on peaceful by default (`-Dtenorclef.pathbench.peaceful=false` keeps mobs), and the world's difficulty (easy) is restored after the run. The origin is pinned as above.
 
 The full run scored **48/48** at an average of 264 ticks (407 with mobs), with `missesAfterDeath=0` and no STALLED or STOPPED trials. The speed-up probably comes from no longer fighting or dodging mobs; that is inferred, not measured. With goals on the ground, a pinned origin and no mobs, this is the reference number for kinematic travel.
+
+## Baritone vs kinematic (peaceful, pinned origin 65,72,-110, 3 reps x 16 goals)
+
+| mover | goalRate | avgGoalTicks | avgFirstMoveTicks | deaths |
+|---|---|---|---|---|
+| kinematic | 48/48 | 264 | — | 0 |
+| baritone | 48/48 | 293 | 8.9 | 0 |
+
+Kinematic was faster on 14 of the 16 goals, by about 20–35% on most. It was slower on goal 2 (323 vs 140) and goal 10 (660 vs 388), which are worth investigating. Overall it was about 10% faster.
+Caveat: a goal counts as reached on XZ distance only (< 2.0); this is one run per mover.
