@@ -260,6 +260,9 @@ package adris.altoclef.benchmark;
 //$$                     double startD = dist(mc, g);
 //$$                     String result = started ? "TIMEOUT" : "NOSTART";
 //$$                     double bestD = startD; long bestAt = 0; long lastReq = 0; double lastD = startD; long lastMoveAt = 0;
+//$$                     // -Dtenorclef.pathbench.trace=x,z logs every poll while the player is within 3 blocks of (x, z)
+//$$                     String tr = System.getProperty("tenorclef.pathbench.trace");
+//$$                     double[] trace = tr == null ? null : java.util.Arrays.stream(tr.split(",")).mapToDouble(Double::parseDouble).toArray();
 //$$                     int deaths = 0; boolean wasDead = false; // mob kills are bench noise, not a mover fault; count them so misses can be attributed
 //$$                     while (started) {
 //$$                         Thread.sleep(25);
@@ -270,6 +273,11 @@ package adris.altoclef.benchmark;
 //$$                         double d = dist(mc, g);
 //$$                         if (firstMove < 0 && Math.abs(d - startD) > 0.5) firstMove = el;
 //$$                         if (d < 2.0) { result = "GOAL"; break; }
+//$$                         if (trace != null && mc.player != null && Math.abs(mc.player.getX() - trace[0]) < 3 && Math.abs(mc.player.getZ() - trace[1]) < 3) {
+//$$                             net.minecraft.util.math.Vec3d v = mc.player.getVelocity();
+//$$                             Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH TRACE t=%d pos=%.2f,%.2f,%.2f vel=%.2f,%.2f,%.2f ground=%s hcoll=%s yaw=%.0f %s",
+//$$                                     el, mc.player.getX(), mc.player.getY(), mc.player.getZ(), v.x, v.y, v.z, mc.player.isOnGround(), mc.player.horizontalCollision, mc.player.yaw, execState(baritone)));
+//$$                         }
 //$$                         if (d < bestD - 1.0) { bestD = d; bestAt = el; kinAtBest = kinTicks(); }
 //$$                         if (stallTicks > 0 && el - bestAt > stallTicks) { result = "STALLED"; break; }
 //$$                         if (Math.abs(d - lastD) > 0.3) { lastD = d; lastMoveAt = el; }
@@ -1035,6 +1043,20 @@ package adris.altoclef.benchmark;
 //$$     }
 //$$
 //$$     /** Ticks Ostinato's kinematic controller has driven the player; -1 if the class is absent. Read reflectively: it is not in the API jar. */
+//$$     private static String execState(IBaritone baritone) {
+//$$         Object ex = baritone.getPathingBehavior().getCurrent();
+//$$         if (ex == null) return "noexec";
+//$$         try {
+//$$             Object drv = ex.getClass().getMethod("getLastDriver").invoke(ex);
+//$$             java.lang.reflect.Field f = ex.getClass().getDeclaredField("ticksOnCurrent"); f.setAccessible(true);
+//$$             int pos = baritone.getPathingBehavior().getCurrent().getPosition();
+//$$             Object mv = baritone.getPathingBehavior().getCurrent().getPath().movements().get(Math.min(pos, baritone.getPathingBehavior().getCurrent().getPath().movements().size() - 1));
+//$$             return "drv=" + drv + " pos=" + pos + " toc=" + f.getInt(ex) + " mv=" + mv.getClass().getSimpleName() + " " + ((baritone.api.pathing.movement.IMovement) mv).getSrc() + "->" + ((baritone.api.pathing.movement.IMovement) mv).getDest();
+//$$         } catch (ReflectiveOperationException | RuntimeException e) {
+//$$             return "exec?" + e;
+//$$         }
+//$$     }
+//$$
 //$$     private static long kinTicks() {
 //$$         try {
 //$$             return Class.forName("baritone.pathing.kinematic.KinematicController").getField("drivenTicks").getLong(null);

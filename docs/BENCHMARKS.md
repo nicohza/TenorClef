@@ -199,3 +199,17 @@ The full run scored **48/48** at an average of 264 ticks (407 with mobs), with `
 
 Kinematic was faster on 14 of the 16 goals, by about 20–35% on most. It was slower on goal 2 (323 vs 140) and goal 10 (660 vs 388), which are worth investigating. Overall it was about 10% faster.
 Caveat: a goal counts as reached on XZ distance only (< 2.0); this is one run per mover.
+
+## Kinematic sync fix (Ostinato `KinematicController.syncPosition`)
+
+A per-tick trace (`-Dtenorclef.pathbench.trace=65,-102.5`) showed what slowed kinematic down on goals 2 and 10. The kinematic mover cut into column x=66 and passed the end of the traverse 65,74,-103→-102 at z≈-100.3, but the step counter stayed on that traverse. Baritone kept walking back toward the step's end while the kinematic mover pushed forward, until the traverse timed out (M03, 104 ticks).
+Fix: a move now also counts as done once the player's position along the path is 0.5 past its destination, subject to the same floor-height check.
+
+| run (peaceful, pinned origin, 3 reps x 16 goals) | goalRate | avgGoalTicks |
+|---|---|---|
+| kinematic before | 48/48 | 264 |
+| kinematic after | 48/48 | 232 |
+| baritone | 48/48 | 293 |
+
+Goal 2 went from 323 to 131 ticks (Baritone 140), and goal 10 from 660 to 387 (Baritone 388). Other goals moved by less than 20 ticks, except 12 (350→310) and 15 (359→321). The M03 faults are gone. One M04 on goal 8 was present before too.
+Caveat: this is one run, and a hit is still counted on XZ distance only.
