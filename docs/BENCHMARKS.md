@@ -219,3 +219,19 @@ Caveat: this is one run, and a hit is still counted on XZ distance only.
 The full run scored **47/48** at an average of 378 ticks, against 407 before the fix. The single miss was goal 15 rep 0 (STALLED), and it came after a death (`missesAfterDeath=1`), so the score is 47/47 with deaths excluded, the same as before the fix. No M03 fault appeared on the goal 2/10 traverse. One run of each, and mob variance is large.
 
 The run also logged one M03 on a diagonal at 109,71,-172 (goals 12–15 heading), together with 3× M01 at 110,71,-172. The peaceful run did not log these, so it may be mob-related. This is not investigated.
+
+## Trace at 110,71,-172 (goals 12–15, kinematic, seed 12345)
+
+Follow-up on the M01/M03 seen at 109–110,71,-172 in the mobs-on run.
+
+| Run | Goals | Avg ticks | M01/M03 at spot |
+|---|---|---|---|
+| Peaceful | 12/12 | 342 | none; route never comes within 3 blocks of 110,-172 |
+| Mobs on | 12/12 | 498 | none |
+
+- With mobs on, goals 14 and 15 take a longer route (584–661 ticks vs 306–358 in peaceful) that goes through 110,-172.
+- On that route the trace shows:
+  - a 3–4 tick Baritone takeover on the diagonal 109,71,-172;
+  - about 10 ticks of horizontal collision at 110.7,72,-173.5 while stepping down to the traverse at y=70.
+- The mover recovers on its own both times.
+- The earlier M01/M03 did not reproduce, so it is not attributed to the mover or to mobs. It is still unexplained.
