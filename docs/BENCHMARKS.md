@@ -268,3 +268,10 @@ Fix (bench only): `teleport()` now sets food to 20 at the start of every trial, 
 
 - 12/12 goals reached, with no M01/M03.
 - The earlier 47/48 mobs-on result (378 avg) was measured with hunger carried over, so it overstates the cost of mobs.
+
+## Full mobs-on rerun with hunger reset
+
+`pathbench travel kinematic 3`, mobs on, every trial fed to 20 (log `obj-mobsfed-1790669557.log`):
+- **48/48 GOAL, 233 ticks on average.** First move comes at 10.0 ticks on average, and the average end distance is 1.7.
+- 0 deaths and no M01/M03/M04 lines.
+- The peaceful reference is 48/48 at 232. This result replaces the old mobs-on 47/48 at 378. That gap was hunger carrying over between trials, not mobs.
