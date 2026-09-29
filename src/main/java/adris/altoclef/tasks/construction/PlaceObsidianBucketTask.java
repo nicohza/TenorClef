@@ -62,10 +62,6 @@ public class PlaceObsidianBucketTask extends Task {
         // Avoid placing blocks within the specified conditions
         botBehaviour.avoidBlockPlacing(this::isBlockInCastWaterOrLava);
 
-        // Burn-death fix: the cast sits beside the lake, and Baritone happily walks into drained
-        // source holes that lava refills a moment later. Never path through lava-touching cells.
-        botBehaviour.avoidWalkingThrough(PlaceObsidianBucketTask::touchesLava);
-
         // Reset the progress checker
         _progressChecker.reset();
 
@@ -75,15 +71,6 @@ public class PlaceObsidianBucketTask extends Task {
         Debug.logInternal("Avoiding block breaking");
         Debug.logInternal("Avoiding block placing");
         Debug.logInternal("Progress checker reset");
-    }
-
-    private static boolean touchesLava(BlockPos p) {
-        net.minecraft.world.World w = AltoClef.getInstance().getWorld();
-        if (w.getBlockState(p).getBlock() == Blocks.LAVA) return true;
-        for (Direction d : Direction.Type.HORIZONTAL) {
-            if (w.getBlockState(p.offset(d)).getBlock() == Blocks.LAVA) return true;
-        }
-        return false;
     }
 
     private boolean isBlockInCastFrame(BlockPos block) {
