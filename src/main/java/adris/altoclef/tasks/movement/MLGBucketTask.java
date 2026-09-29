@@ -164,6 +164,7 @@ public class MLGBucketTask extends Task {
             return placeMLGBucketTask(mod, willLandOn.get());
         } else {
             setDebugState("Wait for it...");
+            Debug.logHarness("MLG wait y=" + String.format("%.2f", mod.getPlayer().getY()) + " noLandingBlock");
             // We must trigger jump as soon as we enter a "climbable" object
             mod.getInputControls().release(Input.JUMP);
             return null;
@@ -191,6 +192,9 @@ public class MLGBucketTask extends Task {
 
         IPlayerContext ctx = mod.getClientBaritone().getPlayerContext();
         Optional<Rotation> reachable = RotationUtils.reachableCenter(ctx.player(), toPlaceOn, ctx.playerController().getBlockReachDistance(), false);
+        Debug.logHarness("MLG y=" + String.format("%.2f", mod.getPlayer().getY()) + " vy=" + String.format("%.2f", mod.getPlayer().getVelocity().y)
+                + " target=" + toPlaceOn.toShortString() + " block=" + mod.getWorld().getBlockState(toPlaceOn).getBlock()
+                + " reachable=" + reachable.isPresent() + " water=" + mod.getItemStorage().hasItem(Items.WATER_BUCKET));
         if (reachable.isPresent()) {
             setDebugState("Performing MLG");
             LookHelper.lookAt(reachable.get());
