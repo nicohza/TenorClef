@@ -226,7 +226,7 @@ package adris.altoclef.benchmark;
 //$$         BaritoneAPI.getSettings().movementFault.value = (code, evidence) -> Debug.logHarness("PATHBENCH FAULT " + code + " " + evidence);
 //$$         PrintWriter csv = open("travel_" + mover);
 //$$         csv.println("mover,goal,dx,dz,dist,rep,result,ticks,endDist,firstMoveTicks");
-//$$         int ok = 0, n = 0, moved = 0; long sumTicks = 0, sumFirst = 0; double sumEnd = 0;
+//$$         int ok = 0, n = 0, moved = 0, missDied = 0; long sumTicks = 0, sumFirst = 0; double sumEnd = 0;
 //$$         try {
 //$$             for (int gi = 0; gi < goals.size(); gi++) {
 //$$                 if (!only.isEmpty() && !only.contains(gi)) continue;
@@ -240,9 +240,13 @@ package adris.altoclef.benchmark;
 //$$                     double startD = dist(mc, g);
 //$$                     String result = started ? "TIMEOUT" : "NOSTART";
 //$$                     double bestD = startD; long bestAt = 0; long lastReq = 0; double lastD = startD; long lastMoveAt = 0;
+//$$                     int deaths = 0; boolean wasDead = false; // mob kills are bench noise, not a mover fault; count them so misses can be attributed
 //$$                     while (started) {
 //$$                         Thread.sleep(25);
 //$$                         long el = worldTime(mc) - t0;
+//$$                         boolean dead = mc.player == null || mc.player.isDead();
+//$$                         if (dead && !wasDead) deaths++;
+//$$                         wasDead = dead;
 //$$                         double d = dist(mc, g);
 //$$                         if (firstMove < 0 && Math.abs(d - startD) > 0.5) firstMove = el;
 //$$                         if (d < 2.0) { result = "GOAL"; break; }
@@ -275,10 +279,10 @@ package adris.altoclef.benchmark;
 //$$                     csv.flush();
 //$$                     // Per-trial diagnostics so a stall can be located after the fact (CSV lacks position/progress history).
 //$$                     BlockPos endPos = mc.player == null ? BlockPos.ORIGIN : mc.player.getBlockPos();
-//$$                     Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH TRIAL mover=%s goal=%d rep=%d result=%s ticks=%d target=%s end=%s endDist=%.1f bestDist=%.1f bestAt=%d lastMoveAt=%d firstMove=%d activeAtEnd=%s pathAtEnd=%s calcAtEnd=%s kinDriven=%d kinSinceBest=%d",
-//$$                             mover, gi, r, result, ticks, g.toShortString() + "(" + (mc.world == null ? "?" : mc.world.getBlockState(g.down()).getBlock().getTranslationKey()) + ")", endPos.toShortString(), end, bestD, bestAt, lastMoveAt, firstMove, activeAtEnd, pathAtEnd, calcAtEnd, kinNow - kin0, kinNow - kinAtBest));
+//$$                     Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH TRIAL mover=%s goal=%d rep=%d result=%s ticks=%d target=%s end=%s endDist=%.1f bestDist=%.1f bestAt=%d lastMoveAt=%d firstMove=%d activeAtEnd=%s pathAtEnd=%s calcAtEnd=%s kinDriven=%d kinSinceBest=%d deaths=%d",
+//$$                             mover, gi, r, result, ticks, g.toShortString() + "(" + (mc.world == null ? "?" : mc.world.getBlockState(g.down()).getBlock().getTranslationKey()) + ")", endPos.toShortString(), end, bestD, bestAt, lastMoveAt, firstMove, activeAtEnd, pathAtEnd, calcAtEnd, kinNow - kin0, kinNow - kinAtBest, deaths));
 //$$                     n++;
-//$$                     if (result.equals("GOAL")) { ok++; sumTicks += ticks; }
+//$$                     if (result.equals("GOAL")) { ok++; sumTicks += ticks; } else if (deaths > 0) missDied++;
 //$$                     if (firstMove >= 0) { moved++; sumFirst += firstMove; }
 //$$                     sumEnd += end;
 //$$                     Thread.sleep(500);
@@ -291,8 +295,8 @@ package adris.altoclef.benchmark;
 //$$             BaritoneAPI.getSettings().movementFault.value = prevFault;
 //$$             csv.close();
 //$$         }
-//$$         Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH SUMMARY mode=travel mover=%s goalRate=%d/%d avgGoalTicks=%.0f avgFirstMoveTicks=%.1f avgEndDist=%.1f",
-//$$                 mover, ok, n, ok == 0 ? 0 : sumTicks / (double) ok, moved == 0 ? -1 : sumFirst / (double) moved, n == 0 ? 0 : sumEnd / n));
+//$$         Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH SUMMARY mode=travel mover=%s goalRate=%d/%d avgGoalTicks=%.0f avgFirstMoveTicks=%.1f avgEndDist=%.1f missesAfterDeath=%d",
+//$$                 mover, ok, n, ok == 0 ? 0 : sumTicks / (double) ok, moved == 0 ? -1 : sumFirst / (double) moved, n == 0 ? 0 : sumEnd / n, missDied));
 //$$     }
 //$$
 //$$     // ---- flow --------------------------------------------------------------------------

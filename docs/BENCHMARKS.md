@@ -166,4 +166,6 @@ The full run scored **45/48** at an average of 358 ticks, with no STOPPED trials
 | 14 | 0 | 10.2 blocks | tick 563 | 234 |
 | 15 | 1 | 15.5 blocks | tick 308 | 233 |
 
-In all three, Baritone still had a path (`pathAtEnd=true`) and the kinematic controller kept driving for about 234 ticks after the last progress, with no M01. That points to a kinematic no-progress loop the M01 watchdog does not catch, because the player keeps moving but gets no closer. This has not been confirmed with a log trace yet; it is the next thing to look at.
+**Correction:** an earlier version of this note blamed a kinematic no-progress loop. That was wrong; it was based only on the TRIAL lines. The full log shows each stall began with a mob kill: goal 12 rep 0 and goal 14 rep 0 by creepers, goal 15 rep 1 by a skeleton. After each death, M01 fired three times at the same block and M03 fired once, and the trial then ran out its stall window. So all three misses are mob deaths (bench noise), and no mover fault is shown.
+
+The travel loop had no death detection. TRIAL lines now carry `deaths=`, and the SUMMARY line carries `missesAfterDeath=`, so these misses can be attributed without changing how trials are scored.
