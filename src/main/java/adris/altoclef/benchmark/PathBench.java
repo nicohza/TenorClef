@@ -230,6 +230,7 @@ package adris.altoclef.benchmark;
 //$$                     long t0 = worldTime(mc);
 //$$                     boolean started = mover.equals("tungsten") ? TungstenMovement.requestPathTo(g) : mover.equals("guided") ? startGuided(mc, baritone, g) : startBaritone(mc, baritone, g);
 //$$                     long firstMove = -1;
+//$$                     long kin0 = kinTicks(), kinAtBest = kin0; // attributes a stall to the kinematic controller or to Baritone
 //$$                     double startD = dist(mc, g);
 //$$                     String result = started ? "TIMEOUT" : "NOSTART";
 //$$                     double bestD = startD; long bestAt = 0; long lastReq = 0; double lastD = startD; long lastMoveAt = 0;
@@ -239,7 +240,7 @@ package adris.altoclef.benchmark;
 //$$                         double d = dist(mc, g);
 //$$                         if (firstMove < 0 && Math.abs(d - startD) > 0.5) firstMove = el;
 //$$                         if (d < 2.0) { result = "GOAL"; break; }
-//$$                         if (d < bestD - 1.0) { bestD = d; bestAt = el; }
+//$$                         if (d < bestD - 1.0) { bestD = d; bestAt = el; kinAtBest = kinTicks(); }
 //$$                         if (stallTicks > 0 && el - bestAt > stallTicks) { result = "STALLED"; break; }
 //$$                         if (Math.abs(d - lastD) > 0.3) { lastD = d; lastMoveAt = el; }
 //$$                         if (!viaCustom && idleTicks > 0 && firstMove >= 0 && el - lastMoveAt > idleTicks && el - lastReq > idleTicks && el < limitTicks) {
@@ -256,6 +257,9 @@ package adris.altoclef.benchmark;
 //$$                         if (el > limitTicks) break;
 //$$                     }
 //$$                     boolean activeAtEnd = !viaCustom ? TungstenMovement.isPathing() : baritone.getCustomGoalProcess().isActive();
+//$$                     long kinNow = kinTicks();
+//$$                     boolean pathAtEnd = viaCustom && baritone.getPathingBehavior().hasPath();
+//$$                     boolean calcAtEnd = viaCustom && baritone.getPathingBehavior().getInProgress().isPresent();
 //$$                     if (!viaCustom) TungstenMovement.cancel();
 //$$                     else mc.execute(() -> baritone.getPathingBehavior().cancelEverything());
 //$$                     long ticks = worldTime(mc) - t0;
@@ -265,8 +269,8 @@ package adris.altoclef.benchmark;
 //$$                     csv.flush();
 //$$                     // Per-trial diagnostics so a stall can be located after the fact (CSV lacks position/progress history).
 //$$                     BlockPos endPos = mc.player == null ? BlockPos.ORIGIN : mc.player.getBlockPos();
-//$$                     Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH TRIAL mover=%s goal=%d rep=%d result=%s ticks=%d end=%s endDist=%.1f bestDist=%.1f bestAt=%d lastMoveAt=%d firstMove=%d activeAtEnd=%s",
-//$$                             mover, gi, r, result, ticks, endPos.toShortString(), end, bestD, bestAt, lastMoveAt, firstMove, activeAtEnd));
+//$$                     Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH TRIAL mover=%s goal=%d rep=%d result=%s ticks=%d end=%s endDist=%.1f bestDist=%.1f bestAt=%d lastMoveAt=%d firstMove=%d activeAtEnd=%s pathAtEnd=%s calcAtEnd=%s kinDriven=%d kinSinceBest=%d",
+//$$                             mover, gi, r, result, ticks, endPos.toShortString(), end, bestD, bestAt, lastMoveAt, firstMove, activeAtEnd, pathAtEnd, calcAtEnd, kinNow - kin0, kinNow - kinAtBest));
 //$$                     n++;
 //$$                     if (result.equals("GOAL")) { ok++; sumTicks += ticks; }
 //$$                     if (firstMove >= 0) { moved++; sumFirst += firstMove; }
@@ -997,6 +1001,15 @@ package adris.altoclef.benchmark;
 //$$         if (mc.player == null) return 1e9;
 //$$         double dx = mc.player.getX() - (g.getX() + 0.5), dz = mc.player.getZ() - (g.getZ() + 0.5);
 //$$         return Math.sqrt(dx * dx + dz * dz);
+//$$     }
+//$$
+//$$     /** Ticks Ostinato's kinematic controller has driven the player; -1 if the class is absent. Read reflectively: it is not in the API jar. */
+//$$     private static long kinTicks() {
+//$$         try {
+//$$             return Class.forName("baritone.pathing.kinematic.KinematicController").getField("drivenTicks").getLong(null);
+//$$         } catch (ReflectiveOperationException e) {
+//$$             return -1;
+//$$         }
 //$$     }
 //$$
 //$$     private static PrintWriter open(String tag) throws java.io.IOException {
