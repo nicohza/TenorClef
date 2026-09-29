@@ -175,3 +175,11 @@ The travel loop had no death detection. TRIAL lines now carry `deaths=`, and the
 Two caveats found in this run:
 - The goal ring is built around each run's start position, which varies. Goal 12 was `-31,73,-110` in the full run and `-28,72,-104` here, so goal indices are not fixed coordinates across runs.
 - Hits are measured on XZ only. Goal 15 (`136,78,-172`) counted as GOAL with the player 4–7 blocks above it (y=82–85).
+
+### Pinned ring origin (current baseline)
+
+Travel mode now centres the goal ring on a fixed `x=65, z=-110` (`-Dtenorclef.pathbench.origin=x,z` to move it, `=spawn` for the old behaviour). Before, the start position ranged over about 10×17 blocks, which moved every goal. The pinned origin resolved to `65,72,-110`, the same origin as the leaf-free baseline, so goal coordinates match that run.
+
+The full run scored **47/48** at an average of 407 ticks, with `missesAfterDeath=1`. The only miss, goal 14 rep 2 (STALLED 14.4 blocks out), came after the player was slain by a spider. With deaths excluded, the score is 47/47. No STOPPED trials.
+
+Hits are still scored on XZ distance only (see the caveat above).
