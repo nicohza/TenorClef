@@ -68,6 +68,7 @@ package adris.altoclef.benchmark;
 //$$                 else if (mode.equalsIgnoreCase("flow")) flow(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("boat")) boat(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("cliff")) cliff(mc, origin, Math.max(1, reps));
+//$$                 else if (mode.equalsIgnoreCase("portal")) portal(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("swim")) swim(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("elytra")) elytra(mc, origin, opt, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("travel")) for (String m : (opt == null ? "-" : opt).split("[;+]")) travel(mc, origin, m, Math.max(1, reps));
@@ -513,6 +514,81 @@ package adris.altoclef.benchmark;
 //$$         }
 //$$         Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH SUMMARY mode=column goalRate=%d/%d", ok, n));
 //$$     }
+//$$
+//$$    // ---- portal ------------------------------------------------------------------------
+//$$
+//$$    /**
+//$$     * Nether-portal bucket build in isolation: a flat stone pad with a 5x5 surface lava pool and a
+//$$     * 3x3 water pool, rebuilt each trial. Kit: iron pickaxe, 2 buckets, flint and steel. Runs
+//$$     * ConstructNetherPortalBucketTask; GOAL when a nether portal block appears on the pad.
+//$$     */
+//$$    private static void portal(MinecraftClient mc, BlockPos origin, int reps) throws Exception {
+//$$        int ox = origin.getX(), oz = origin.getZ(), y0 = Math.max(64, origin.getY());
+//$$        PrintWriter csv = open("portal");
+//$$        csv.println("rep,result,ticks,lastState,lastLineState");
+//$$        int ok = 0, n = 0; long sumTicks = 0;
+//$$        try {
+//$$            for (int r = 0; r < reps; r++) {
+//$$                java.util.concurrent.CompletableFuture<Void> built = new java.util.concurrent.CompletableFuture<>();
+//$$                mc.getServer().execute(() -> {
+//$$                    net.minecraft.server.world.ServerWorld w = mc.getServer().getOverworld();
+//$$                    for (int x = -16; x <= 26; x++) for (int z = -14; z <= 14; z++) {
+//$$                        for (int y = y0 - 3; y <= y0 + 10; y++) {
+//$$                            net.minecraft.block.BlockState st = y < y0 ? net.minecraft.block.Blocks.STONE.getDefaultState() : net.minecraft.block.Blocks.AIR.getDefaultState();
+//$$                            if (y == y0 - 1 && x >= 8 && x <= 12 && Math.abs(z) <= 2) st = net.minecraft.block.Blocks.LAVA.getDefaultState();
+//$$                            if (y == y0 - 1 && x >= -9 && x <= -7 && Math.abs(z) <= 1) st = net.minecraft.block.Blocks.WATER.getDefaultState();
+//$$                            w.setBlockState(new BlockPos(ox + x, y, oz + z), st, 2);
+//$$                        }
+//$$                    }
+//$$                    w.getEntities(net.minecraft.entity.ItemEntity.class, new net.minecraft.util.math.Box(ox - 17, y0 - 4, oz - 15, ox + 27, y0 + 11, oz + 15), e -> true).forEach(net.minecraft.entity.Entity::remove);
+//$$                    ServerPlayerEntity sp = mc.getServer().getPlayerManager().getPlayerList().get(0);
+//$$                    sp.inventory.clear();
+//$$                    sp.inventory.insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_PICKAXE));
+//$$                    sp.inventory.insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.BUCKET, 2));
+//$$                    sp.inventory.insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.FLINT_AND_STEEL));
+//$$                    built.complete(null);
+//$$                });
+//$$                built.get();
+//$$                teleport(mc, new BlockPos(ox, y0, oz));
+//$$                Thread.sleep(1500); // let the block scanner see the pools
+//$$                adris.altoclef.tasks.construction.compound.ConstructNetherPortalBucketTask task = new adris.altoclef.tasks.construction.compound.ConstructNetherPortalBucketTask();
+//$$                mc.execute(() -> adris.altoclef.AltoClef.getInstance().runUserTask(task));
+//$$                long t0 = worldTime(mc), last = -1;
+//$$                String result = "TIMEOUT", state = "", lastLogged = "";
+//$$                while (true) {
+//$$                    Thread.sleep(25);
+//$$                    long el = worldTime(mc) - t0;
+//$$                    if (el == last) continue;
+//$$                    last = el;
+//$$                    String ds = task.getDebugState();
+//$$                    if (ds != null) state = ds;
+//$$                    if (!state.equals(lastLogged)) { Debug.logHarness("PORTAL t=" + el + " state=" + state); lastLogged = state; }
+//$$                    if (el % 200 == 0) Debug.logHarness(String.format(Locale.ROOT, "PORTAL t=%d pos=%s state=%s", el, mc.player.getBlockPos().toShortString(), state));
+//$$                    if (portalOnPad(mc, ox, y0, oz)) { result = "GOAL"; break; }
+//$$                    if (mc.player.isDead()) { result = "DIED"; break; }
+//$$                    if (el > 20 * 300) break;
+//$$                }
+//$$                long ticks = worldTime(mc) - t0;
+//$$                mc.execute(() -> adris.altoclef.AltoClef.getInstance().stopTasks());
+//$$                csv.printf(Locale.ROOT, "%d,%s,%d,\"%s\",\"%s\"%n", r, result, ticks, state.replace('"', '\''), lastLogged.replace('"', '\''));
+//$$                csv.flush();
+//$$                Debug.logHarness(String.format(Locale.ROOT, "PORTAL rep=%d result=%s ticks=%d state=%s", r, result, ticks, state));
+//$$                n++;
+//$$                if (result.equals("GOAL")) { ok++; sumTicks += ticks; }
+//$$                if (mc.player.isDead()) { mc.execute(() -> mc.player.requestRespawn()); Thread.sleep(2000); }
+//$$                Thread.sleep(1000);
+//$$            }
+//$$        } finally {
+//$$            csv.close();
+//$$        }
+//$$        Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH SUMMARY mode=portal goalRate=%d/%d avgGoalTicks=%.0f", ok, n, ok == 0 ? 0.0 : (double) sumTicks / ok));
+//$$    }
+//$$
+//$$    private static boolean portalOnPad(MinecraftClient mc, int ox, int y0, int oz) {
+//$$        for (int x = -16; x <= 26; x++) for (int z = -14; z <= 14; z++) for (int y = y0 - 3; y <= y0 + 10; y++)
+//$$            if (mc.world.getBlockState(new BlockPos(ox + x, y, oz + z)).getBlock() == net.minecraft.block.Blocks.NETHER_PORTAL) return true;
+//$$        return false;
+//$$    }
 //$$
 //$$     // ---- swim --------------------------------------------------------------------------
 //$$
