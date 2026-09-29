@@ -169,3 +169,9 @@ The full run scored **45/48** at an average of 358 ticks, with no STOPPED trials
 **Correction:** an earlier version of this note blamed a kinematic no-progress loop. That was wrong; it was based only on the TRIAL lines. The full log shows each stall began with a mob kill: goal 12 rep 0 and goal 14 rep 0 by creepers, goal 15 rep 1 by a skeleton. After each death, M01 fired three times at the same block and M03 fired once, and the trial then ran out its stall window. So all three misses are mob deaths (bench noise), and no mover fault is shown.
 
 The travel loop had no death detection. TRIAL lines now carry `deaths=`, and the SUMMARY line carries `missesAfterDeath=`, so these misses can be attributed without changing how trials are scored.
+
+**Rerun of goals 12, 14 and 15 with death counting:** 9/9 GOAL, `deaths=0` in every trial, average 447 ticks. None of the three stalled when no mob killed the player.
+
+Two caveats found in this run:
+- The goal ring is built around each run's start position, which varies. Goal 12 was `-31,73,-110` in the full run and `-28,72,-104` here, so goal indices are not fixed coordinates across runs.
+- Hits are measured on XZ only. Goal 15 (`136,78,-172`) counted as GOAL with the player 4–7 blocks above it (y=82–85).
