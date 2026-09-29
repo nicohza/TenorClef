@@ -1,6 +1,7 @@
 package adris.altoclef.tasks.movement;
 
 import adris.altoclef.AltoClef;
+import adris.altoclef.Debug;
 import adris.altoclef.multiversion.FoodComponentWrapper;
 import adris.altoclef.multiversion.item.ItemVer;
 import adris.altoclef.tasksystem.Task;
@@ -86,6 +87,7 @@ public class EscapeFromLavaTask extends CustomBaritoneGoalTask {
         if (mod.getPlayer().isInLava() && mod.getItemStorage().hasItem(Items.WATER_BUCKET)
                 && !mod.getWorld().getDimension().ultrawarm()) {
             setDebugState("pouring water on lava");
+            Debug.logHarness("LAVA_REFLEX pouring water pos=" + mod.getPlayer().getBlockPos().toShortString());
             LookHelper.lookAt(new Rotation(LookHelper.getLookRotation().getYaw(), 90));
             if (mod.getSlotHandler().forceEquipItem(Items.WATER_BUCKET)) {
                 mod.getInputControls().tryPress(Input.CLICK_RIGHT);
