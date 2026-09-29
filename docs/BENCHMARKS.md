@@ -275,3 +275,8 @@ Fix (bench only): `teleport()` now sets food to 20 at the start of every trial, 
 - **48/48 GOAL, 233 ticks on average.** First move comes at 10.0 ticks on average, and the average end distance is 1.7.
 - 0 deaths and no M01/M03/M04 lines.
 - The peaceful reference is 48/48 at 232. This result replaces the old mobs-on 47/48 at 378. That gap was hunger carrying over between trials, not mobs.
+
+## Peaceful rerun with hunger reset
+
+The same bench on peaceful, every trial fed (log `obj-peacefed-1790670955.log`): **48/48 GOAL, 230 ticks on average**, first move at 10.7 ticks on average, 0 deaths, one M-fault line.
+The old peaceful reference was 232, so hunger did not skew it. Peaceful already stops hunger from dropping, so feeding makes no difference there. Fed trials score 230 on peaceful and 233 with mobs on: mobs add no measurable travel cost.
