@@ -304,7 +304,15 @@ package adris.altoclef.benchmark;
 //$$                         }
 //$$                         if (el > limitTicks) break;
 //$$                     }
-//$$                     boolean activeAtEnd = !viaCustom ? TungstenMovement.isPathing() : baritone.getCustomGoalProcess().isActive();
+//$$                     // -Dtenorclef.pathbench.tail=N keeps the path running N ticks after the trial ends and logs each poll (for faults after the goal)
+//$$                     long tail = Long.getLong("tenorclef.pathbench.tail", 0L), tailEnd = worldTime(mc) + tail;
+//$$                     while (tail > 0 && worldTime(mc) < tailEnd && mc.player != null) {
+//$$                         Thread.sleep(25);
+//$$                         net.minecraft.util.math.Vec3d v = mc.player.getVelocity();
+//$$                         Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH TAIL t=%d pos=%.2f,%.2f,%.2f vel=%.2f,%.2f,%.2f ground=%s hcoll=%s %s",
+//$$                                 worldTime(mc) - t0, mc.player.getX(), mc.player.getY(), mc.player.getZ(), v.x, v.y, v.z, mc.player.isOnGround(), mc.player.horizontalCollision, execState(baritone)));
+//$$                     }
+//$$                     boolean activeAtEnd =!viaCustom ? TungstenMovement.isPathing() : baritone.getCustomGoalProcess().isActive();
 //$$                     long kinNow = kinTicks();
 //$$                     boolean pathAtEnd = viaCustom && baritone.getPathingBehavior().hasPath();
 //$$                     boolean calcAtEnd = viaCustom && baritone.getPathingBehavior().getInProgress().isPresent();

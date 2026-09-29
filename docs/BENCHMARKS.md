@@ -284,3 +284,14 @@ The old peaceful reference was 232, so hunger did not skew it. Peaceful already 
 The one fault line is `M04 MovementDiagonal UNREACHABLE at 88,71,-133`. It is logged in the same second goal 7 rep 2 finishes, at goal 7's target, before goal 8 starts. This matches the known "one M04 on goal 8" from the sync-fix run. It looks like goal 7's leftover path being dropped at the teleport, not a failure: goal 8 then scored 3/3 GOAL. That reading is inferred from timing and position, not traced.
 
 *Correction:* the teleport explanation is wrong. With the end-of-trial cancel made synchronous (`mc.submit(...).get()`), a peaceful rerun (`obj-peacecancel-1790672133.log`, 48/48 at 235) still logged the same M04. It came after the goal 7 rep 2 TRIAL line and at the player's own feet, 88,71,-133, so the player had not been teleported yet. `PathingBehavior.cancelEverything()` only drops the path when `isSafeToCancel()` holds. Mid-diagonal it doesn't, so the rest of goal 7's path keeps running after the bench counts the goal (XZ < 2), and that diagonal really returns UNREACHABLE. The change was reverted, since it did not fix anything. The fault looks like a genuine diagonal failure next to goal 7's target, not a bench artifact. That is not traced yet.
+
+### Goal 7 M04, traced
+
+This run was goal 7 only, 3 reps, peaceful, with `-Dtenorclef.pathbench.trace=88,-133 -Dtenorclef.pathbench.tail=40` (log `obj-t88-1790673332.log`). The new `tail=N` option keeps the path running N ticks after a trial ends and logs each poll as `PATHBENCH TAIL`.
+
+- 3/3 GOAL. The M04 appeared once, in the tail after rep 1.
+- The final movement of the path (pos 29) is `MovementDiagonal 86,70,-131 -> 87,70,-132`. The kinematic mover takes it airborne (y 72.25, vel ≈ 0.21,0,-0.22, not on ground), so the bench's XZ < 2 check counts the goal mid-jump.
+- The player's momentum carries it past the diagonal's destination to 88,71,-133. That block is neither the source nor the destination, so the diagonal returns UNREACHABLE. It lands at 89.05,70.68,-133.08 a few ticks later.
+- So the fault is the kinematic mover **overshooting the last movement of a path while sprint-jumping**. It is not a teleport artifact or a blocked diagonal. It happens after the goal counts, so it doesn't affect scores. In normal use it would cancel a path that was already at its end.
+- Side finding: `execState` logs `IndexOutOfBoundsException: Index -1` once the path is empty. That's a logging bug in the bench helper only.
+- Tick counts in this run (132–180) are not comparable with other runs. The trace was logging every poll inside the 3-block box.
