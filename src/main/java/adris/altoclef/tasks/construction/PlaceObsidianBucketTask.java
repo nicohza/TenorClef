@@ -170,6 +170,7 @@ public class PlaceObsidianBucketTask extends Task {
             if (!WorldHelper.isSolidBlock(castPos)) {
                 _currentCastTarget = castPos;
                 Debug.logInternal("Building cast frame...");
+                Debug.logHarness("CAST obsidian=" + _pos.toShortString() + " castTarget=" + castPos.toShortString());
                 return null;
             }
         }

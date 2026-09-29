@@ -569,7 +569,7 @@ package adris.altoclef.benchmark;
 //$$                    Thread.sleep(100);
 //$$                    seen = adris.altoclef.AltoClef.getInstance().getBlockScanner().getKnownLocations(net.minecraft.block.Blocks.LAVA).stream().anyMatch(p -> p.isWithinDistance(padLava, 3));
 //$$                }
-//$$                Debug.logHarness("PORTAL rep=" + r + " scannerSawPadLava=" + seen);
+//$$                Debug.logHarness("PORTAL rep=" + r + " origin=" + ox + "," + y0 + "," + oz + " pool=x" + (ox + 8) + ".." + (ox + 12) + ",y" + (y0 - 1) + ",z" + (oz - 2) + ".." + (oz + 2) + " scannerSawPadLava=" + seen);
 //$$                adris.altoclef.tasks.construction.compound.ConstructNetherPortalBucketTask task = new adris.altoclef.tasks.construction.compound.ConstructNetherPortalBucketTask();
 //$$                mc.execute(() -> adris.altoclef.AltoClef.getInstance().runUserTask(task));
 //$$                long t0 = worldTime(mc), last = -1;
