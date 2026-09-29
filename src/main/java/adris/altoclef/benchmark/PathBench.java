@@ -519,7 +519,7 @@ package adris.altoclef.benchmark;
 //$$
 //$$    /**
 //$$     * Nether-portal bucket build in isolation: a flat stone pad with a 5x5 surface lava pool and a
-//$$     * 3x3 water pool, rebuilt each trial. Kit: iron pickaxe, 2 buckets, flint and steel. Runs
+//$$     * 3x3 water pool, rebuilt each trial. Kit: iron pickaxe, 2 buckets, flint and steel, 32 cobblestone. Runs
 //$$     * ConstructNetherPortalBucketTask; GOAL when a nether portal block appears on the pad.
 //$$     */
 //$$    private static void portal(MinecraftClient mc, BlockPos origin, int reps) throws Exception {
@@ -546,6 +546,7 @@ package adris.altoclef.benchmark;
 //$$                    sp.inventory.insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_PICKAXE));
 //$$                    sp.inventory.insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.BUCKET, 2));
 //$$                    sp.inventory.insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.FLINT_AND_STEEL));
+//$$                    sp.inventory.insertStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.COBBLESTONE, 32)); // cast-frame throwaways: PORTAL phase arrives with cobble
 //$$                    built.complete(null);
 //$$                });
 //$$                built.get();
