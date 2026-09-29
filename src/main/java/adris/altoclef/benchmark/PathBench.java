@@ -553,7 +553,14 @@ package adris.altoclef.benchmark;
 //$$                });
 //$$                built.get();
 //$$                teleport(mc, new BlockPos(ox, y0, oz));
-//$$                Thread.sleep(1500); // let the block scanner see the pools
+//$$                // Wait until the scanner knows the pad lava; 1.5s was not enough and the task picked a natural lake below.
+//$$                final BlockPos padLava = new BlockPos(ox + 10, y0 - 1, oz);
+//$$                boolean seen = false;
+//$$                for (int i = 0; i < 200 && !seen; i++) {
+//$$                    Thread.sleep(100);
+//$$                    seen = adris.altoclef.AltoClef.getInstance().getBlockScanner().getKnownLocations(net.minecraft.block.Blocks.LAVA).stream().anyMatch(p -> p.isWithinDistance(padLava, 3));
+//$$                }
+//$$                Debug.logHarness("PORTAL rep=" + r + " scannerSawPadLava=" + seen);
 //$$                adris.altoclef.tasks.construction.compound.ConstructNetherPortalBucketTask task = new adris.altoclef.tasks.construction.compound.ConstructNetherPortalBucketTask();
 //$$                mc.execute(() -> adris.altoclef.AltoClef.getInstance().runUserTask(task));
 //$$                long t0 = worldTime(mc), last = -1;
