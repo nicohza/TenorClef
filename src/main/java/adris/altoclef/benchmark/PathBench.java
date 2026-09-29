@@ -665,7 +665,15 @@ package adris.altoclef.benchmark;
 //$$                        String hz = String.format(Locale.ROOT, "hp=%.0f fire=%b lava=%b pos=%s", mc.player.getHealth(), mc.player.isOnFire(), mc.player.isInLava(), mc.player.getBlockPos().toShortString());
 //$$                        if (!hz.equals(lastHazard)) { Debug.logHarness("PORTAL t=" + el + " " + hz + " chain=" + chain); lastHazard = hz; }
 //$$                    }
-//$$                    if (el % 200 == 0) Debug.logHarness(String.format(Locale.ROOT, "PORTAL t=%d pos=%s state=%s", el, mc.player.getBlockPos().toShortString(), state));
+//$$                    if (el % 200 == 0) {
+//$$                        int lavaLeft = 0, obsInPool = 0;
+//$$                        for (int x = 8; x <= 12; x++) for (int z = -2; z <= 2; z++) {
+//$$                            net.minecraft.block.BlockState bs = mc.world.getBlockState(new BlockPos(ox + x, y0 - 1, oz + z));
+//$$                            if (bs.getFluidState().isStill() && bs.getFluidState().getFluid() == net.minecraft.fluid.Fluids.LAVA) lavaLeft++;
+//$$                            if (bs.getBlock() == net.minecraft.block.Blocks.OBSIDIAN || bs.getBlock() == net.minecraft.block.Blocks.COBBLESTONE) obsInPool++;
+//$$                        }
+//$$                        Debug.logHarness(String.format(Locale.ROOT, "PORTAL t=%d pos=%s state=%s poolLava=%d poolSolid=%d", el, mc.player.getBlockPos().toShortString(), state, lavaLeft, obsInPool));
+//$$                    }
 //$$                    if (portalOnPad(mc, ox, y0, oz)) { result = "GOAL"; break; }
 //$$                    if (mc.player.isDead()) { result = "DIED"; break; }
 //$$                    if (el > 20 * 300) break;
