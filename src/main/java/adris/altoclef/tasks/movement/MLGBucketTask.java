@@ -222,7 +222,20 @@ public class MLGBucketTask extends Task {
                 setDebugState("NOT LOOKING CORRECTLY!");
             }
         } else {
-            setDebugState("Waiting to reach target block...");
+            // At terminal-ish speed (~2 blocks/tick) the reach check only passes the tick
+            // before impact, so falls kept ending with no click. Pre-aim at the landing
+            // face and click every tick once it is close: the bucket's own raycast
+            // (5 blocks) places as soon as it connects, and a miss is a no-op.
+            setDebugState("Pre-aiming MLG");
+            Vec3d face = new Vec3d(toPlaceOn.getX() + 0.5, toPlaceOn.getY() + 1, toPlaceOn.getZ() + 0.5);
+            LookHelper.lookAt(mod, face);
+            double dist = mod.getPlayer().getPos().add(0, mod.getPlayer().getStandingEyeHeight(), 0).distanceTo(face);
+            if (dist < 5.5 && !mod.getWorld().getDimension().ultrawarm()
+                    && mod.getSlotHandler().forceEquipItem(Items.WATER_BUCKET)) {
+                Debug.logHarness("MLG preaim click dist=" + String.format("%.2f", dist));
+                placedPos = willLandIn;
+                mod.getInputControls().tryPress(Input.CLICK_RIGHT);
+            }
         }
         return null;
     }
