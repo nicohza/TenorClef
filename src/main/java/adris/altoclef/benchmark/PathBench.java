@@ -545,6 +545,8 @@ package adris.altoclef.benchmark;
 //$$                        built.complete(null);
 //$$                    });
 //$$                    built.get();
+//$$                    // Chains only tick while a user task runs (TaskRunner.active); real play always has one.
+//$$                    mc.execute(() -> adris.altoclef.AltoClef.getInstance().runUserTask(new adris.altoclef.tasks.movement.IdleTask()));
 //$$                    Thread.sleep(1500);
 //$$                    teleport(mc, new BlockPos(ox, by + H, oz));
 //$$                    long t0 = worldTime(mc);
