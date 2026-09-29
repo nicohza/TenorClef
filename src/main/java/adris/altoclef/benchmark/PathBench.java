@@ -254,6 +254,10 @@ package adris.altoclef.benchmark;
 //$$                 for (int r = 0; r < reps; r++) {
 //$$                     teleport(mc, origin);
 //$$                     long t0 = worldTime(mc);
+//$$                     if (!peaceful && mc.world != null && mc.player != null) { // world state that can differ between trials when mobs are on
+//$$                         int hostiles = mc.world.getEntities(net.minecraft.entity.mob.HostileEntity.class, mc.player.getBoundingBox().expand(32), e -> true).size();
+//$$                         Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH TRIALSTATE goal=%d rep=%d timeOfDay=%d hostiles32=%d", gi, r, mc.world.getTimeOfDay() % 24000, hostiles));
+//$$                     }
 //$$                     boolean started = mover.equals("tungsten") ? TungstenMovement.requestPathTo(g) : mover.equals("guided") ? startGuided(mc, baritone, g) : startBaritone(mc, baritone, g);
 //$$                     long firstMove = -1;
 //$$                     long kin0 = kinTicks(), kinAtBest = kin0; // attributes a stall to the kinematic controller or to Baritone
@@ -282,7 +286,7 @@ package adris.altoclef.benchmark;
 //$$                         }
 //$$                         if (routeEvery > 0 && mc.player != null && el / routeEvery != lastRoute) {
 //$$                             lastRoute = el / routeEvery;
-//$$                             Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH ROUTE t=%d pos=%.1f,%.1f,%.1f d=%.1f %s", el, mc.player.getX(), mc.player.getY(), mc.player.getZ(), d, execState(baritone)));
+//$$                             Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH ROUTE t=%d age=%d food=%d sprint=%s pos=%.1f,%.1f,%.1f d=%.1f %s", el, mc.player.age, mc.player.getHungerManager().getFoodLevel(), mc.player.isSprinting(), mc.player.getX(), mc.player.getY(), mc.player.getZ(), d, execState(baritone)));
 //$$                         }
 //$$                         if (d < bestD - 1.0) { bestD = d; bestAt = el; kinAtBest = kinTicks(); }
 //$$                         if (stallTicks > 0 && el - bestAt > stallTicks) { result = "STALLED"; break; }
@@ -1022,6 +1026,8 @@ package adris.altoclef.benchmark;
 //$$             if (sp != null) {
 //$$                 sp.setVelocity(0, 0, 0);
 //$$                 sp.fallDistance = 0;
+//$$                 sp.getHungerManager().setFoodLevel(20); // every trial starts fed: with mobs on, hunger drained to 0 by goal 15 and disabled sprint
+//$$                 sp.getHungerManager().setSaturationLevelClient(5.0f);
 //$$                 sp.setAir(sp.getMaxAir());
 //$$                 sp.setHealth(sp.getMaxHealth());
 //$$                 sp.networkHandler.requestTeleport(p.getX() + 0.5, p.getY(), p.getZ() + 0.5, sp.yaw, sp.pitch);

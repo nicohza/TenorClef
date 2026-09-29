@@ -245,3 +245,26 @@ Follow-up on the M01/M03 seen at 109–110,71,-172 in the mobs-on run.
 
 - Run by itself, goal 14 takes the direct route in both modes and costs no extra time with mobs on.
 - So the 584–661 ticks for goals 14 and 15 in the 12–15 mobs run are not a route choice caused by mobs. They depend on state left by the earlier trials (for example world time or mobs that have gathered). That part is not yet measured.
+
+### Why goals 14–15 were slow with mobs on: hunger, not routing
+
+New opt-in logging:
+- `ROUTE` breadcrumbs now include player `age`, `food` and `sprint`.
+- A `TRIALSTATE` line (mobs-on only) records time of day and hostile mobs within 32 blocks.
+
+Goals 12–15, mobs on, kinematic, 3 reps:
+- The whole run is daytime (timeOfDay 175 → 5598), with 0–13 hostiles near the origin.
+- Player `age` tracks world ticks 1:1, so there is no client lag.
+- Food falls from 20 to 0 across trials. On easy difficulty it doesn't regenerate, and sprint-jumping drains it fast.
+- Sprinting stops once food is 6 or below. That happens in goal 13 rep 2 (540 ticks), and every later trial walks (568–664 ticks) along the same route.
+
+Fix (bench only): `teleport()` now sets food to 20 at the start of every trial, so trials no longer depend on the ones before them.
+
+| Goals 12–15, mobs on | Avg ticks | Goal 14 | Goal 15 |
+|---|---|---|---|
+| Before (hunger carried over) | 497 | 568–607 | 628–664 |
+| After (fed each trial) | 350 | 308–354 | 362–364 |
+| Peaceful, for reference | 342 | 306–345 | 343–358 |
+
+- 12/12 goals reached, with no M01/M03.
+- The earlier 47/48 mobs-on result (378 avg) was measured with hunger carried over, so it overstates the cost of mobs.
