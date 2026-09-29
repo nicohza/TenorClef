@@ -188,7 +188,7 @@ Hits are still scored on XZ distance only (see the caveat above).
 
 Travel trials now run on peaceful by default (`-Dtenorclef.pathbench.peaceful=false` keeps mobs), and the world's difficulty (easy) is restored after the run. The origin is pinned as above.
 
-The full run scored **48/48** at an average of 264 ticks (407 with mobs), with `missesAfterDeath=0` and no STALLED or STOPPED trials. The speed-up probably comes from no longer fighting or dodging mobs; that is inferred, not measured. With goals on the ground, a pinned origin and no mobs, this is the reference number for kinematic travel.
+The full run scored **48/48** at an average of 264 ticks (407 with mobs), with `missesAfterDeath=0` and no STALLED or STOPPED trials. The speed-up probably comes from no longer fighting or dodging mobs; that is inferred, not measured. *Superseded:* most of the gap came from hunger carrying over between trials. With every trial fed, mobs-on scores 48/48 at 233 (see "Full mobs-on rerun with hunger reset" below). With goals on the ground, a pinned origin and no mobs, this is the reference number for kinematic travel.
 
 ## Baritone vs kinematic (peaceful, pinned origin 65,72,-110, 3 reps x 16 goals)
 
@@ -216,9 +216,9 @@ Caveat: this is one run, and a hit is still counted on XZ distance only.
 
 ### Sync fix with mobs (difficulty easy, pinned origin)
 
-The full run scored **47/48** at an average of 378 ticks, against 407 before the fix. The single miss was goal 15 rep 0 (STALLED), and it came after a death (`missesAfterDeath=1`), so the score is 47/47 with deaths excluded, the same as before the fix. No M03 fault appeared on the goal 2/10 traverse. One run of each, and mob variance is large.
+The full run scored **47/48** at an average of 378 ticks, against 407 before the fix. The single miss was goal 15 rep 0 (STALLED), and it came after a death (`missesAfterDeath=1`), so the score is 47/47 with deaths excluded, the same as before the fix. No M03 fault appeared on the goal 2/10 traverse. One run of each, and mob variance is large. *Superseded:* this run carried hunger over between trials, so later trials walked instead of sprinting. The current mobs-on figure is 48/48 at 233; see "Full mobs-on rerun with hunger reset" below.
 
-The run also logged one M03 on a diagonal at 109,71,-172 (goals 12–15 heading), together with 3× M01 at 110,71,-172. The peaceful run did not log these, so it may be mob-related. This is not investigated.
+The run also logged one M03 on a diagonal at 109,71,-172 (goals 12–15 heading), together with 3× M01 at 110,71,-172. The peaceful run did not log these, so it may be mob-related. Later traces (see "Trace at 110,71,-172") and the fed mobs-on rerun did not reproduce them, so the cause is still unknown.
 
 ## Trace at 110,71,-172 (goals 12–15, kinematic, seed 12345)
 
