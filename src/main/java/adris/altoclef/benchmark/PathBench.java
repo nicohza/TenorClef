@@ -221,6 +221,12 @@ package adris.altoclef.benchmark;
 //$$             Debug.logHarness("PATHBENCH travel origin pinned at " + origin.toShortString());
 //$$         }
 //$$         List<BlockPos> goals = ring(mc, origin);
+//$$         // Mob kills were the only travel misses once goals were fixed; they measure luck, not pathing.
+//$$         // Run peaceful by default (-Dtenorclef.pathbench.peaceful=false keeps mobs) and restore afterwards.
+//$$         net.minecraft.world.Difficulty prevDifficulty = mc.getServer().getSaveProperties().getDifficulty();
+//$$         boolean peaceful = Boolean.parseBoolean(System.getProperty("tenorclef.pathbench.peaceful", "true"));
+//$$         if (peaceful) mc.getServer().submit(() -> mc.getServer().setDifficulty(net.minecraft.world.Difficulty.PEACEFUL, true)).get();
+//$$         Debug.logHarness("PATHBENCH travel difficulty=" + (peaceful ? "peaceful" : prevDifficulty.getName()));
 //$$         long limitTicks = Long.getLong("tenorclef.pathbench.travelTicks", 20L * 90);
 //$$         // End a trial early once it stops getting closer; 0 disables.
 //$$         long stallTicks = Long.getLong("tenorclef.pathbench.stallTicks", 400L);
@@ -307,6 +313,7 @@ package adris.altoclef.benchmark;
 //$$             BaritoneAPI.getSettings().kinematicTravel.value = false;
 //$$             BaritoneAPI.getSettings().physicsTravel.value = false;
 //$$             BaritoneAPI.getSettings().movementFault.value = prevFault;
+//$$             if (peaceful) mc.getServer().submit(() -> mc.getServer().setDifficulty(prevDifficulty, true));
 //$$             csv.close();
 //$$         }
 //$$         Debug.logHarness(String.format(Locale.ROOT, "PATHBENCH SUMMARY mode=travel mover=%s goalRate=%d/%d avgGoalTicks=%.0f avgFirstMoveTicks=%.1f avgEndDist=%.1f missesAfterDeath=%d",
