@@ -142,4 +142,4 @@ Full `pathbench travel kinematic 3`: 46/48, average 459 ticks.
 
   No M01 (kinematic stuck) fired.
 
-Kinematic across three full runs after the merge: 42/48, 46/48, 46/48. The silent motionless stalls from the 23:18 run did not recur, so their driver is still unattributed.
+Kinematic across two full runs after the merge: 42/48, 46/48. The last run before the merge was 46/48. The silent motionless stalls from the 23:18 run did not recur, so their driver is still unattributed.
