@@ -518,12 +518,12 @@ package adris.altoclef.benchmark;
 //$$    // ---- portal ------------------------------------------------------------------------
 //$$
 //$$    /**
-//$$     * Nether-portal bucket build in isolation: a flat stone pad with a 5x5 surface lava pool and a
+//$$     * Nether-portal bucket build in isolation: a flat stone pad at y=120 with a 5x5 lava pool and a
 //$$     * 3x3 water pool, rebuilt each trial. Kit: iron pickaxe, 2 buckets, flint and steel, 32 cobblestone. Runs
 //$$     * ConstructNetherPortalBucketTask; GOAL when a nether portal block appears on the pad.
 //$$     */
 //$$    private static void portal(MinecraftClient mc, BlockPos origin, int reps) throws Exception {
-//$$        int ox = origin.getX(), oz = origin.getZ(), y0 = Math.max(64, origin.getY());
+//$$        int ox = origin.getX(), oz = origin.getZ(), y0 = 120; // sky pad: no natural water/lava/caves under it
 //$$        PrintWriter csv = open("portal");
 //$$        csv.println("rep,result,ticks,lastState,lastLineState");
 //$$        int ok = 0, n = 0; long sumTicks = 0;
