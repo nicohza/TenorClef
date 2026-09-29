@@ -92,6 +92,15 @@ the one miss was goal 15 rep 0, which stalled 44 blocks away). The physics row i
 | Kinematic (experimental) | 46/48 | 383 |
 | Physics search (experimental, `physicsTravel`) | 15/16 | 401 |
 
+Newer kinematic runs (2026-09-29, 16 goals × 3 reps, pinned origin, every trial fed to full hunger; one run each):
+
+| Mover | Conditions | Goals reached | Avg ticks |
+| --- | --- | --- | --- |
+| Kinematic (experimental) | Mobs on | 48/48 | 233 |
+| Kinematic (experimental) | Peaceful | 48/48 | 230 |
+
+These replace the kinematic row above. Its lower score and higher tick count came mostly from hunger carrying over between trials. Baritone has not been re-run fed, so the two movers can't be compared yet. Details and logs are in [docs/BENCHMARKS.md](docs/BENCHMARKS.md).
+
 The averages only cover goals each mover reached. The bench origin moves between runs, so
 compare runs taken together. Single-rep runs are noisy; re-run with 3 reps before drawing conclusions.
 
