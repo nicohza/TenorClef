@@ -206,6 +206,20 @@ package adris.altoclef.benchmark;
 //$$     private static void travel(MinecraftClient mc, BlockPos origin, String opt, int reps) throws Exception {
 //$$         String mover = opt == null || opt.equals("-") ? "baritone" : opt.toLowerCase(Locale.ROOT);
 //$$         IBaritone baritone = BaritoneAPI.getProvider().getPrimaryBaritone();
+//$$         // Spawn drifts a few blocks between runs, which moved every goal. Pin the ring centre (x,z) so goal N is the
+//$$         // same block each run; "spawn" restores the old behaviour. Default is the first leaf-free baseline's origin.
+//$$         String pin = System.getProperty("tenorclef.pathbench.origin", "65,-110").trim();
+//$$         if (!pin.equalsIgnoreCase("spawn")) {
+//$$             String[] xz = pin.split(",");
+//$$             int px = Integer.parseInt(xz[0].trim()), pz = Integer.parseInt(xz[1].trim());
+//$$             teleport(mc, new BlockPos(px, 200, pz)); // load the column before reading its surface
+//$$             Thread.sleep(1000);
+//$$             int py;
+//$$             try { py = mc.submit(() -> surfaceY(mc, px, pz)).get(); } catch (Exception e) { py = surfaceY(mc, px, pz); }
+//$$             origin = new BlockPos(px, py, pz);
+//$$             teleport(mc, origin);
+//$$             Debug.logHarness("PATHBENCH travel origin pinned at " + origin.toShortString());
+//$$         }
 //$$         List<BlockPos> goals = ring(mc, origin);
 //$$         long limitTicks = Long.getLong("tenorclef.pathbench.travelTicks", 20L * 90);
 //$$         // End a trial early once it stops getting closer; 0 disables.
