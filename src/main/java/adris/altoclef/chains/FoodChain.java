@@ -18,7 +18,7 @@ import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.util.Pair;
+import adris.altoclef.util.Pair;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.Objects;

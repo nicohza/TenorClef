@@ -6,7 +6,17 @@ import adris.altoclef.tasks.resources.CollectFoodTask;
 import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.slots.Slot;
+//#if MC < 260000
 import net.minecraft.block.*;
+//#else
+//$$ import net.minecraft.world.level.block.BeetrootBlock;
+//$$ import net.minecraft.world.level.block.Block;
+//$$ import net.minecraft.world.level.block.state.BlockState;
+//$$ import net.minecraft.world.level.block.Blocks;
+//$$ import net.minecraft.world.level.block.CarrotBlock;
+//$$ import net.minecraft.world.level.block.CropBlock;
+//$$ import net.minecraft.world.level.block.PotatoBlock;
+//#endif
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;

@@ -16,7 +16,16 @@ import adris.altoclef.util.time.TimerGame;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
+//#if MC < 260000
 import net.minecraft.entity.passive.*;
+//#else
+//$$ import net.minecraft.world.entity.animal.chicken.Chicken;
+//$$ import net.minecraft.world.entity.animal.cow.Cow;
+//$$ import net.minecraft.world.entity.animal.cow.AbstractCow;
+//$$ import net.minecraft.world.entity.animal.pig.Pig;
+//$$ import net.minecraft.world.entity.animal.rabbit.Rabbit;
+//$$ import net.minecraft.world.entity.animal.sheep.Sheep;
+//#endif
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;

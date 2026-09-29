@@ -45,8 +45,9 @@ public class UnstuckChain extends SingleTaskChain {
         ClientPlayerEntity player = AltoClef.getInstance().getPlayer();
 
         // is not in water
-        if (!world.getBlockState(player.getSteppingPos()).getBlock().equals(Blocks.WATER)
-                && !world.getBlockState(player.getSteppingPos().down()).getBlock().equals(Blocks.WATER))
+        BlockPos steppingPos = player.getSteppingPos();
+        if (!world.getBlockState(steppingPos).getBlock().equals(Blocks.WATER)
+                && !world.getBlockState(steppingPos.down()).getBlock().equals(Blocks.WATER))
             return;
 
         // everything should be fine

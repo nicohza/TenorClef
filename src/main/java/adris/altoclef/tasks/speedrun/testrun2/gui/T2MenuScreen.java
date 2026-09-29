@@ -1,5 +1,7 @@
 package adris.altoclef.tasks.speedrun.testrun2.gui;
 
+import adris.altoclef.multiversion.ScreenVer;
+
 import adris.altoclef.Debug;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -105,7 +107,7 @@ public class T2MenuScreen extends Screen {
         if (mc == null) return;
         Runnable show = () -> {
             try {
-                if (mc.currentScreen instanceof T2MenuScreen) return;
+                if (ScreenVer.current(mc) instanceof T2MenuScreen) return;
                 T2MenuScreen screen = new T2MenuScreen();
                 try {
                     mc.getClass().getMethod("openScreen", Screen.class).invoke(mc, screen);
@@ -133,10 +135,10 @@ public class T2MenuScreen extends Screen {
         if (pendingOpen <= 0) return;
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc == null) return;
-        if (mc.currentScreen != null) {
-            String n = mc.currentScreen.getClass().getSimpleName();
+        if (ScreenVer.current(mc) != null) {
+            String n = ScreenVer.current(mc).getClass().getSimpleName();
             if (n.contains("Chat") || n.contains("Command")) return;
-            if (mc.currentScreen instanceof T2MenuScreen) {
+            if (ScreenVer.current(mc) instanceof T2MenuScreen) {
                 pendingOpen = 0;
                 return;
             }
@@ -276,7 +278,20 @@ public class T2MenuScreen extends Screen {
         return false;
     }
 
-    //#if MC >= 12000
+    //#if MC >= 260000
+    //$$ @Override
+    //$$ public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    //$$     adris.altoclef.multiversion.DrawContextWrapper g = adris.altoclef.multiversion.DrawContextWrapper.of(context);
+    //$$     paintUi(g, mouseX, mouseY);
+    //$$     super.extractRenderState(context, mouseX, mouseY, delta);
+    //$$     if (dropStart < hits.size()) T2MenuLook.paintHits(this, g, mouseX, mouseY, dropStart);
+    //$$ }
+    //$$
+    //$$ // The panel supplies its own backdrop; skip the blurred menu background.
+    //$$ @Override
+    //$$ public void extractBackground(net.minecraft.client.gui.GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    //$$ }
+    //#elseif MC >= 12000
     @Override
     public void render(net.minecraft.client.gui.DrawContext context, int mouseX, int mouseY, float delta) {
         adris.altoclef.multiversion.DrawContextWrapper g = adris.altoclef.multiversion.DrawContextWrapper.of(context);
@@ -306,6 +321,28 @@ public class T2MenuScreen extends Screen {
         T2MenuLook.paint(this, g, mx, my);
     }
 
+    //#if MC >= 12111
+    //$$ @Override
+    //$$ public boolean mouseClicked(net.minecraft.client.gui.Click click, boolean doubled) {
+    //$$     double mx = click.x();
+    //$$     double my = click.y();
+    //$$     int button = click.button();
+    //$$     if (button == 0) {
+    //$$         for (int i = hits.size() - 1; i >= 0; i--) {
+    //$$             int[] b = hits.get(i);
+    //$$             if (mx >= b[0] && mx <= b[0] + b[2] && my >= b[1] && my <= b[1] + b[3]) {
+    //$$                 T2MenuActions.runCmd(this, i < hitCmd.size() ? hitCmd.get(i) : null);
+    //$$                 return true;
+    //$$             }
+    //$$         }
+    //$$     }
+    //$$     try {
+    //$$         return super.mouseClicked(click, doubled);
+    //$$     } catch (Throwable t) {
+    //$$         return false;
+    //$$     }
+    //$$ }
+    //#else
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
         if (button == 0) {
@@ -323,4 +360,5 @@ public class T2MenuScreen extends Screen {
             return false;
         }
     }
+    //#endif
 }

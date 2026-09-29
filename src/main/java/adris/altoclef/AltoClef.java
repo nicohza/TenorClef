@@ -46,7 +46,7 @@ import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import org.lwjgl.glfw.GLFW;
+import adris.altoclef.multiversion.input.KeyCodes;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -268,7 +268,7 @@ public class AltoClef implements ModInitializer {
         inputControls.onTickPre();
 
         // Cancel shortcut
-        if (InputHelper.isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) && InputHelper.isKeyPressed(GLFW.GLFW_KEY_K)) {
+        if (InputHelper.isKeyPressed(KeyCodes.LEFT_CONTROL) && InputHelper.isKeyPressed(KeyCodes.K)) {
             stopTasks();
         }
         try {

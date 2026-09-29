@@ -1,7 +1,9 @@
 package adris.altoclef.tasks.speedrun.testrun2.gui;
 
+import adris.altoclef.multiversion.ScreenVer;
+
 import net.minecraft.client.MinecraftClient;
-import org.lwjgl.glfw.GLFW;
+import adris.altoclef.util.helpers.InputHelper;
 
 /**
  * Poll the configured key. Hooked from {@code AltoClef.onClientTick}.
@@ -16,19 +18,12 @@ public final class T2MenuKeys {
         T2MenuScreen.poll();
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc == null) return;
-        if (mc.currentScreen != null) {
+        if (ScreenVer.current(mc) != null) {
             wasDown = false;
             return;
         }
-        long handle;
-        try {
-            Object win = mc.getWindow();
-            handle = (Long) win.getClass().getMethod("getHandle").invoke(win);
-        } catch (Throwable t) {
-            return;
-        }
         int key = AgentConfig.cached().glfwKey();
-        boolean down = GLFW.glfwGetKey(handle, key) == GLFW.GLFW_PRESS;
+        boolean down = InputHelper.isKeyPressed(key);
         if (down && !wasDown) {
             T2MenuScreen.open();
         }

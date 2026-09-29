@@ -8,6 +8,14 @@ import net.minecraft.item.ItemStack;
 
 public class PlayerVer {
 
+    public static void sendClientMessage(ClientPlayerEntity player, net.minecraft.text.Text text, boolean overlay) {
+        //#if MC >= 260000
+        //$$ if (overlay) player.sendOverlayMessage(text); else player.sendSystemMessage(text);
+        //#else
+        player.sendMessage(text, overlay);
+        //#endif
+    }
+
 
     public static void sendChatMessage(ClientPlayerEntity player,String content) {
         //#if MC >= 11904

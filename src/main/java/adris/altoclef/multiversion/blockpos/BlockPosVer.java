@@ -1,7 +1,14 @@
 package adris.altoclef.multiversion.blockpos;
 
 import adris.altoclef.multiversion.Pattern;
+//#if MC < 260000
 import net.minecraft.util.math.*;
+//#else
+//$$ import net.minecraft.core.BlockPos;
+//$$ import net.minecraft.util.Mth;
+//$$ import net.minecraft.core.Position;
+//$$ import net.minecraft.core.Vec3i;
+//#endif
 import adris.altoclef.multiversion.blockpos.BlockPosHelper;
 
 public class BlockPosVer {
@@ -12,8 +19,23 @@ public class BlockPosVer {
     }
 
 
+    /** 26.x removed the BlockPos(Vec3i) constructor. */
+    public static BlockPos copyOf(Vec3i v) {
+        return new BlockPos(v.getX(), v.getY(), v.getZ());
+    }
+
+    /** Vec3i.isWithinDistance(Vec3i, double); 26.x splits it by argument type, so compute it directly. */
+    public static boolean isWithinDistance(Vec3i a, Vec3i b, double distance) {
+        double dx = a.getX() - b.getX();
+        double dy = a.getY() - b.getY();
+        double dz = a.getZ() - b.getZ();
+        return dx * dx + dy * dy + dz * dz < distance * distance;
+    }
+
     public static double getSquaredDistance(BlockPos pos, Position obj) {
-        //#if MC >= 11802
+        //#if MC >= 260000
+        //$$ return pos.distToCenterSqr(obj);
+        //#elseif MC >= 11802
         return pos.getSquaredDistance(obj);
         //#else
         //$$ return pos.getSquaredDistance(obj.getX(), obj.getY(), obj.getZ(), true);

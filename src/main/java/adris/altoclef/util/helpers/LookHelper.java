@@ -1,5 +1,6 @@
 package adris.altoclef.util.helpers;
 
+import adris.altoclef.multiversion.blockpos.BlockPosVer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.util.slots.Slot;
@@ -20,7 +21,16 @@ import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
+//#if MC < 260000
 import net.minecraft.util.math.*;
+//#else
+//$$ import net.minecraft.core.BlockPos;
+//$$ import net.minecraft.world.phys.AABB;
+//$$ import net.minecraft.core.Direction;
+//$$ import net.minecraft.util.Mth;
+//$$ import net.minecraft.world.phys.Vec3;
+//$$ import net.minecraft.core.Vec3i;
+//#endif
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 
@@ -65,7 +75,7 @@ public interface LookHelper {
             // Check if the reachable rotation is present
             if (reachableRotation.isPresent()) {
                 // Calculate the camera position and vector to player position
-                Vec3d cameraPos = context.player().getCameraPosVec(1.0F);
+                Vec3d cameraPos = cameraPos(context.player(), 1.0F);
                 Vec3d vecToPlayerPos = cameraPos.subtract(sidePoint);
 
                 // Calculate the dot product between the vector to player position and the side vector
@@ -114,7 +124,7 @@ public interface LookHelper {
         Vec3d end = getCameraPos(to);
 
         // Calculate the direction of the raycast
-        Vec3d direction = end.subtract(start).normalize().multiply(reachDistance);
+        Vec3d direction = MathsHelper.scale(end.subtract(start).normalize(), reachDistance);
 
         // Get the bounding box of the target entity
         Box box = to.getBoundingBox();
@@ -270,7 +280,7 @@ public interface LookHelper {
         // Check if the direction vector length exceeds the maximum range
         if (direction.lengthSquared() > maxRange * maxRange) {
             // If it does, normalize the direction vector and multiply it by the maximum range
-            direction = direction.normalize().multiply(maxRange);
+            direction = MathsHelper.scale(direction.normalize(), maxRange);
             // Update the end point of the raycast to the new calculated position
             end = start.add(direction);
         }
@@ -338,6 +348,14 @@ public interface LookHelper {
      * @param entity The entity for which to retrieve the camera position.
      * @return The camera position of the entity.
      */
+    static Vec3d cameraPos(Entity entity, float tickDelta) {
+        //#if MC >= 260000
+        //$$ return entity.getEyePosition(tickDelta);
+        //#else
+        return entity.getCameraPosVec(tickDelta);
+        //#endif
+    }
+
     static Vec3d getCameraPos(Entity entity) {
         boolean isPlayerSneaking = entity instanceof PlayerEntity && entity.isSneaking();
 
@@ -346,7 +364,7 @@ public interface LookHelper {
             return RayTraceUtils.inferSneakingEyePosition(entity);
         } else {
             // Otherwise, return the default camera position of the entity
-            return entity.getCameraPosVec(1.0F);
+            return cameraPos(entity, 1.0F);
         }
     }
 
@@ -361,7 +379,7 @@ public interface LookHelper {
         IPlayerContext playerContext = BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext();
 
         // Get the camera position vector from the player context
-        return playerContext.player().getCameraPosVec(1);
+        return cameraPos(playerContext.player(), 1);
     }
 
     /**
@@ -473,7 +491,7 @@ public interface LookHelper {
             // Get the block position from the crosshair target
             Vec3i resultGetPosOrigin = new Vec3i((int) result.getPos().getX(), (int) result.getPos().getY(), (int) result.getPos().getZ());
             // Check if the block is an interactable block
-            return WorldHelper.isInteractableBlock(new BlockPos(resultGetPosOrigin));
+            return WorldHelper.isInteractableBlock(BlockPosVer.copyOf(resultGetPosOrigin));
         }
         // Check if the crosshair target is an entity
         else if (result.getType() == HitResult.Type.ENTITY && result instanceof EntityHitResult) {

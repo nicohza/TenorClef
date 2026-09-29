@@ -1,5 +1,7 @@
 package adris.altoclef.tasks.speedrun.testrun2;
 
+import adris.altoclef.multiversion.CItems;
+
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 
@@ -25,10 +27,10 @@ public final class KeepList {
             Items.OBSIDIAN, Items.CRYING_OBSIDIAN,
             Items.ENDER_EYE, Items.ENDER_PEARL, Items.BLAZE_ROD, Items.BLAZE_POWDER,
             Items.CRAFTING_TABLE, Items.FURNACE,
-            Items.WHITE_BED, Items.ORANGE_BED, Items.MAGENTA_BED, Items.LIGHT_BLUE_BED,
-            Items.YELLOW_BED, Items.LIME_BED, Items.PINK_BED, Items.GRAY_BED,
-            Items.LIGHT_GRAY_BED, Items.CYAN_BED, Items.PURPLE_BED, Items.BLUE_BED,
-            Items.BROWN_BED, Items.GREEN_BED, Items.RED_BED, Items.BLACK_BED,
+            CItems.WHITE_BED, CItems.ORANGE_BED, CItems.MAGENTA_BED, CItems.LIGHT_BLUE_BED,
+            CItems.YELLOW_BED, CItems.LIME_BED, CItems.PINK_BED, CItems.GRAY_BED,
+            CItems.LIGHT_GRAY_BED, CItems.CYAN_BED, CItems.PURPLE_BED, CItems.BLUE_BED,
+            CItems.BROWN_BED, CItems.GREEN_BED, CItems.RED_BED, CItems.BLACK_BED,
             Items.OAK_BOAT, Items.BIRCH_BOAT, Items.SPRUCE_BOAT,
             Items.COBBLESTONE, Items.NETHERRACK,
             Items.BREAD, Items.COOKED_PORKCHOP, Items.COOKED_BEEF, Items.GOLDEN_CARROT,

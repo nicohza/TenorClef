@@ -1,5 +1,6 @@
 package adris.altoclef.tasks.speedrun.testrun2.combat;
 
+import adris.altoclef.util.helpers.MathsHelper;
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.speedrun.testrun2.McCompat;
@@ -248,7 +249,7 @@ public class AnyWeaponCombatTask extends Task {
     }
 
     private void retreat(AltoClef mod, LivingEntity e) {
-        Vec3d away = mod.getPlayer().getPos().subtract(e.getPos()).normalize().multiply(4);
+        Vec3d away = MathsHelper.scale(mod.getPlayer().getPos().subtract(e.getPos()).normalize(), 4);
         Vec3d dest = mod.getPlayer().getPos().add(away);
         try {
             TungstenHelper.tryPathTo(dest);

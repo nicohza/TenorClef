@@ -12,13 +12,25 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+//#if MC >= 260000
+//$$ @Mixin(net.minecraft.client.gui.Hud.class)
+//#else
 @Mixin(InGameHud.class)
+//#endif
 public final class ClientUIMixin {
     @Inject(
+            //#if MC >= 260000
+            //$$ method = "extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/DeltaTracker;)V",
+            //#else
             method = "render",
+            //#endif
             at = @At("TAIL")
     )
-    //#if MC >= 12100
+    //#if MC >= 260000
+    //$$ private void clientRender(net.minecraft.client.gui.GuiGraphicsExtractor context, net.minecraft.client.DeltaTracker tickCounter, CallbackInfo ci) {
+    //$$     EventBus.publish(new ClientRenderEvent(DrawContextWrapper.of(context), tickCounter.getGameTimeDeltaPartialTick(true)));
+    //$$ }
+    //#elseif MC >= 12100
     private void clientRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         EventBus.publish(new ClientRenderEvent(DrawContextWrapper.of(context), tickCounter.getTickDelta(true)));
     }

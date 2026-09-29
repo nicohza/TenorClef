@@ -1,5 +1,7 @@
 package adris.altoclef.tasks.speedrun.testrun2.combat;
 
+import adris.altoclef.multiversion.CBlocks;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import net.minecraft.block.Block;
@@ -54,7 +56,7 @@ public final class ZeroSetup {
                 new Step(up1, fill),
                 new Step(obbyA, hard),
                 new Step(obbyB, hard),
-                new Step(bed, Blocks.WHITE_BED)
+                new Step(bed, CBlocks.WHITE_BED)
         };
     }
 

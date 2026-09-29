@@ -17,7 +17,9 @@ public class BlockStateVer {
 
     @Pattern
     private static boolean isReplaceable(BlockState state) {
-        //#if MC >= 11904
+        //#if MC >= 260000
+        //$$ return state.canBeReplaced();
+        //#elseif MC >= 11904
         return state.isReplaceable();
         //#else
         //$$ return state.getMaterial().isReplaceable();

@@ -15,6 +15,7 @@ import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.Dimension;
 import adris.altoclef.util.helpers.WorldHelper;
 import net.minecraft.block.Blocks;
+import adris.altoclef.util.helpers.LookHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.BlazeEntity;
 import net.minecraft.item.Items;
@@ -118,7 +119,7 @@ public class CollectBlazeRodsTask extends ResourceTask {
                 // Ignore if the blaze is too far away.
                 if (sqDistanceToPlayer > SPAWNER_BLAZE_RADIUS * SPAWNER_BLAZE_RADIUS) {
                     // If the blaze can see us it needs to go lol
-                    BlockHitResult hit = mod.getWorld().raycast(new RaycastContext(mod.getPlayer().getCameraPosVec(1.0F), kill.getCameraPosVec(1.0F), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mod.getPlayer()));
+                    BlockHitResult hit = mod.getWorld().raycast(new RaycastContext(LookHelper.cameraPos(mod.getPlayer(), 1.0F), LookHelper.cameraPos(kill, 1.0F), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mod.getPlayer()));
                     if (hit != null && BlockPosVer.getSquaredDistance(hit.getBlockPos(),mod.getPlayer().getPos()) < sqDistanceToPlayer) {
                         toKill = Optional.empty();
                     }

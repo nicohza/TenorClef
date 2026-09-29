@@ -1,5 +1,10 @@
 package adris.altoclef.tasks.speedrun.beatgame;
 
+import adris.altoclef.multiversion.CBlocks;
+
+import adris.altoclef.multiversion.ScreenVer;
+
+import adris.altoclef.util.helpers.MathsHelper;
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
@@ -38,12 +43,34 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
+//#if MC < 260000
 import net.minecraft.entity.mob.*;
+//#else
+//$$ import net.minecraft.world.entity.monster.Enderman;
+//$$ import net.minecraft.world.entity.monster.Monster;
+//$$ import net.minecraft.world.entity.monster.illager.Pillager;
+//$$ import net.minecraft.world.entity.monster.Silverfish;
+//$$ import net.minecraft.world.entity.monster.Witch;
+//#endif
 import net.minecraft.entity.player.PlayerInventory;
+//#if MC < 260000
 import net.minecraft.item.*;
+//#else
+//$$ import net.minecraft.world.item.EnderEyeItem;
+//$$ import net.minecraft.world.item.Item;
+//$$ import net.minecraft.world.item.ItemStack;
+//#endif
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.collection.DefaultedList;
+//#if MC < 260000
 import net.minecraft.util.math.*;
+//#else
+//$$ import net.minecraft.core.BlockPos;
+//$$ import net.minecraft.world.phys.AABB;
+//$$ import net.minecraft.core.Position;
+//$$ import net.minecraft.world.phys.Vec3;
+//$$ import net.minecraft.core.Vec3i;
+//#endif
 import net.minecraft.world.Difficulty;
 import org.apache.commons.lang3.ArrayUtils;
 import adris.altoclef.multiversion.versionedfields.Items;
@@ -256,7 +283,7 @@ public class BeatMinecraftTask extends Task {
 
         for (BlockPos pos : mod.getBlockScanner().getKnownLocations(Blocks.END_PORTAL_FRAME)) {
             // distance is arbitrary for now, dont think this can run into any edge cases in a normal mc world
-            if (pos.isWithinDistance(endPortalCenter, 20)) {
+            if (BlockPosVer.isWithinDistance(pos, endPortalCenter, 20)) {
                 frameBlocks.add(pos);
             }
         }
@@ -728,7 +755,7 @@ public class BeatMinecraftTask extends Task {
      */
     @Override
     public boolean isFinished() {
-        if (getInstance().currentScreen instanceof CreditsScreen) {
+        if (ScreenVer.current(getInstance()) instanceof CreditsScreen) {
             Debug.logInternal("isFinished - Current screen is CreditsScreen");
             return true;
         }
@@ -1003,13 +1030,13 @@ public class BeatMinecraftTask extends Task {
             if (blacklistedChests.contains(blockPos)) return false;
 
             boolean isUnopenedChest = WorldHelper.isUnopenedChest(blockPos);
-            boolean isWithinDistance = mod.getPlayer().getBlockPos().isWithinDistance(blockPos, 150);
+            boolean isWithinDistance = BlockPosVer.isWithinDistance(mod.getPlayer().getBlockPos(), blockPos, 150);
             boolean isLootableChest = canBeLootablePortalChest(mod, blockPos);
 
             // TODO make more sophisticated
             //dont open spawner chests
             Optional<BlockPos> nearestSpawner = mod.getBlockScanner().getNearestBlock(WorldHelper.toVec3d(blockPos), Blocks.SPAWNER);
-            if (nearestSpawner.isPresent() && nearestSpawner.get().isWithinDistance(blockPos, 6)) {
+            if (nearestSpawner.isPresent() && BlockPosVer.isWithinDistance(nearestSpawner.get(), blockPos, 6)) {
                 blacklistedChests.add(blockPos);
                 return false;
             }
@@ -1263,7 +1290,7 @@ public class BeatMinecraftTask extends Task {
 
                     }
                 }
-                if (craftingTablePosUp.getBlock() == Blocks.WHITE_WOOL) {
+                if (craftingTablePosUp.getBlock() == CBlocks.WHITE_WOOL) {
                     Debug.logMessage("Blacklisting pillage crafting table.");
                     mod.getBlockScanner().requestBlockUnreachable(craftingTable, 0);
                 }
@@ -1723,7 +1750,7 @@ public class BeatMinecraftTask extends Task {
                             }
 
                             return new PlaceObsidianBucketTask(
-                                    mod.getBlockScanner().getNearestBlock(WorldHelper.toVec3d(endPortalCenterLocation), (blockPos) -> !blockPos.isWithinDistance(endPortalCenterLocation, 8), Blocks.LAVA).get());
+                                    mod.getBlockScanner().getNearestBlock(WorldHelper.toVec3d(endPortalCenterLocation), (blockPos) -> !BlockPosVer.isWithinDistance(blockPos, endPortalCenterLocation, 8), Blocks.LAVA).get());
                         }
                         setDebugState(waterPlacedTimer.getDuration() + "");
                         return null;
@@ -1977,12 +2004,13 @@ public class BeatMinecraftTask extends Task {
 
         if (frames.size() >= END_PORTAL_FRAME_COUNT) {
             // Calculate the average position of the frames.
-            Vec3d average = frames.stream().reduce(Vec3d.ZERO, (accum, bpos) -> accum.add((int) Math.round(bpos.getX() + 0.5), (int) Math.round(bpos.getY() + 0.5), (int) Math.round(bpos.getZ() + 0.5)), Vec3d::add).multiply(1d / frames.size());
+            Vec3d average = frames.stream().reduce(Vec3d.ZERO, (accum, bpos) -> accum.add((int) Math.round(bpos.getX() + 0.5), (int) Math.round(bpos.getY() + 0.5), (int) Math.round(bpos.getZ() + 0.5)), Vec3d::add);
+            average = MathsHelper.scale(average, 1d / frames.size());
 
             // Log the average position.
             mod.log("Average Position: " + average);
 
-            return new BlockPos(new Vec3i((int) average.x, (int) average.y, (int) average.z));
+            return BlockPosVer.copyOf(new Vec3i((int) average.x, (int) average.y, (int) average.z));
         }
 
         // Log that there are not enough frames.
@@ -2141,7 +2169,7 @@ public class BeatMinecraftTask extends Task {
                         TaskChange t2 = taskChanges.get(1);
                         TaskChange t3 = taskChanges.get(2);
 
-                        if (t1.original == t2.interrupt && t1.pos.isWithinDistance(t3.pos, 5) && t3.original == t1.interrupt) {
+                        if (t1.original == t2.interrupt && BlockPosVer.isWithinDistance(t1.pos, t3.pos, 5) && t3.original == t1.interrupt) {
                             forcedTaskTimer.reset();
                             mod.logWarning("Probably stuck! Forcing timer...");
                             taskChanges.clear();

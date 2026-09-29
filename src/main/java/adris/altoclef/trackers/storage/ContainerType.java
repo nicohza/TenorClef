@@ -3,9 +3,30 @@ package adris.altoclef.trackers.storage;
 import adris.altoclef.util.slots.ChestSlot;
 import adris.altoclef.util.slots.FurnaceSlot;
 import adris.altoclef.util.slots.Slot;
+//#if MC < 260000
 import net.minecraft.block.*;
+//#else
+//$$ import net.minecraft.world.level.block.AbstractFurnaceBlock;
+//$$ import net.minecraft.world.level.block.BarrelBlock;
+//$$ import net.minecraft.world.level.block.Block;
+//$$ import net.minecraft.world.level.block.Blocks;
+//$$ import net.minecraft.world.level.block.BrewingStandBlock;
+//$$ import net.minecraft.world.level.block.ChestBlock;
+//$$ import net.minecraft.world.level.block.DispenserBlock;
+//$$ import net.minecraft.world.level.block.HopperBlock;
+//$$ import net.minecraft.world.level.block.ShulkerBoxBlock;
+//#endif
 import net.minecraft.client.MinecraftClient;
+//#if MC < 260000
 import net.minecraft.screen.*;
+//#else
+//$$ import net.minecraft.world.inventory.AbstractFurnaceMenu;
+//$$ import net.minecraft.world.inventory.BrewingStandMenu;
+//$$ import net.minecraft.world.inventory.DispenserMenu;
+//$$ import net.minecraft.world.inventory.ChestMenu;
+//$$ import net.minecraft.world.inventory.AbstractContainerMenu;
+//$$ import net.minecraft.world.inventory.ShulkerBoxMenu;
+//#endif
 import org.apache.commons.lang3.NotImplementedException;
 
 public enum ContainerType {

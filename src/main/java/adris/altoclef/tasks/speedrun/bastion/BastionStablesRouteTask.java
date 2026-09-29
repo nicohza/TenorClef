@@ -1,5 +1,6 @@
 package adris.altoclef.tasks.speedrun.bastion;
 
+import adris.altoclef.multiversion.blockpos.BlockPosVer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.StorageHelper;
@@ -36,7 +37,7 @@ public class BastionStablesRouteTask extends BastionRouteTask {
             if (go != null) return go;
         }
         Optional<BlockPos> gold = mod.getBlockScanner().getNearestBlock(Blocks.GOLD_BLOCK, Blocks.GILDED_BLACKSTONE);
-        if (gold.isPresent() && gold.get().isWithinDistance(bastionOrigin, 40)) {
+        if (gold.isPresent() && BlockPosVer.isWithinDistance(gold.get(), bastionOrigin, 40)) {
             Task go = goToTarget(gold.get(), "Stables route – gold");
             if (go != null) return go;
         }

@@ -1,5 +1,7 @@
 package adris.altoclef.tasks.movement;
 
+import adris.altoclef.multiversion.ScreenVer;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.construction.compound.ConstructNetherPortalObsidianTask;
@@ -75,7 +77,7 @@ public class FastTravelTask extends Task {
         boolean canLightPortal = mod.getItemStorage().hasItem(Items.FLINT_AND_STEEL, Items.FIRE_CHARGE);
 
         // EDGE CASE: We die in the nether, stop force walking, we want to start over.
-        if (MinecraftClient.getInstance().currentScreen instanceof DeathScreen) {
+        if (ScreenVer.current(MinecraftClient.getInstance()) instanceof DeathScreen) {
             _forceOverworldWalking = false;
         }
 

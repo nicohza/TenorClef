@@ -118,12 +118,12 @@ public abstract class ChatInputSuggestorMixin {
 
         if (result == null) return;
 
-        messages.clear();
+        this.messages.clear();
         if (result.getRight().isPresent()) {
             MutableText text = result.getRight().get().getLeft();
             int severity = result.getRight().get().getRight();
 
-            messages.add(text.asOrderedText());
+            this.messages.add(text.asOrderedText());
 
             if (severity == 1) {
                 this.x = MathHelper.clamp(this.textField.getCharacterX(original.length()), 0, this.textField.getCharacterX(0) + this.textField.getInnerWidth());

@@ -1,5 +1,11 @@
 package adris.altoclef.tasks.speedrun.testrun2;
 
+import adris.altoclef.multiversion.CItems;
+
+import adris.altoclef.multiversion.ScreenVer;
+
+import adris.altoclef.multiversion.blockpos.BlockPosVer;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.speedrun.testrun2.fault.FaultBook;
@@ -92,7 +98,7 @@ public class ModernSpeedrunTask extends Task {
             var ps = mod.getEntityTracker().getTrackedEntities(net.minecraft.entity.mob.PiglinEntity.class);
             if (ps == null) return false;
             for (var e : ps) {
-                if (e != null && e.isAlive() && e.getBlockPos().isWithinDistance(pos, 16)) return true;
+                if (e != null && e.isAlive() && BlockPosVer.isWithinDistance(e.getBlockPos(), pos, 16)) return true;
             }
         } catch (Throwable ignored) {}
         return false;
@@ -712,7 +718,7 @@ public class ModernSpeedrunTask extends Task {
             wdAnchor = null;
         }
         if (wdAnchor == null || items != wdItems
-                || !p.isWithinDistance(wdAnchor, PROGRESS_DIST)) {
+                || !BlockPosVer.isWithinDistance(p, wdAnchor, PROGRESS_DIST)) {
             wdAnchor = p;
             wdItems = items;
             FaultBook.progress(System.currentTimeMillis());
@@ -1325,7 +1331,7 @@ public class ModernSpeedrunTask extends Task {
             // a wander, then the same bail. Third bail at the same spot inside 3 min: pillar straight up.
             BlockPos bp = mod.getPlayer().getBlockPos();
             long nowMs = System.currentTimeMillis();
-            bailRepeat = (lastBailPos != null && lastBailPos.isWithinDistance(bp, 4) && nowMs - lastBailMs < 180_000) ? bailRepeat + 1 : 0;
+            bailRepeat = (lastBailPos != null && BlockPosVer.isWithinDistance(lastBailPos, bp, 4) && nowMs - lastBailMs < 180_000) ? bailRepeat + 1 : 0;
             lastBailPos = bp; lastBailMs = nowMs;
             if (bailRepeat >= 2) {
                 bailRepeat = 0;
@@ -2118,8 +2124,8 @@ public class ModernSpeedrunTask extends Task {
     private static boolean slowScreenOpen() {
         try {
             var mc = net.minecraft.client.MinecraftClient.getInstance();
-            if (mc == null || mc.currentScreen == null) return false;
-            String n = mc.currentScreen.getClass().getSimpleName();
+            if (mc == null || ScreenVer.current(mc) == null) return false;
+            String n = ScreenVer.current(mc).getClass().getSimpleName();
             return n.contains("Furnace") || n.contains("Brew");
         } catch (Throwable t) {
             return false;
@@ -2480,7 +2486,7 @@ public class ModernSpeedrunTask extends Task {
         if (SpeedrunOpt.BEDS > 0
                 && bedCount(mod) < SpeedrunOpt.BEDS
                 && woolCount(mod) >= SpeedrunOpt.BEDS * 3) {
-            return TaskCatalogue.getItemTask(Items.WHITE_BED, SpeedrunOpt.BEDS);
+            return TaskCatalogue.getItemTask(CItems.WHITE_BED, SpeedrunOpt.BEDS);
         }
         return new GoToStrongholdPortalTask(SpeedrunOpt.EYES);
     }
@@ -3328,18 +3334,18 @@ public class ModernSpeedrunTask extends Task {
 
     private int bedCount(AltoClef mod) {
         return mod.getItemStorage().getItemCount(
-                Items.WHITE_BED, Items.ORANGE_BED, Items.MAGENTA_BED, Items.LIGHT_BLUE_BED,
-                Items.YELLOW_BED, Items.LIME_BED, Items.PINK_BED, Items.GRAY_BED,
-                Items.LIGHT_GRAY_BED, Items.CYAN_BED, Items.PURPLE_BED, Items.BLUE_BED,
-                Items.BROWN_BED, Items.GREEN_BED, Items.RED_BED, Items.BLACK_BED);
+                CItems.WHITE_BED, CItems.ORANGE_BED, CItems.MAGENTA_BED, CItems.LIGHT_BLUE_BED,
+                CItems.YELLOW_BED, CItems.LIME_BED, CItems.PINK_BED, CItems.GRAY_BED,
+                CItems.LIGHT_GRAY_BED, CItems.CYAN_BED, CItems.PURPLE_BED, CItems.BLUE_BED,
+                CItems.BROWN_BED, CItems.GREEN_BED, CItems.RED_BED, CItems.BLACK_BED);
     }
 
     private int woolCount(AltoClef mod) {
         return mod.getItemStorage().getItemCount(
-                Items.WHITE_WOOL, Items.ORANGE_WOOL, Items.MAGENTA_WOOL, Items.LIGHT_BLUE_WOOL,
-                Items.YELLOW_WOOL, Items.LIME_WOOL, Items.PINK_WOOL, Items.GRAY_WOOL,
-                Items.LIGHT_GRAY_WOOL, Items.CYAN_WOOL, Items.PURPLE_WOOL, Items.BLUE_WOOL,
-                Items.BROWN_WOOL, Items.GREEN_WOOL, Items.RED_WOOL, Items.BLACK_WOOL);
+                CItems.WHITE_WOOL, CItems.ORANGE_WOOL, CItems.MAGENTA_WOOL, CItems.LIGHT_BLUE_WOOL,
+                CItems.YELLOW_WOOL, CItems.LIME_WOOL, CItems.PINK_WOOL, CItems.GRAY_WOOL,
+                CItems.LIGHT_GRAY_WOOL, CItems.CYAN_WOOL, CItems.PURPLE_WOOL, CItems.BLUE_WOOL,
+                CItems.BROWN_WOOL, CItems.GREEN_WOOL, CItems.RED_WOOL, CItems.BLACK_WOOL);
     }
 
     private void setPhase(Phase p) {
@@ -3467,7 +3473,11 @@ public class ModernSpeedrunTask extends Task {
         if (HolePillar.busy() || HolePillar.holding() || McCompat.baritonePlacing(mod)) return;
         try {
             for (int i = 0; i < 9; i++) {
+                //#if MC >= 12111
+                //$$ if (mod.getPlayer().getInventory().getStack(i) != null && adris.altoclef.util.helpers.ItemHelper.stackIn(mod.getPlayer().getInventory().getStack(i), net.minecraft.registry.tag.ItemTags.PICKAXES)) return;
+                //#else
                 if (mod.getPlayer().getInventory().getStack(i).getItem() instanceof net.minecraft.item.PickaxeItem) return;
+                //#endif
             }
             Item[] picks = new Item[]{Items.NETHERITE_PICKAXE, Items.DIAMOND_PICKAXE, Items.IRON_PICKAXE,
                     Items.STONE_PICKAXE, Items.GOLDEN_PICKAXE, Items.WOODEN_PICKAXE};

@@ -35,20 +35,18 @@ public class CommandStatusOverlay {
             paused = false;
         }
 
-        MatrixStack matrixStack = context.getMatrices();
-
-        matrixStack.push();
+        context.pushMatrix();
 
         drawTaskChain(context,MinecraftClient.getInstance().textRenderer, 10, 10,
-                matrixStack, 10, tasks, mod);
+                10, tasks, mod);
 
-        matrixStack.pop();
+        context.popMatrix();
     }
 
-    private void drawTaskChain(DrawContextWrapper context, TextRenderer renderer, int x, int y, MatrixStack matrices, int maxLines, List<Task> tasks, AltoClef mod) {
+    private void drawTaskChain(DrawContextWrapper context, TextRenderer renderer, int x, int y, int maxLines, List<Task> tasks, AltoClef mod) {
         int whiteColor = 0xFFFFFFFF;
 
-        matrices.scale(0.5f,0.5f,0.5f);
+        context.scale(0.5f,0.5f,0.5f);
 
         int fontHeight = renderer.fontHeight;
         int addX = 4;

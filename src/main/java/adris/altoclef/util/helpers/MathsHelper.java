@@ -9,11 +9,16 @@ import net.minecraft.util.math.Vec3d;
  */
 public interface MathsHelper {
 
+    /** Uniform scale; Vec3d.multiply(double) was renamed to scale() on 26.x so go through the 3-arg overload. */
+    static Vec3d scale(Vec3d vec, double k) {
+        return vec.multiply(k, k, k);
+    }
+
     static Vec3d project(Vec3d vec, Vec3d onto, boolean assumeOntoNormalized) {
         if (!assumeOntoNormalized) {
             onto = onto.normalize();
         }
-        return onto.multiply(vec.dotProduct(onto));
+        return MathsHelper.scale(onto, vec.dotProduct(onto));
     }
 
     static Vec3d project(Vec3d vec, Vec3d onto) {

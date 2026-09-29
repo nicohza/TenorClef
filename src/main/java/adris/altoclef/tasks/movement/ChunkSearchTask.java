@@ -1,5 +1,6 @@
 package adris.altoclef.tasks.movement;
 
+import adris.altoclef.multiversion.ChunkPosVer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.eventbus.EventBus;
@@ -184,10 +185,10 @@ abstract class ChunkSearchTask extends Task {
             _searchedAlready.add(pos);
             if (isChunkPartOfSearchSpace(mod, pos)) {
                 // This chunk may lead to more, so either search or enqueue its neighbors.
-                searchChunkOrQueueSearch(mod, new ChunkPos(pos.x + 1, pos.z));
-                searchChunkOrQueueSearch(mod, new ChunkPos(pos.x - 1, pos.z));
-                searchChunkOrQueueSearch(mod, new ChunkPos(pos.x, pos.z + 1));
-                searchChunkOrQueueSearch(mod, new ChunkPos(pos.x, pos.z - 1));
+                searchChunkOrQueueSearch(mod, new ChunkPos(ChunkPosVer.x(pos) + 1, ChunkPosVer.z(pos)));
+                searchChunkOrQueueSearch(mod, new ChunkPos(ChunkPosVer.x(pos) - 1, ChunkPosVer.z(pos)));
+                searchChunkOrQueueSearch(mod, new ChunkPos(ChunkPosVer.x(pos), ChunkPosVer.z(pos) + 1));
+                searchChunkOrQueueSearch(mod, new ChunkPos(ChunkPosVer.x(pos), ChunkPosVer.z(pos) - 1));
             }
             return true;
         }

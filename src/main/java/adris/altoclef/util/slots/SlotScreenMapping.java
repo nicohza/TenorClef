@@ -1,8 +1,18 @@
 package adris.altoclef.util.slots;
 
+import adris.altoclef.multiversion.ScreenVer;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+//#if MC < 260000
 import net.minecraft.client.gui.screen.ingame.*;
+//#else
+//$$ import net.minecraft.client.gui.screens.inventory.AbstractFurnaceScreen;
+//$$ import net.minecraft.client.gui.screens.inventory.BrewingStandScreen;
+//$$ import net.minecraft.client.gui.screens.inventory.CraftingScreen;
+//$$ import net.minecraft.client.gui.screens.inventory.ContainerScreen;
+//$$ import net.minecraft.client.gui.screens.inventory.SmithingScreen;
+//#endif
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.List;
@@ -27,7 +37,7 @@ public class SlotScreenMapping {
 
     @SuppressWarnings("unchecked")
     public static boolean isScreenOpen(Class slotType) {
-        Screen screen = MinecraftClient.getInstance().currentScreen;
+        Screen screen = ScreenVer.current(MinecraftClient.getInstance());
         if (!_classList.isEmpty()) {
             for (SlotScreenMappingEntry entry : _classList) {
                 if (slotType == entry.type || slotType.isAssignableFrom(entry.type)) {
@@ -39,7 +49,7 @@ public class SlotScreenMapping {
     }
 
     public static Slot getFromScreen(int slot, boolean inventory) {
-        Screen screen = MinecraftClient.getInstance().currentScreen;
+        Screen screen = ScreenVer.current(MinecraftClient.getInstance());
         if (!_classList.isEmpty()) {
             for (SlotScreenMappingEntry entry : _classList) {
                 if (entry.inScreen.test(screen)) {

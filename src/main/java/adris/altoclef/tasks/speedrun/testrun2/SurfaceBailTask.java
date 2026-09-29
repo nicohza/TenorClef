@@ -1,5 +1,7 @@
 package adris.altoclef.tasks.speedrun.testrun2;
 
+import adris.altoclef.multiversion.blockpos.BlockPosVer;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.movement.GetToBlockTask;
@@ -316,9 +318,9 @@ public class SurfaceBailTask extends Task {
         // S199: keep the previous pocket until it is reached or gone. Re-picking the nearest
         // pocket every retarget made run fix10 ping-pong between two pockets 2 blocks apart
         // (each became "nearest" once the bot stood at the other).
-        if (stickyPocket != null && stickyPocket.isWithinDistance(from, 1.5)) lastReachedPocket = stickyPocket;
+        if (stickyPocket != null && BlockPosVer.isWithinDistance(stickyPocket, from, 1.5)) lastReachedPocket = stickyPocket;
         if (stickyPocket != null && standableAir(mod, stickyPocket)
-                && !stickyPocket.isWithinDistance(from, 1.5) && ticks - stickyAt < 20 * 30) {
+                && !BlockPosVer.isWithinDistance(stickyPocket, from, 1.5) && ticks - stickyAt < 20 * 30) {
             return stickyPocket;
         }
         BlockPos pocket = findAirPocket(mod, from, lastReachedPocket);

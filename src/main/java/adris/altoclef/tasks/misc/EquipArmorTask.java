@@ -11,7 +11,14 @@ import adris.altoclef.util.helpers.StorageHelper;
 import adris.altoclef.util.slots.PlayerSlot;
 import adris.altoclef.util.slots.Slot;
 import net.minecraft.entity.EquipmentSlot;
+//#if MC < 260000
 import net.minecraft.item.*;
+//#else
+//$$ import net.minecraft.world.item.Item;
+//$$ import net.minecraft.world.item.ItemStack;
+//$$ import net.minecraft.world.item.Items;
+//$$ import net.minecraft.world.item.ShieldItem;
+//#endif
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
 import org.apache.commons.lang3.ArrayUtils;
@@ -90,7 +97,7 @@ public class EquipArmorTask extends Task {
                     }
                 }
             } else {
-                ArmorItem item = (ArmorItem) Objects.requireNonNull(targetArmor.getMatches())[0];
+                Item item = Objects.requireNonNull(targetArmor.getMatches())[0];
                 if (item == null) {
                     Debug.logWarning("Item " + targetArmor + " is not armor! Will not equip.");
                 } else {

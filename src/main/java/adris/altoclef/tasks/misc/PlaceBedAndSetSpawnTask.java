@@ -1,5 +1,7 @@
 package adris.altoclef.tasks.misc;
 
+import adris.altoclef.multiversion.ScreenVer;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
@@ -226,7 +228,7 @@ public class PlaceBedAndSetSpawnTask extends Task {
             setDebugState("Going to the overworld first.");
             return new DefaultGoToDimensionTask(Dimension.OVERWORLD);
         }
-        Screen screen = MinecraftClient.getInstance().currentScreen;
+        Screen screen = ScreenVer.current(MinecraftClient.getInstance());
         if (screen instanceof SleepingChatScreen) {
             progressChecker.reset();
             setDebugState("Sleeping...");

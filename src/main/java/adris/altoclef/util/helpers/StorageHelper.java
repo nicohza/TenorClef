@@ -1,5 +1,7 @@
 package adris.altoclef.util.helpers;
 
+import adris.altoclef.multiversion.ScreenVer;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
@@ -27,8 +29,32 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.option.GameOptionsScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+//#if MC < 260000
 import net.minecraft.item.*;
+//#else
+//$$ import net.minecraft.world.item.BlockItem;
+//$$ import net.minecraft.world.item.Item;
+//$$ import net.minecraft.world.item.ItemStack;
+//$$ import net.minecraft.world.item.Items;
+//$$ import net.minecraft.world.item.ShieldItem;
+//#endif
+//#if MC >= 12102
+//$$ import net.minecraft.registry.tag.TagKey;
+//#endif
+//#if MC < 260000
 import net.minecraft.screen.*;
+//#else
+//$$ import net.minecraft.world.inventory.AbstractFurnaceMenu;
+//$$ import net.minecraft.world.inventory.BlastFurnaceMenu;
+//$$ import net.minecraft.world.inventory.BrewingStandMenu;
+//$$ import net.minecraft.world.inventory.CraftingMenu;
+//$$ import net.minecraft.world.inventory.FurnaceMenu;
+//$$ import net.minecraft.world.inventory.ChestMenu;
+//$$ import net.minecraft.world.inventory.InventoryMenu;
+//$$ import net.minecraft.world.inventory.ContainerData;
+//$$ import net.minecraft.world.inventory.AbstractContainerMenu;
+//$$ import net.minecraft.world.inventory.SmokerMenu;
+//#endif
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.*;
@@ -47,7 +73,7 @@ public class StorageHelper {
     public static void closeScreen() {
         if (MinecraftClient.getInstance().player == null)
             return;
-        Screen screen = MinecraftClient.getInstance().currentScreen;
+        Screen screen = ScreenVer.current(MinecraftClient.getInstance());
         if (
                 screen != null &&
                         !(screen instanceof GameMenuScreen) &&
@@ -239,8 +265,8 @@ public class StorageHelper {
         final HashMap<Class, Integer> bestMaterials = new HashMap<>();
         final HashMap<Class, Slot> bestToolSlot = new HashMap<>();
         //#else
-        //$$ final HashMap<net.minecraft.registry.tag.TagKey<Item>, Double> bestMaterials = new HashMap<>();
-        //$$ final HashMap<net.minecraft.registry.tag.TagKey<Item>, Slot> bestToolSlot = new HashMap<>();
+        //$$ final HashMap<TagKey<Item>, Double> bestMaterials = new HashMap<>();
+        //$$ final HashMap<TagKey<Item>, Slot> bestToolSlot = new HashMap<>();
         //#endif
 
         for (Slot slot : PlayerSlot.getCurrentScreenSlots()) {

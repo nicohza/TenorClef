@@ -1,0 +1,118 @@
+name: Port check
+
+# Diagnostic for the multi-version ports (1.21.11, 26.3). Compiles preprocess nodes and keeps the full log, so
+# port errors can be read without a local 15-minute build. On push it also compiles the two released nodes
+# (1.21.4, 1.16.1) so shared-source changes for a port cannot silently break them.
+on:
+  push:
+    branches: [ccr-9292ccac-gfi0nr]
+    paths: ['.github/workflows/port-check.yml', 'src/**', 'versions/**', 'build.gradle', 'root.gradle.kts']
+  workflow_dispatch:
+    inputs:
+      node:
+        description: 'Single Gradle node to compile (e.g. 26.3); empty = 1.21.11 + 1.21.4 + 1.16.1'
+        required: false
+        default: ''
+      ostinato_asset:
+        description: 'Ostinato v1.0.1 release asset to stage for a non-released node'
+        required: false
+        default: 'ostinato-mc1.21.11-unoptimized-fabric-1.17.0.jar'
+      task:
+        description: 'Gradle task on the node (compileJava, or build -x test to check the full jar)'
+        required: false
+        default: 'compileJava'
+      java:
+        description: 'JDK to build with'
+        required: false
+        default: '21'
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ${{ fromJSON(inputs.node && format('["{0}"]', inputs.node) || '["1.21.11","1.21.4","1.16.1"]') }}
+    steps:
+      - uses: actions/checkout@v4
+      # 26.3 compiles with a JDK 25 toolchain, but Gradle and the preprocessor's Kotlin remapper run on 21
+      # (that Kotlin cannot parse the 25.0.4.1 version string). The second setup-java is the default JAVA_HOME.
+      - uses: actions/setup-java@v4
+        if: matrix.node == '26.3'
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.node == '26.3' && '21' || inputs.java || '21' }}
+      - name: Stage Ostinato jar (nodes without a committed jar)
+        if: matrix.node != '1.21.4' && matrix.node != '1.16.1'
+        run: |
+          curl -fsSL -o "libs/baritone-unoptimized-fabric-ostinato-${{ matrix.node }}.jar" \
+            "https://github.com/vexrypt-rgb/Ostinato/releases/download/v1.0.1/${{ inputs.ostinato_asset || 'ostinato-mc1.21.11-unoptimized-fabric-1.17.0.jar' }}"
+          ls -la libs
+      - name: Compile ${{ matrix.node }}
+        run: |
+          set -o pipefail
+          cat > "$RUNNER_TEMP/maxerrs.gradle" <<'EOF'
+          allprojects { tasks.withType(JavaCompile).configureEach { options.compilerArgs += ['-Xmaxerrs', '100000'] } }
+          EOF
+          # Watchdog: a hung build otherwise leaves no log. Dump thread stacks at 25 min, then kill at 30.
+          ( sleep 1500; echo '=== WATCHDOG: jstack ==='; for p in $(jps -q); do echo "--- pid $p"; jstack $p | head -120; done ) &
+          timeout 1800 ./gradlew -I "$RUNNER_TEMP/maxerrs.gradle" ${{ matrix.node == '26.3' && '-Pwith26 -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64' || '' }} :${{ matrix.node }}:${{ inputs.task || 'compileJava' }} --console=plain --stacktrace 2>&1 | tee port-check.log
+      - name: Error summary
+        if: always()
+        run: |
+          echo "=== root cause ==="
+          grep -nE "What went wrong|^Caused by|^Execution failed|Could not (resolve|GET|find)|Failed to|Exception:" port-check.log | grep -v '^\S*\s*at ' | awk '!seen[$0]++' | cut -c1-300 | head -25
+          echo "unique errors: $(( $(grep -c ' error: ' port-check.log || true) / 3 ))"
+          echo "=== by message ==="
+          grep -h ' error: ' port-check.log | sed 's/.* error: //' | sort | uniq -c | sort -rn | head -60
+          echo "=== missing symbols ==="
+          grep -h '^ *symbol: ' port-check.log | sed 's/^ *//' | sort | uniq -c | sort -rn | head -80
+          echo "=== every error with source line (deduplicated) ==="
+          grep -h -A2 ' error: ' port-check.log | grep -v '^--$' | awk '!seen[$0]++' | sed 's#.*/preprocessed/main/java/##' | head -400
+      - name: API dump (remapped Minecraft classes)
+        if: always()
+        run: |
+          JAR=""
+          for j in $(find ~/.gradle/caches/fabric-loom -name '*.jar' 2>/dev/null); do
+            case "$j" in *minecraft-merged/${{ matrix.node }}-*) ;; *) continue ;; esac
+            if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/entity/Entity.class'; then JAR="$j"; break; fi
+          done
+          echo "minecraft jar: $JAR"
+          [ -z "$JAR" ] && exit 0
+          show() { # class, grep-regex (empty = everything)
+            echo "##### $1"
+            if [ -n "$2" ]; then javap -cp "$JAR" -public "$1" 2>&1 | grep -E "$2" | head -60; else javap -cp "$JAR" -public "$1" 2>&1 | head -120; fi
+          }
+          {
+            show net.minecraft.entity.Entity 'World|Pos\(|getName|getType'
+            show net.minecraft.entity.LivingEntity 'Item|Stack|Equip|Armor|Hand'
+            show net.minecraft.entity.player.PlayerInventory ''
+            show net.minecraft.world.dimension.DimensionType ''
+            show net.minecraft.client.gui.DrawContext 'drawHorizontalLine|drawVerticalLine|fill\(|getMatrices|drawBorder|drawText\('
+            show net.minecraft.client.render.RenderLayer 'Gui'
+            show net.minecraft.client.util.InputUtil 'Window|isKeyPressed|setCursor|getKeyCode|fromKeyCode|fromTranslationKey'
+            show net.minecraft.client.gui.ParentElement 'mouse'
+            show net.minecraft.client.gui.screen.Screen 'mouse|key'
+            echo "##### classes named *Armor*/*Pickaxe*/*ToolMaterial*/Click*"
+            unzip -l "$JAR" | grep -E 'item/[A-Za-z]*(Armor|Pickaxe|ToolMaterial|MiningTool)[A-Za-z]*\.class|gui/Click|input/(Mouse|Key)Input' | awk '{print $4}' | head -40
+            show net.minecraft.item.Items 'PICKAXE|_HELMET$'
+            show net.minecraft.client.gui.Click ''
+            show net.minecraft.client.input.MouseInput ''
+            show net.minecraft.registry.tag.ItemTags 'PICKAXES'
+            show net.minecraft.world.World 'NETHER|OVERWORLD|getRegistryKey|getEntityWorld'
+          } > api-dump.txt
+          cat api-dump.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: port-check-log-${{ matrix.node }}
+          path: |
+            port-check.log
+            api-dump.txt

@@ -1,5 +1,6 @@
 package adris.altoclef.tasks.movement;
 
+import adris.altoclef.util.helpers.MathsHelper;
 import adris.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.helpers.LookHelper;
@@ -27,7 +28,7 @@ public class ThrowEnderPearlSimpleProjectileTask extends Task {
     private static boolean cleanThrow(AltoClef mod, float yaw, float pitch) {
         Rotation rotation = new Rotation(yaw, -1 * pitch);
         float range = 3f;
-        Vec3d delta = LookHelper.toVec3d(rotation).multiply(range);
+        Vec3d delta = MathsHelper.scale(LookHelper.toVec3d(rotation), range);
         Vec3d start = LookHelper.getCameraPos(mod);
         return LookHelper.cleanLineOfSight(start.add(delta), range);
     }

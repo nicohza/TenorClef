@@ -9,7 +9,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+//#if MC >= 260000
+//$$ @Mixin(net.minecraft.client.gui.Hud.class)
+//#else
 @Mixin(InGameHud.class)
+//#endif
 public class GameOverlayMixin {
 
     @Inject(

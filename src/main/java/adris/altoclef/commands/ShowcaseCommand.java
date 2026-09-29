@@ -40,7 +40,9 @@ public class ShowcaseCommand extends Command {
         List<String> cmds = new ArrayList<>();
         BlockPos goal;
         s.kinematicTravel.value = false;
+        //#if MC < 12111
         s.physicsTravel.value = false;
+        //#endif
         switch (demo) {
             case "parkour" -> {
                 // Gaps of 4, 3 and 2 blocks, the last onto a 1-wide pillar, over a pit.
@@ -99,7 +101,11 @@ public class ShowcaseCommand extends Command {
                 }
                 cmds.add(fill(x + 60, y - 1, z - 1, x + 63, y - 1, z + 1, "emerald_block"));
                 if (demo.equals("kinematic")) s.kinematicTravel.value = true;
+                //#if MC >= 12111
+                //$$ else { /* Ostinato's 1.21.11 build has no physicsTravel setting */ }
+                //#else
                 else s.physicsTravel.value = true;
+                //#endif
                 goal = new BlockPos(x + 62, y, z);
             }
             case "off" -> {

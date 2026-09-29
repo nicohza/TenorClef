@@ -1,5 +1,7 @@
 package adris.altoclef.tasks.resources;
 
+import adris.altoclef.multiversion.CItems;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
@@ -77,7 +79,7 @@ public abstract class CraftWithMatchingMaterialsTask extends ResourceTask {
 
         // For each "same" item: How many items can we craft with it?
         // For instance, if we have 7 red wool, we can craft 2 beds
-        // sameFullCraftsPermitted[Items.RED_WOOL] = 2;
+        // sameFullCraftsPermitted[CItems.RED_WOOL] = 2;
         int canCraftTotal = 0;
         int majorityCraftCount = 0;
         Item majorityCraftItem = null;

@@ -77,14 +77,13 @@ public class AltoClefTickChart {
 
 
     protected void drawBorderedText(DrawContextWrapper context, String string, int x, int y) {
-        MatrixStack matrixStack = context.getMatrices();
-        matrixStack.push();
-        matrixStack.scale(0.5f,0.5f,1);
+        context.pushMatrix();
+        context.scale(0.5f,0.5f,1);
 
         context.fill(x*2, y*2, x*2 + this.textRenderer.getWidth(string) + 2, y*2 + this.textRenderer.fontHeight+1, 0x90505050);
         context.drawText(this.textRenderer, string, (x + 1)*2, (y + 1)*2, 0xE9E9E9, false);
 
-        matrixStack.pop();
+        context.popMatrix();
     }
 
 
@@ -113,7 +112,13 @@ public class AltoClefTickChart {
     }
 
     private static int lerp(float delta, int start, int end) {
-        //#if MC >= 12102
+        //#if MC >= 260000
+        //$$ int i = (int) net.minecraft.util.Mth.lerp(delta, net.minecraft.util.ARGB.alpha(start), net.minecraft.util.ARGB.alpha(end));
+        //$$ int j = (int) net.minecraft.util.Mth.lerp(delta, net.minecraft.util.ARGB.red(start), net.minecraft.util.ARGB.red(end));
+        //$$ int k = (int) net.minecraft.util.Mth.lerp(delta, net.minecraft.util.ARGB.green(start), net.minecraft.util.ARGB.green(end));
+        //$$ int l = (int) net.minecraft.util.Mth.lerp(delta, net.minecraft.util.ARGB.blue(start), net.minecraft.util.ARGB.blue(end));
+        //$$ return net.minecraft.util.ARGB.color(i, j, k, l);
+        //#elseif MC >= 12102
         //$$ int i = (int) MathHelper.lerp(delta, ColorHelper.getAlpha(start), ColorHelper.getAlpha(end));
         //$$ int j = (int) MathHelper.lerp(delta, ColorHelper.getRed(start), ColorHelper.getRed(end));
         //$$ int k = (int) MathHelper.lerp(delta, ColorHelper.getGreen(start), ColorHelper.getGreen(end));
