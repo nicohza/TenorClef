@@ -147,3 +147,9 @@ Kinematic across two full runs after the merge: 42/48, 46/48. The last run befor
 ### Goal 12 rerun with target logging
 
 A goal-12-only rerun scored 3/3 GOAL, averaging 445 ticks. The TRIAL `target=` field shows the goal is `-36,75,-121` on `grass_block`, not on a leaf canopy, so the canopy hypothesis is refuted. The earlier STOPPED misses followed a 7.2-block partial path and then M04 (MovementDiagonal UNREACHABLE). That makes them intermittent Baritone partial-path endings, not a bad goal.
+
+### Goal 6 rerun with target logging
+
+A goal-6-only rerun scored 0/3. All three reps were STOPPED 2.9 blocks out, all ending at `70,71,-150`. The target is `70,82,-153` on `spruce_leaves`, 11 blocks above where the player ends up, on top of a spruce canopy. That comes from `surfaceY`, which uses the MOTION_BLOCKING heightmap, and that heightmap counts leaves (client worlds get no NO_LEAVES map). Baritone's 30-block path ends under the tree and the process finishes with no faults and no stall.
+
+So goal 6's repeated miss is caused by where the bench put the goal, not by a mover fault. The goal set has been left unchanged to keep past runs comparable. Scanning past leaves in `surfaceY` would change the benchmark and should come with a new baseline.
