@@ -280,3 +280,5 @@ Fix (bench only): `teleport()` now sets food to 20 at the start of every trial, 
 
 The same bench on peaceful, every trial fed (log `obj-peacefed-1790670955.log`): **48/48 GOAL, 230 ticks on average**, first move at 10.7 ticks on average, 0 deaths, one M-fault line.
 The old peaceful reference was 232, so hunger did not skew it. Peaceful already stops hunger from dropping, so feeding makes no difference there. Fed trials score 230 on peaceful and 233 with mobs on: mobs add no measurable travel cost.
+
+The one fault line is `M04 MovementDiagonal UNREACHABLE at 88,71,-133`. It is logged in the same second goal 7 rep 2 finishes, at goal 7's target, before goal 8 starts. This matches the known "one M04 on goal 8" from the sync-fix run. It looks like goal 7's leftover path being dropped at the teleport, not a failure: goal 8 then scored 3/3 GOAL. That reading is inferred from timing and position, not traced.
