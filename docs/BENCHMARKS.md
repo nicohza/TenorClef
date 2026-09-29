@@ -183,3 +183,9 @@ Travel mode now centres the goal ring on a fixed `x=65, z=-110` (`-Dtenorclef.pa
 The full run scored **47/48** at an average of 407 ticks, with `missesAfterDeath=1`. The only miss, goal 14 rep 2 (STALLED 14.4 blocks out), came after the player was slain by a spider. With deaths excluded, the score is 47/47. No STOPPED trials.
 
 Hits are still scored on XZ distance only (see the caveat above).
+
+### Peaceful travel (current baseline)
+
+Travel trials now run on peaceful by default (`-Dtenorclef.pathbench.peaceful=false` keeps mobs), and the world's difficulty (easy) is restored after the run. The origin is pinned as above.
+
+The full run scored **48/48** at an average of 264 ticks (407 with mobs), with `missesAfterDeath=0` and no STALLED or STOPPED trials. The speed-up probably comes from no longer fighting or dodging mobs; that is inferred, not measured. With goals on the ground, a pinned origin and no mobs, this is the reference number for kinematic travel.
