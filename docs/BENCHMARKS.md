@@ -153,3 +153,17 @@ A goal-12-only rerun scored 3/3 GOAL, averaging 445 ticks. The TRIAL `target=` f
 A goal-6-only rerun scored 0/3. All three reps were STOPPED 2.9 blocks out, all ending at `70,71,-150`. The target is `70,82,-153` on `spruce_leaves`, 11 blocks above where the player ends up, on top of a spruce canopy. That comes from `surfaceY`, which uses the MOTION_BLOCKING heightmap, and that heightmap counts leaves (client worlds get no NO_LEAVES map). Baritone's 30-block path ends under the tree and the process finishes with no faults and no stall.
 
 So goal 6's repeated miss is caused by where the bench put the goal, not by a mover fault. The goal set has been left unchanged to keep past runs comparable. Scanning past leaves in `surfaceY` would change the benchmark and should come with a new baseline.
+
+### New baseline: goals placed below leaf canopies (changed goal set)
+
+`surfaceY` now drops through leaves, so every goal sits on a non-leaf block (all 16 are on `grass_block` in this world). This is not directly comparable with earlier runs.
+
+The full run scored **45/48** at an average of 358 ticks, with no STOPPED trials. The three misses were all STALLED:
+
+| Goal | Rep | Distance out | Progress stopped at | `kinSinceBest` |
+|---|---|---|---|---|
+| 12 | 0 | 27.3 blocks | tick 480 | 235 |
+| 14 | 0 | 10.2 blocks | tick 563 | 234 |
+| 15 | 1 | 15.5 blocks | tick 308 | 233 |
+
+In all three, Baritone still had a path (`pathAtEnd=true`) and the kinematic controller kept driving for about 234 ticks after the last progress, with no M01. That points to a kinematic no-progress loop the M01 watchdog does not catch, because the player keeps moving but gets no closer. This has not been confirmed with a log trace yet; it is the next thing to look at.
