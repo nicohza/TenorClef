@@ -69,6 +69,7 @@ package adris.altoclef.benchmark;
 //$$                 else if (mode.equalsIgnoreCase("boat")) boat(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("cliff")) cliff(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("portal")) portal(mc, origin, Math.max(1, reps));
+//$$                 else if (mode.equalsIgnoreCase("fall")) fall(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("swim")) swim(mc, origin, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("elytra")) elytra(mc, origin, opt, Math.max(1, reps));
 //$$                 else if (mode.equalsIgnoreCase("travel")) for (String m : (opt == null ? "-" : opt).split("[;+]")) travel(mc, origin, m, Math.max(1, reps));
@@ -516,6 +517,61 @@ package adris.altoclef.benchmark;
 //$$     }
 //$$
 //$$    // ---- portal ------------------------------------------------------------------------
+//$$
+//$$    /**
+//$$     * Fall clutch in isolation: drop from H blocks above a stone floor holding one water bucket
+//$$     * (in the main inventory, like a real run) and no user task. SAFE when the player lands alive.
+//$$     */
+//$$    private static void fall(MinecraftClient mc, BlockPos origin, int reps) throws Exception {
+//$$        int ox = origin.getX() + 40, oz = origin.getZ(), by = 100;
+//$$        PrintWriter csv = open("fall");
+//$$        csv.println("height,rep,result,ticks,hpLost");
+//$$        int ok = 0, n = 0;
+//$$        try {
+//$$            for (int H : new int[]{12, 25, 45}) {
+//$$                for (int r = 0; r < reps; r++) {
+//$$                    java.util.concurrent.CompletableFuture<Void> built = new java.util.concurrent.CompletableFuture<>();
+//$$                    mc.getServer().execute(() -> {
+//$$                        net.minecraft.server.world.ServerWorld w = mc.getServer().getOverworld();
+//$$                        for (int x = -6; x <= 6; x++) for (int z = -6; z <= 6; z++) for (int y = by - 2; y <= by + 60; y++) {
+//$$                            net.minecraft.block.BlockState st = y < by ? net.minecraft.block.Blocks.STONE.getDefaultState() : net.minecraft.block.Blocks.AIR.getDefaultState();
+//$$                            w.setBlockState(new BlockPos(ox + x, y, oz + z), st, 2);
+//$$                        }
+//$$                        ServerPlayerEntity sp = mc.getServer().getPlayerManager().getPlayerList().get(0);
+//$$                        sp.inventory.clear();
+//$$                        sp.inventory.setStack(20, new net.minecraft.item.ItemStack(net.minecraft.item.Items.WATER_BUCKET));
+//$$                        sp.setHealth(sp.getMaxHealth());
+//$$                        sp.getHungerManager().setFoodLevel(20);
+//$$                        built.complete(null);
+//$$                    });
+//$$                    built.get();
+//$$                    Thread.sleep(1500);
+//$$                    teleport(mc, new BlockPos(ox, by + H, oz));
+//$$                    long t0 = worldTime(mc);
+//$$                    String result = "TIMEOUT";
+//$$                    while (true) {
+//$$                        Thread.sleep(25);
+//$$                        long el = worldTime(mc) - t0;
+//$$                        if (mc.player.isDead() || mc.player.getHealth() <= 0) { result = "DIED"; break; }
+//$$                        if (el > 10 && mc.player.isOnGround() || el > 10 && mc.player.isTouchingWater()) { Thread.sleep(500); result = mc.player.isDead() ? "DIED" : "SAFE"; break; }
+//$$                        if (el > 20 * 15) break;
+//$$                    }
+//$$                    float lost = 20 - mc.player.getHealth();
+//$$                    long ticks = worldTime(mc) - t0;
+//$$                    csv.printf(Locale.ROOT, "%d,%d,%s,%d,%.1f%n", H, r, result, ticks, lost);
+//$$                    csv.flush();
+//$$                    Debug.logHarness(String.format(Locale.ROOT, "FALL H=%d rep=%d result=%s ticks=%d hpLost=%.1f", H, r, result, ticks, lost));
+//$$                    n++;
+//$$                    if (result.equals("SAFE")) ok++;
+//$$                    if (result.equals("DIED")) { mc.execute(() -> mc.player.requestRespawn()); Thread.sleep(3000); }
+//$$                    Thread.sleep(1000);
+//$$                }
+//$$            }
+//$$        } finally {
+//$$            csv.close();
+//$$        }
+//$$        Debug.logHarness("PATHBENCH SUMMARY mode=fall safe=" + ok + "/" + n);
+//$$    }
 //$$
 //$$    /**
 //$$     * Nether-portal bucket build in isolation: a flat stone pad at y=120 with a 5x5 lava pool and a
