@@ -163,20 +163,6 @@ public class CollectBucketLiquidTask extends ResourceTask {
             return WorldHelper.isSourceBlock(blockPos, false);
         };
 
-        // Burn-death fix: scooping a lake's EDGE lava source leaves a walkable air hole beside the
-        // shore that lava refills a few ticks later; the portal bench bot stepped into it 2/3 reps.
-        // Prefer interior sources (lava on all 4 sides) so the hole is never reachable on foot.
-        if (toCollect == Blocks.LAVA) {
-            Predicate<BlockPos> base = isSafeSourceLiquid;
-            Predicate<BlockPos> interior = base.and(p -> {
-                for (Direction d : Direction.Type.HORIZONTAL) {
-                    if (mod.getWorld().getBlockState(p.offset(d)).getBlock() != Blocks.LAVA) return false;
-                }
-                return true;
-            });
-            if (mod.getBlockScanner().anyFound(interior, toCollect)) isSafeSourceLiquid = interior;
-        }
-
         // Find nearest water and right click it
         if (mod.getBlockScanner().anyFound(isSafeSourceLiquid, toCollect)) {
             // We want to MINIMIZE this distance to liquid.
