@@ -385,6 +385,10 @@ public class ConstructNetherPortalBucketTask extends Task {
                 continue;
             }
 
+            // S211 fix: holding lava is progress. Without this the anchor survives a whole compact
+            // build (bot stays within 10 blocks) and fires ~40s in, blacklisting a lake mid-frame
+            // (pathbench portal rep1: 8 frame blocks placed, then relocated and timed out).
+            if (mod.getItemStorage().hasItem(Items.LAVA_BUCKET)) lavaStallAnchor = null;
             // Get lava early so placing it is faster
             if (!mod.getItemStorage().hasItem(Items.LAVA_BUCKET) && frameBlock != Blocks.LAVA) {
                 // S211: run ironregate bobbed in water at 222,66,208 for 80s on "Collecting lava"
