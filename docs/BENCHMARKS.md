@@ -293,5 +293,5 @@ This run was goal 7 only, 3 reps, peaceful, with `-Dtenorclef.pathbench.trace=88
 - The final movement of the path (pos 29) is `MovementDiagonal 86,70,-131 -> 87,70,-132`. The kinematic mover takes it airborne (y 72.25, vel ≈ 0.21,0,-0.22, not on ground), so the bench's XZ < 2 check counts the goal mid-jump.
 - The player's momentum carries it past the diagonal's destination to 88,71,-133. That block is neither the source nor the destination, so the diagonal returns UNREACHABLE. It lands at 89.05,70.68,-133.08 a few ticks later.
 - So the fault is the kinematic mover **overshooting the last movement of a path while sprint-jumping**. It is not a teleport artifact or a blocked diagonal. It happens after the goal counts, so it doesn't affect scores. In normal use it would cancel a path that was already at its end.
-- Side finding: `execState` logs `IndexOutOfBoundsException: Index -1` once the path is empty. That's a logging bug in the bench helper only.
+- Side finding: `execState` logged `IndexOutOfBoundsException: Index -1` once the path was empty. Fixed: it now reads the executor once and logs `mv=none` for an empty path. The rerun (`obj-t88b-1790673688.log`, 3/3, the same M04) has 0 `exec?` lines.
 - Tick counts in this run (132–180) are not comparable with other runs. The trace was logging every poll inside the 3-block box.

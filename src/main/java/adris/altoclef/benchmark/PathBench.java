@@ -1069,8 +1069,11 @@ package adris.altoclef.benchmark;
 //$$         try {
 //$$             Object drv = ex.getClass().getMethod("getLastDriver").invoke(ex);
 //$$             java.lang.reflect.Field f = ex.getClass().getDeclaredField("ticksOnCurrent"); f.setAccessible(true);
-//$$             int pos = baritone.getPathingBehavior().getCurrent().getPosition();
-//$$             Object mv = baritone.getPathingBehavior().getCurrent().getPath().movements().get(Math.min(pos, baritone.getPathingBehavior().getCurrent().getPath().movements().size() - 1));
+//$$             baritone.api.pathing.path.IPathExecutor pe = (baritone.api.pathing.path.IPathExecutor) ex; // read once; getCurrent() can change between calls
+//$$             int pos = pe.getPosition();
+//$$             java.util.List<? extends baritone.api.pathing.movement.IMovement> mvs = pe.getPath().movements();
+//$$             if (mvs.isEmpty()) return "drv=" + drv + " pos=" + pos + " toc=" + f.getInt(ex) + " mv=none";
+//$$             Object mv = mvs.get(Math.min(pos, mvs.size() - 1));
 //$$             return "drv=" + drv + " pos=" + pos + " toc=" + f.getInt(ex) + " mv=" + mv.getClass().getSimpleName() + " " + ((baritone.api.pathing.movement.IMovement) mv).getSrc() + "->" + ((baritone.api.pathing.movement.IMovement) mv).getDest();
 //$$         } catch (ReflectiveOperationException | RuntimeException e) {
 //$$             return "exec?" + e;
