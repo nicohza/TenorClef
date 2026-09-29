@@ -555,7 +555,7 @@ package adris.altoclef.benchmark;
 //$$                adris.altoclef.tasks.construction.compound.ConstructNetherPortalBucketTask task = new adris.altoclef.tasks.construction.compound.ConstructNetherPortalBucketTask();
 //$$                mc.execute(() -> adris.altoclef.AltoClef.getInstance().runUserTask(task));
 //$$                long t0 = worldTime(mc), last = -1;
-//$$                String result = "TIMEOUT", state = "", lastLogged = "";
+//$$                String result = "TIMEOUT", state = "", lastLogged = "", lastChain = "";
 //$$                while (true) {
 //$$                    Thread.sleep(25);
 //$$                    long el = worldTime(mc) - t0;
@@ -564,6 +564,9 @@ package adris.altoclef.benchmark;
 //$$                    String ds = task.getDebugState();
 //$$                    if (ds != null) state = ds;
 //$$                    if (!state.equals(lastLogged)) { Debug.logHarness("PORTAL t=" + el + " state=" + state); lastLogged = state; }
+//$$                    StringBuilder chain = new StringBuilder();
+//$$                    for (adris.altoclef.tasksystem.Task c = task.getSub(); c != null && chain.length() < 400; c = c.getSub()) chain.append(c.getClass().getSimpleName()).append('>');
+//$$                    if (!chain.toString().equals(lastChain)) { Debug.logHarness("PORTAL t=" + el + " chain=" + chain); lastChain = chain.toString(); }
 //$$                    if (el % 200 == 0) Debug.logHarness(String.format(Locale.ROOT, "PORTAL t=%d pos=%s state=%s", el, mc.player.getBlockPos().toShortString(), state));
 //$$                    if (portalOnPad(mc, ox, y0, oz)) { result = "GOAL"; break; }
 //$$                    if (mc.player.isDead()) { result = "DIED"; break; }
