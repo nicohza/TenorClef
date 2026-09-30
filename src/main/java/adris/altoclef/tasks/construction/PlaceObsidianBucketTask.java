@@ -150,22 +150,6 @@ public class PlaceObsidianBucketTask extends Task {
                 Debug.logHarness("CAST blocked-by-player castTarget=" + _currentCastTarget.toShortString());
                 return new GetToBlockTask(_pos.add(-1, 1, 0), false);
             } else {
-                // reach1 trace: Baritone's builder walks the player into the cast cell, then the
-                // blocked-by-player sidestep interrupts it, forever. Within reach, click a solid face directly.
-                if (_currentCastTarget.isWithinDistance(mod.getPlayer().getEyePos(), 4.5)) {
-                    net.minecraft.item.Item throwaway = Arrays.stream(mod.getModSettings().getThrowawayItems(mod))
-                            .filter(i -> !Arrays.asList(ItemHelper.LEAVES).contains(i) && mod.getItemStorage().hasItem(i))
-                            .findFirst().orElse(null);
-                    if (throwaway != null) {
-                        for (Direction d : Direction.values()) {
-                            BlockPos support = _currentCastTarget.offset(d);
-                            if (WorldHelper.isSolidBlock(support)) {
-                                Debug.logHarness("CAST direct castTarget=" + _currentCastTarget.toShortString() + " support=" + support.toShortString());
-                                return new InteractWithBlockTask(new ItemTarget(throwaway, 1), d.getOpposite(), support, false);
-                            }
-                        }
-                    }
-                }
                 return new PlaceBlockTask(_currentCastTarget,
                         Arrays.stream(ItemHelper.itemsToBlocks(mod.getModSettings().getThrowawayItems(mod))).filter((b)-> !Arrays.stream(ItemHelper.itemsToBlocks(ItemHelper.LEAVES)).toList().contains(b)).toArray(Block[]::new)
                 );
