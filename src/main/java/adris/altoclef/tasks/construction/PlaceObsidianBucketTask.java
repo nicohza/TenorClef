@@ -10,7 +10,6 @@ import adris.altoclef.tasks.movement.GetToBlockTask;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.ItemTarget;
-import baritone.api.utils.input.Input;
 import adris.altoclef.util.helpers.ItemHelper;
 import adris.altoclef.util.helpers.WorldHelper;
 import adris.altoclef.util.progresscheck.MovementProgressChecker;
@@ -104,8 +103,6 @@ public class PlaceObsidianBucketTask extends Task {
      *
      * @return The next task to be executed
      */
-    private boolean _settling = false;
-
     @Override
     protected Task onTick() {
         AltoClef mod = AltoClef.getInstance();
@@ -133,22 +130,6 @@ public class PlaceObsidianBucketTask extends Task {
                 _progressChecker.reset();
                 return TaskCatalogue.getItemTask(Items.LAVA_BUCKET, 1);
             }
-        }
-
-        // Portal bench edge1: every rep the bot came out of a lava scoop airborne with momentum toward
-        // the pool; pathing from that overhang dropped it into the scooped hole and the water reflex
-        // solidified the pool. Land first, holding sneak so the landing can't slide off the pad edge.
-        if (!mod.getPlayer().isOnGround() && !mod.getPlayer().isTouchingWater() && !mod.getPlayer().isInLava()
-                && mod.getPlayer().getVelocity().y > -0.6) {
-            mod.getClientBaritone().getPathingBehavior().forceCancel();
-            mod.getInputControls().hold(Input.SNEAK);
-            _settling = true;
-            setDebugState("Landing before casting");
-            return null;
-        }
-        if (_settling) {
-            mod.getInputControls().release(Input.SNEAK);
-            _settling = false;
         }
 
         // Check progress
