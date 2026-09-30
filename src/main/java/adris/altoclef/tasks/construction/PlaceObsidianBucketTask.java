@@ -149,6 +149,11 @@ public class PlaceObsidianBucketTask extends Task {
                 // marked unreachable and the only lake was abandoned. Step off the cell first.
                 Debug.logHarness("CAST blocked-by-player castTarget=" + _currentCastTarget.toShortString());
                 return new GetToBlockTask(_pos.add(-1, 1, 0), false);
+            } else if (!_currentCastTarget.isWithinDistance(mod.getPlayer().getPos(), 4.5)) {
+                // retry1 bench: after falling off the frame the bot sat 6 blocks away at the pad edge for
+                // 300+ ticks with PlaceBlockTask never approaching; the frame got blacklisted. Walk back first.
+                Debug.logHarness("CAST out-of-reach castTarget=" + _currentCastTarget.toShortString());
+                return new GetToBlockTask(_pos.add(-1, 1, 0), false);
             } else {
                 return new PlaceBlockTask(_currentCastTarget,
                         Arrays.stream(ItemHelper.itemsToBlocks(mod.getModSettings().getThrowawayItems(mod))).filter((b)-> !Arrays.stream(ItemHelper.itemsToBlocks(ItemHelper.LEAVES)).toList().contains(b)).toArray(Block[]::new)
