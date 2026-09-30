@@ -111,9 +111,16 @@ public class EscapeFromLavaTask extends CustomBaritoneGoalTask {
             if (mod.getWorld().getBlockState(n).getBlock() != Blocks.LAVA
                     && mod.getWorld().getBlockState(n.up()).isAir()) edgeExit = true;
         }
+        // Water poured beside lava sources solidifies the whole pool (portal bench: 15-25 of 25 cells within ~100 ticks); only do it when HP is critical.
+        boolean besideLavaSource = false;
+        for (Direction d : Direction.Type.HORIZONTAL) {
+            if (mod.getWorld().getFluidState(feet.offset(d)).isStill()
+                    && mod.getWorld().getBlockState(feet.offset(d)).getBlock() == Blocks.LAVA) besideLavaSource = true;
+        }
+        if (besideLavaSource && mod.getPlayer().getHealth() > 6) edgeExit = true;
         if (mod.getPlayer().isInLava() && mod.getItemStorage().hasItem(Items.WATER_BUCKET)
                 && !mod.getWorld().getDimension().ultrawarm()
-                && (!edgeExit || mod.getPlayer().getHealth() <= 10)) {
+                && (!edgeExit || mod.getPlayer().getHealth() <= (besideLavaSource ? 6 : 10))) {
             setDebugState("pouring water on lava");
             Debug.logHarness("LAVA_REFLEX pouring water pos=" + mod.getPlayer().getBlockPos().toShortString());
             LookHelper.lookAt(new Rotation(LookHelper.getLookRotation().getYaw(), 90));
