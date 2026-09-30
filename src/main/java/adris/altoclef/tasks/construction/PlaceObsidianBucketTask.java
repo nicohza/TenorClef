@@ -144,6 +144,11 @@ public class PlaceObsidianBucketTask extends Task {
         if (_currentCastTarget != null) {
             if (WorldHelper.isSolidBlock(_currentCastTarget)) {
                 _currentCastTarget = null;
+            } else if (mod.getPlayer().getBoundingBox().intersects(new net.minecraft.util.math.Box(_currentCastTarget))) {
+                // src1 bench: stood clipping the (1,1,0) cast cell for 5s, placement failed, frame got
+                // marked unreachable and the only lake was abandoned. Step off the cell first.
+                Debug.logHarness("CAST blocked-by-player castTarget=" + _currentCastTarget.toShortString());
+                return new GetToBlockTask(_pos.add(-1, 1, 0), false);
             } else {
                 return new PlaceBlockTask(_currentCastTarget,
                         Arrays.stream(ItemHelper.itemsToBlocks(mod.getModSettings().getThrowawayItems(mod))).filter((b)-> !Arrays.stream(ItemHelper.itemsToBlocks(ItemHelper.LEAVES)).toList().contains(b)).toArray(Block[]::new)
