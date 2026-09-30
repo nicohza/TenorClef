@@ -1,7 +1,7 @@
 package adris.altoclef.tasks.speedrun.testrun2.gui;
 
 import adris.altoclef.tasks.speedrun.testrun2.util.GameFiles;
-import org.lwjgl.glfw.GLFW;
+import adris.altoclef.multiversion.input.KeyCodes;
 
 import java.util.Locale;
 
@@ -64,16 +64,16 @@ public final class AgentConfig {
     public int glfwKey() {
         String b = bind == null ? "" : bind.trim().toUpperCase(Locale.ROOT);
         return switch (b) {
-            case "RSHIFT", "RIGHT_SHIFT" -> GLFW.GLFW_KEY_RIGHT_SHIFT;
-            case "LSHIFT", "LEFT_SHIFT" -> GLFW.GLFW_KEY_LEFT_SHIFT;
-            case "RCTRL", "RIGHT_CONTROL" -> GLFW.GLFW_KEY_RIGHT_CONTROL;
-            case "GRAVE", "BACKTICK", "`" -> GLFW.GLFW_KEY_GRAVE_ACCENT;
-            case "O" -> GLFW.GLFW_KEY_O;
-            case "M" -> GLFW.GLFW_KEY_M;
-            case "K" -> GLFW.GLFW_KEY_K;
-            case "F8" -> GLFW.GLFW_KEY_F8;
-            case "F9" -> GLFW.GLFW_KEY_F9;
-            default -> GLFW.GLFW_KEY_RIGHT_SHIFT;
+            case "RSHIFT", "RIGHT_SHIFT" -> KeyCodes.RIGHT_SHIFT;
+            case "LSHIFT", "LEFT_SHIFT" -> KeyCodes.LEFT_SHIFT;
+            case "RCTRL", "RIGHT_CONTROL" -> KeyCodes.RIGHT_CONTROL;
+            case "GRAVE", "BACKTICK", "`" -> KeyCodes.GRAVE;
+            case "O" -> KeyCodes.O;
+            case "M" -> KeyCodes.M;
+            case "K" -> KeyCodes.K;
+            case "F8" -> KeyCodes.F8;
+            case "F9" -> KeyCodes.F9;
+            default -> KeyCodes.RIGHT_SHIFT;
         };
     }
 }

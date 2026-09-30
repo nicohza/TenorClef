@@ -73,7 +73,12 @@ final class T2MenuLook {
                 ly += 11;
             }
         }
-        for (int i = 0; i < s.hits.size(); i++) {
+        paintHits(s, g, mx, my, 0);
+    }
+
+    static void paintHits(T2MenuScreen s, adris.altoclef.multiversion.DrawContextWrapper g, int mx, int my, int start) {
+        int tab = T2MenuScreen.tab();
+        for (int i = start; i < s.hits.size(); i++) {
             int[] b = s.hits.get(i);
             String cmd = s.hitCmd.get(i);
             String label = s.hitLab.get(i);

@@ -1,5 +1,8 @@
 package adris.altoclef.tasks.speedrun.testrun2.combat;
 
+import adris.altoclef.multiversion.CItems;
+import adris.altoclef.multiversion.CBlocks;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
@@ -60,8 +63,8 @@ public class ZeroCycleTask extends Task {
 
         if (phase == Phase.MATS) {
             try {
-                if (mod.getItemStorage().getItemCount(Items.WHITE_BED) < 5) {
-                    Task t = TaskCatalogue.getItemTask(Items.WHITE_BED, 6);
+                if (mod.getItemStorage().getItemCount(CItems.WHITE_BED) < 5) {
+                    Task t = TaskCatalogue.getItemTask(CItems.WHITE_BED, 6);
                     if (t != null) return sticky.keep("beds", t);
                 }
                 if (mod.getItemStorage().getItemCount(Items.OBSIDIAN) < 2) {
@@ -204,7 +207,7 @@ public class ZeroCycleTask extends Task {
     private static Task placeBed(BlockPos on) {
         try {
             return (Task) Class.forName("adris.altoclef.tasks.construction.PlaceBlockTask")
-                    .getConstructor(BlockPos.class, Block.class).newInstance(on, Blocks.WHITE_BED);
+                    .getConstructor(BlockPos.class, Block.class).newInstance(on, CBlocks.WHITE_BED);
         } catch (Throwable t) {
             return null;
         }
@@ -213,7 +216,7 @@ public class ZeroCycleTask extends Task {
     private static void equipBed(AltoClef mod) {
         try {
             mod.getSlotHandler().getClass().getMethod("forceEquipItem", Item.class)
-                    .invoke(mod.getSlotHandler(), Items.WHITE_BED);
+                    .invoke(mod.getSlotHandler(), CItems.WHITE_BED);
         } catch (Throwable ignored) {}
     }
 

@@ -29,9 +29,43 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.entity.effect.StatusEffects;
+//#if MC < 260000
 import net.minecraft.entity.mob.*;
+//#else
+//$$ import net.minecraft.world.entity.monster.skeleton.AbstractSkeleton;
+//$$ import net.minecraft.world.entity.monster.Blaze;
+//$$ import net.minecraft.world.entity.monster.spider.CaveSpider;
+//$$ import net.minecraft.world.entity.monster.Creeper;
+//$$ import net.minecraft.world.entity.monster.zombie.Drowned;
+//$$ import net.minecraft.world.entity.monster.Enderman;
+//$$ import net.minecraft.world.entity.monster.Ghast;
+//$$ import net.minecraft.world.entity.monster.hoglin.Hoglin;
+//$$ import net.minecraft.world.entity.monster.Monster;
+//$$ import net.minecraft.world.entity.monster.cubemob.MagmaCube;
+//$$ import net.minecraft.world.entity.Mob;
+//$$ import net.minecraft.world.entity.monster.piglin.Piglin;
+//$$ import net.minecraft.world.entity.monster.illager.Pillager;
+//$$ import net.minecraft.world.entity.monster.Silverfish;
+//$$ import net.minecraft.world.entity.monster.skeleton.Skeleton;
+//$$ import net.minecraft.world.entity.monster.cubemob.Slime;
+//$$ import net.minecraft.world.entity.monster.spider.Spider;
+//$$ import net.minecraft.world.entity.monster.skeleton.Stray;
+//$$ import net.minecraft.world.entity.monster.illager.Vindicator;
+//$$ import net.minecraft.world.entity.monster.Witch;
+//$$ import net.minecraft.world.entity.monster.skeleton.WitherSkeleton;
+//$$ import net.minecraft.world.entity.monster.Zoglin;
+//$$ import net.minecraft.world.entity.monster.zombie.Zombie;
+//#endif
 import net.minecraft.entity.player.PlayerEntity;
+//#if MC < 260000
 import net.minecraft.entity.projectile.*;
+//#else
+//$$ import net.minecraft.world.entity.projectile.arrow.Arrow;
+//$$ import net.minecraft.world.entity.projectile.hurtingprojectile.DragonFireball;
+//$$ import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball;
+//$$ import net.minecraft.world.entity.projectile.hurtingprojectile.SmallFireball;
+//$$ import net.minecraft.world.entity.projectile.arrow.SpectralArrow;
+//#endif
 import net.minecraft.entity.projectile.thrown.PotionEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;

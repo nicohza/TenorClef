@@ -46,7 +46,7 @@ import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import org.lwjgl.glfw.GLFW;
+import adris.altoclef.multiversion.input.KeyCodes;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -120,7 +120,7 @@ public class AltoClef implements ModInitializer {
         // This code runs as soon as Minecraft is in a mod-load-ready state.
         // However, some things (like resources) may still be uninitialized.
         // As such, nothing will be loaded here but basic initialization.
-        EventBus.subscribe(TitleScreenEntryEvent.class, evt -> onInitializeLoad());
+        EventBus.subscribe(TitleScreenEntryEvent.class, evt -> ensureLoaded());
 
         if (instance != null) {
             throw new IllegalStateException("AltoClef already loaded!");
@@ -128,11 +128,24 @@ public class AltoClef implements ModInitializer {
         instance = this;
     }
 
+    private static boolean loadStarted;
+
+    /**
+     * Runs {@link #onInitializeLoad} once. Normally the title screen triggers it; a launch that skips the title
+     * screen (quick play) would otherwise leave every manager null, so the client tick calls this too.
+     */
+    public static void ensureLoaded() {
+        if (loadStarted || instance == null) return;
+        loadStarted = true;
+        instance.onInitializeLoad();
+    }
+
     public void onInitializeLoad() {
         // This code should be run after Minecraft loads everything else in.
         // This is the actual start point, controlled by a mixin.
 
         initializeBaritoneSettings();
+        hookFreecamStatus();
 
         // Central Managers
         commandExecutor = new CommandExecutor(this);
@@ -255,7 +268,7 @@ public class AltoClef implements ModInitializer {
         inputControls.onTickPre();
 
         // Cancel shortcut
-        if (InputHelper.isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) && InputHelper.isKeyPressed(GLFW.GLFW_KEY_K)) {
+        if (InputHelper.isKeyPressed(KeyCodes.LEFT_CONTROL) && InputHelper.isKeyPressed(KeyCodes.K)) {
             stopTasks();
         }
         try {
@@ -350,6 +363,14 @@ public class AltoClef implements ModInitializer {
         autoRunWorld = getWorld();
         Debug.logHarness("AUTORUN: executing '" + cmd + "'");
         Debug.logMessage("AUTORUN: executing '" + cmd + "'");
+        // -Dtenorclef.autorun.freecam=true: start Ostinato's freecam first, for reproducing freecam issues headless.
+        if (Boolean.getBoolean("tenorclef.autorun.freecam")) {
+            try {
+                getClientBaritone().getCommandManager().execute("freecam");
+            } catch (Throwable t) {
+                Debug.logWarning("AUTORUN freecam failed: " + t);
+            }
+        }
         try {
             getCommandExecutor().executeWithPrefix(cmd);
         } catch (Throwable t) {
@@ -497,6 +518,25 @@ public class AltoClef implements ModInitializer {
     /**
      * The user task chain (runs your command. Ex. Get Diamonds, Beat the Game)
      */
+    /**
+     * Ostinato's freecam draws the bot as a translucent ghost with a status tag; feed it the current task.
+     * Reflective because not every Ostinato build has the hook.
+     */
+    private void hookFreecamStatus() {
+        try {
+            java.util.function.Supplier<String> status = () -> {
+                adris.altoclef.tasksystem.TaskChain chain = taskRunner == null ? null : taskRunner.getCurrentTaskChain();
+                if (chain == null || chain.getTasks().isEmpty()) {
+                    return null;
+                }
+                java.util.List<adris.altoclef.tasksystem.Task> tasks = chain.getTasks();
+                return tasks.get(tasks.size() - 1).toString();
+            };
+            Class.forName("baritone.behavior.FreecamBehavior").getField("statusSupplier").set(null, status);
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+        }
+    }
+
     public UserTaskChain getUserTaskChain() {
         return userTaskChain;
     }

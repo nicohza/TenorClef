@@ -40,7 +40,8 @@ param(
   [int]$TimeoutSec = 600,
   [int]$MaxRunSec = 0,
   [string]$Command = 'testrun2',
-  [string]$Mover = 'ostinato'
+  [string]$Mover = 'ostinato',
+  [switch]$SkipOstinatoUpdate
 )
 
 $ErrorActionPreference = 'Continue'
@@ -102,6 +103,9 @@ foreach ($f in @($TopSettings, $WorldSettings)) {
   [System.IO.File]::WriteAllText($f, ($obj | ConvertTo-Json -Depth 40), $enc)
 }
 Write-Host "settings: both files set (autoLoadWorld=true, autoRunCommand=$Command, mover=$Mover)" -ForegroundColor DarkGray
+
+# ---- 4b. rebuild Ostinato if origin/1.16.1 moved --------------------------------
+if (-not $SkipOstinatoUpdate) { & (Join-Path $PSScriptRoot 'update-ostinato.ps1') -Repo $Repo }
 
 # ---- 5. launch -----------------------------------------------------------------
 Write-Host "launching :1.16.1:runClient (log -> $RunLog)" -ForegroundColor Cyan

@@ -1,5 +1,6 @@
 package adris.altoclef.tasks.examples;
 
+import adris.altoclef.multiversion.blockpos.BlockPosVer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.tasks.movement.GetToBlockTask;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
@@ -46,7 +47,7 @@ public class ExampleTask2 extends Task {
             Optional<BlockPos> nearest = mod.getBlockScanner().getNearestBlock(Blocks.OAK_LOG);
             if (nearest.isPresent()) {
                 // Figure out leaves
-                BlockPos check = new BlockPos(nearest.get());
+                BlockPos check = BlockPosVer.copyOf(nearest.get());
                 while (mod.getWorld().getBlockState(check).getBlock() == Blocks.OAK_LOG ||
                         mod.getWorld().getBlockState(check).getBlock() == Blocks.OAK_LEAVES) {
                     check = check.up();

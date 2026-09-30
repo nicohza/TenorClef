@@ -1,5 +1,7 @@
 package adris.altoclef.tasks.construction;
 
+import adris.altoclef.multiversion.CBlocks;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.movement.GetOutOfWaterTask;
@@ -17,7 +19,16 @@ import baritone.api.pathing.goals.GoalBlock;
 import baritone.api.pathing.goals.GoalNear;
 import baritone.api.utils.Rotation;
 import baritone.api.utils.input.Input;
+//#if MC < 260000
 import net.minecraft.block.*;
+//#else
+//$$ import net.minecraft.world.level.block.Block;
+//$$ import net.minecraft.world.level.block.state.BlockState;
+//$$ import net.minecraft.world.level.block.DoorBlock;
+//$$ import net.minecraft.world.level.block.FenceBlock;
+//$$ import net.minecraft.world.level.block.FenceGateBlock;
+//$$ import net.minecraft.world.level.block.FlowerBlock;
+//#endif
 import adris.altoclef.multiversion.versionedfields.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.PillagerEntity;
@@ -253,7 +264,7 @@ public class DestroyBlockTask extends Task implements ITaskRequiresGrounded {
         AltoClef mod = AltoClef.getInstance();
 
         // Check if there is white wool at the specified position
-        if (mod.getWorld().getBlockState(pos).getBlock() == Blocks.WHITE_WOOL) {
+        if (mod.getWorld().getBlockState(pos).getBlock() == CBlocks.WHITE_WOOL) {
             // Iterate over all entities in the world
             Iterable<Entity> entities = mod.getWorld().getEntities();
             for (Entity entity : entities) {

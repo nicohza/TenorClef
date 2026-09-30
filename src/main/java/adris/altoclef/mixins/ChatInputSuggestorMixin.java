@@ -104,7 +104,7 @@ public abstract class ChatInputSuggestorMixin {
     public void inj(String original, int firstCharacterIndex, CallbackInfoReturnable<net.minecraft.text.OrderedText> cir) {
         String full = this.textField.getText();
 
-        if (!full.startsWith(AltoClef.getCommandExecutor().getCommandPrefix())) return;
+        if (AltoClef.getCommandExecutor() == null || !full.startsWith(AltoClef.getCommandExecutor().getCommandPrefix())) return;
 
         Pair<String, Integer> key = new Pair<>(original, firstCharacterIndex);
 
@@ -118,12 +118,12 @@ public abstract class ChatInputSuggestorMixin {
 
         if (result == null) return;
 
-        messages.clear();
+        this.messages.clear();
         if (result.getRight().isPresent()) {
             MutableText text = result.getRight().get().getLeft();
             int severity = result.getRight().get().getRight();
 
-            messages.add(text.asOrderedText());
+            this.messages.add(text.asOrderedText());
 
             if (severity == 1) {
                 this.x = MathHelper.clamp(this.textField.getCharacterX(original.length()), 0, this.textField.getCharacterX(0) + this.textField.getInnerWidth());

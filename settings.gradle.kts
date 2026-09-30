@@ -54,7 +54,9 @@ rootProject.buildFileName = "root.gradle.kts"
 //
 // If 16-minute builds become intolerable, prefer REDUCING BUILD COUNT (batch edits,
 // javap-verify before building, longer runs between builds) over trimming the graph.
-val versions = listOf(
+// 26.3 is opt-in (-Pwith26) until its port compiles, so it cannot break the released nodes.
+val with26 = providers.gradleProperty("with26").isPresent
+val versions = (if (with26) listOf("26.3") else emptyList()) + listOf(
     "1.21.11",
     "1.21.4",
     "1.21.1",

@@ -1,5 +1,6 @@
 package adris.altoclef.trackers;
 
+import adris.altoclef.multiversion.ChunkPosVer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.eventbus.EventBus;
@@ -45,11 +46,11 @@ public class SimpleChunkTracker {
     }
 
     public boolean isChunkLoaded(ChunkPos pos) {
-        return !(mod.getWorld().getChunk(pos.x, pos.z) instanceof EmptyChunk);
+        return !(mod.getWorld().getChunk(ChunkPosVer.x(pos), ChunkPosVer.z(pos)) instanceof EmptyChunk);
     }
 
     public boolean isChunkLoaded(BlockPos pos) {
-        return isChunkLoaded(new ChunkPos(pos));
+        return isChunkLoaded(ChunkPosVer.of(pos));
     }
 
     public List<ChunkPos> getLoadedChunks() {

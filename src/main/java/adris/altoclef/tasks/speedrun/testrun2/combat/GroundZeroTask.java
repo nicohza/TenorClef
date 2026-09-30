@@ -1,5 +1,7 @@
 package adris.altoclef.tasks.speedrun.testrun2.combat;
 
+import adris.altoclef.multiversion.CItems;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
@@ -58,7 +60,7 @@ public class GroundZeroTask extends Task {
         }
 
         if (phase == Phase.MATS) {
-            Task need = need(mod, Items.WHITE_BED, 8);
+            Task need = need(mod, CItems.WHITE_BED, 8);
             if (need != null) return sticky.keep("beds", need);
             Task bars = cageItem(mod);
             if (bars != null) return sticky.keep("cage", bars);

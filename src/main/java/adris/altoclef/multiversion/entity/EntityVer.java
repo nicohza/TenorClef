@@ -32,7 +32,9 @@ public class EntityVer {
 
     @Pattern
     public BlockPos getLandingPos(Entity entity) {
-        //#if MC >= 11701
+        //#if MC >= 260000
+        //$$ return entity.getBlockPosBelowThatAffectsMyMovement();
+        //#elseif MC >= 11701
         return entity.getSteppingPos();
         //#else
         //$$ return ((adris.altoclef.mixins.EntityAccessor) entity).invokeGetLandingPos();
@@ -72,6 +74,26 @@ public class EntityVer {
         player.setYaw(value);
         //#else
         //$$ player.yaw = value;
+        //#endif
+    }
+
+    /** Yarn renamed Entity.getPos() to getEntityPos() in 1.21.11 (older versions keep getPos()). */
+    @Pattern
+    private static Vec3d getPos(Entity entity) {
+        //#if MC >= 12111
+        //$$ return entity.getEntityPos();
+        //#else
+        return entity.getPos();
+        //#endif
+    }
+
+    /** Yarn renamed Entity.getWorld() to getEntityWorld() in 1.21.11. */
+    @Pattern
+    private static net.minecraft.world.World getWorld(Entity entity) {
+        //#if MC >= 12111
+        //$$ return entity.getEntityWorld();
+        //#else
+        return entity.getWorld();
         //#endif
     }
 

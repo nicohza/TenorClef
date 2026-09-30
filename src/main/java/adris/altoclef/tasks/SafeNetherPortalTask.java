@@ -51,8 +51,9 @@ public class SafeNetherPortalTask extends Task {
         if (mod.getPlayer().getPortalCooldown() < 10) {
             if (positions != null && directions != null) {
                 //#if MC >= 11605
-                BlockPos pos1 = mod.getPlayer().getSteppingPos().offset(axis, 1);
-                BlockPos pos2 = mod.getPlayer().getSteppingPos().offset(axis, -1);
+                BlockPos stepPos = mod.getPlayer().getSteppingPos();
+                BlockPos pos1 = stepPos.offset(axis, 1);
+                BlockPos pos2 = stepPos.offset(axis, -1);
                 //#else
                 //$$ BlockPos stepping = ((adris.altoclef.mixins.EntityAccessor) mod.getPlayer()).invokeGetLandingPos();
                 //$$ BlockPos pos1 = new BlockPos(

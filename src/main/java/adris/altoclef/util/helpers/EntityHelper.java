@@ -10,7 +10,18 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffects;
+//#if MC < 260000
 import net.minecraft.entity.mob.*;
+//#else
+//$$ import net.minecraft.world.entity.monster.Enderman;
+//$$ import net.minecraft.world.entity.monster.hoglin.Hoglin;
+//$$ import net.minecraft.world.entity.monster.Monster;
+//$$ import net.minecraft.world.entity.Mob;
+//$$ import net.minecraft.world.entity.monster.piglin.Piglin;
+//$$ import net.minecraft.world.entity.monster.cubemob.Slime;
+//$$ import net.minecraft.world.entity.monster.Zoglin;
+//$$ import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
+//#endif
 import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;

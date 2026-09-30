@@ -24,7 +24,9 @@ public class DamageSourceWrapper {
     }
 
     public boolean bypassesArmor() {
-        //#if MC >= 11904
+        //#if MC >= 260000
+        //$$ return source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_ARMOR);
+        //#elseif MC >= 11904
         return source.isIn(net.minecraft.registry.tag.DamageTypeTags.BYPASSES_ARMOR);
         //#else
         //$$ return source.bypassesArmor();
@@ -32,7 +34,9 @@ public class DamageSourceWrapper {
     }
 
     public boolean bypassesShield() {
-        //#if MC >= 11904
+        //#if MC >= 260000
+        //$$ return source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_SHIELD);
+        //#elseif MC >= 11904
         return source.isIn(net.minecraft.registry.tag.DamageTypeTags.BYPASSES_SHIELD);
         //#else
         //$$ return source.isUnblockable();

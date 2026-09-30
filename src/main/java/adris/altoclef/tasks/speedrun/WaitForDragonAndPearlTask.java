@@ -1,5 +1,6 @@
 package adris.altoclef.tasks.speedrun;
 
+import adris.altoclef.multiversion.blockpos.BlockPosVer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
@@ -230,7 +231,7 @@ public class WaitForDragonAndPearlTask extends Task {
                         true;
                 case BLOCK ->
                     // Hit a block, check if it's the same as the target block
-                        hitResult.getBlockPos().isWithinDistance(targetToPearl.up(), 10);
+                        BlockPosVer.isWithinDistance(hitResult.getBlockPos(), targetToPearl.up(), 10);
                 case ENTITY ->
                     // Hit an entity, line of sight blocked
                         false;

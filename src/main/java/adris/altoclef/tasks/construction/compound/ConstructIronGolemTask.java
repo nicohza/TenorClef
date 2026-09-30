@@ -1,5 +1,6 @@
 package adris.altoclef.tasks.construction.compound;
 
+import adris.altoclef.multiversion.blockpos.BlockPosVer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.tasks.construction.DestroyBlockTask;
 import adris.altoclef.tasks.construction.PlaceBlockTask;
@@ -125,7 +126,7 @@ public class ConstructIronGolemTask extends Task {
     public boolean isFinished() {
         if (position == null) return false;
         Optional<Entity> closestIronGolem = AltoClef.getInstance().getEntityTracker().getClosestEntity(new Vec3d(position.getX(), position.getY(), position.getZ()), IronGolemEntity.class);
-        return closestIronGolem.isPresent() && closestIronGolem.get().getBlockPos().isWithinDistance(position, 2) && canBeFinished;
+        return closestIronGolem.isPresent() && BlockPosVer.isWithinDistance(closestIronGolem.get().getBlockPos(), position, 2) && canBeFinished;
     }
 
     @Override

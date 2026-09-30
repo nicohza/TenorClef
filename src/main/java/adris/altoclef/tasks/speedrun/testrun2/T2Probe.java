@@ -1,5 +1,7 @@
 package adris.altoclef.tasks.speedrun.testrun2;
 
+import adris.altoclef.multiversion.ScreenVer;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
 import adris.altoclef.util.Dimension;
@@ -145,10 +147,10 @@ public final class T2Probe {
         boolean slowScreen = false;
         try {
             var mc = MinecraftClient.getInstance();
-            if (mc != null && mc.currentScreen != null) {
-                String sn = mc.currentScreen.getClass().getSimpleName();
+            if (mc != null && ScreenVer.current(mc) != null) {
+                String sn = ScreenVer.current(mc).getClass().getSimpleName();
                 slowScreen = sn.contains("Furnace") || sn.contains("Brew");
-                screen = !(mc.currentScreen instanceof net.minecraft.client.gui.screen.ChatScreen)
+                screen = !(ScreenVer.current(mc) instanceof net.minecraft.client.gui.screen.ChatScreen)
                         && !slowScreen;
             }
         } catch (Throwable ignored) {}
@@ -156,7 +158,7 @@ public final class T2Probe {
         else guiTicks = 0;
         if (guiTicks > 20 * 8) {
             String sn = "?";
-            try { sn = MinecraftClient.getInstance().currentScreen.getClass().getSimpleName(); } catch (Throwable ignored) {}
+            try { sn = ScreenVer.current(MinecraftClient.getInstance()).getClass().getSimpleName(); } catch (Throwable ignored) {}
             fire(T2Codes.E104_GUI, sn + " open " + (guiTicks / 20) + "s ph=" + phase);
             guiTicks = 20 * 4;
         }

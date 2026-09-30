@@ -9,7 +9,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Pair;
+import adris.altoclef.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.RaycastContext;
 

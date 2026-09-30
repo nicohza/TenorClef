@@ -59,7 +59,7 @@ public class AutoWorldLoadMixin {
     //$$         return;
     //$$     }
     //$$     List<WorldListWidget.Entry> rows =
-    //$$             ((WorldListWidgetAccessor) (Object) list).altoGetEntries();
+    //$$             list.children();
     //$$     if (rows == null || rows.isEmpty()) {
     //$$         Debug.logMessage("AUTOWORLD: no saves in saves/ — create one first");
     //$$         return;

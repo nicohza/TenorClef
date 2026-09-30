@@ -14,10 +14,24 @@ import baritone.pathing.movement.MovementHelper;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+//#if MC < 260000
 import net.minecraft.item.*;
+//#else
+//$$ import net.minecraft.world.item.Item;
+//$$ import net.minecraft.world.item.ItemStack;
+//$$ import net.minecraft.world.item.Items;
+//#endif
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
+//#if MC < 260000
 import net.minecraft.util.math.*;
+//#else
+//$$ import net.minecraft.core.BlockPos;
+//$$ import net.minecraft.world.phys.AABB;
+//$$ import net.minecraft.core.Direction;
+//$$ import net.minecraft.util.Mth;
+//$$ import net.minecraft.world.phys.Vec3;
+//#endif
 import net.minecraft.world.RaycastContext;
 
 import java.util.Optional;
@@ -206,7 +220,7 @@ public class EscapeFromLavaTask extends CustomBaritoneGoalTask {
 
 
     public HitResult raycast(AltoClef mod,double maxDistance, float pitch, float yaw) {
-        Vec3d cameraPos = mod.getPlayer().getCameraPosVec(MinecraftClient.getInstance().getRenderTickCounter().getTickDelta(true));
+        Vec3d cameraPos = LookHelper.cameraPos(mod.getPlayer(), MinecraftClient.getInstance().getRenderTickCounter().getTickDelta(true));
         Vec3d rotationVector = getRotationVector(pitch,yaw);
 
         Vec3d vec3d3 = cameraPos.add(rotationVector.x * maxDistance, rotationVector.y * maxDistance, rotationVector.z * maxDistance);

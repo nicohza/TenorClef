@@ -4,7 +4,9 @@ import adris.altoclef.mixins.AxeItemAccessor;
 import adris.altoclef.mixins.MiningToolItemAccessor;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+//#if MC < 260000
 import net.minecraft.item.AxeItem;
+//#endif
 import net.minecraft.item.Item;
 //#if MC < 12102
 import net.minecraft.item.MiningToolItem;

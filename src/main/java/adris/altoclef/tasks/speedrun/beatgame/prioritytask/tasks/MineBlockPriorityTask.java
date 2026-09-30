@@ -10,7 +10,7 @@ import adris.altoclef.util.helpers.StorageHelper;
 import net.minecraft.block.Block;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.Item;
-import net.minecraft.util.Pair;
+import adris.altoclef.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 

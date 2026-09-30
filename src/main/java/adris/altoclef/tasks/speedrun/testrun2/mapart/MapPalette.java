@@ -1,5 +1,7 @@
 package adris.altoclef.tasks.speedrun.testrun2.mapart;
 
+import adris.altoclef.multiversion.CItems;
+
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 
@@ -24,30 +26,30 @@ public final class MapPalette {
     }
 
     public static final Swatch[] ALL = {
-            sw("white_concrete", Items.WHITE_CONCRETE, 255, 255, 255),
-            sw("light_gray_concrete", Items.LIGHT_GRAY_CONCRETE, 153, 153, 153),
-            sw("gray_concrete", Items.GRAY_CONCRETE, 76, 76, 76),
-            sw("black_concrete", Items.BLACK_CONCRETE, 25, 25, 25),
-            sw("red_concrete", Items.RED_CONCRETE, 153, 51, 51),
-            sw("orange_concrete", Items.ORANGE_CONCRETE, 216, 127, 51),
-            sw("yellow_concrete", Items.YELLOW_CONCRETE, 229, 229, 51),
-            sw("lime_concrete", Items.LIME_CONCRETE, 127, 204, 25),
-            sw("green_concrete", Items.GREEN_CONCRETE, 102, 127, 51),
-            sw("cyan_concrete", Items.CYAN_CONCRETE, 76, 127, 153),
-            sw("light_blue_concrete", Items.LIGHT_BLUE_CONCRETE, 102, 153, 216),
-            sw("blue_concrete", Items.BLUE_CONCRETE, 51, 76, 178),
-            sw("purple_concrete", Items.PURPLE_CONCRETE, 127, 63, 178),
-            sw("magenta_concrete", Items.MAGENTA_CONCRETE, 178, 76, 216),
-            sw("pink_concrete", Items.PINK_CONCRETE, 242, 127, 165),
-            sw("brown_concrete", Items.BROWN_CONCRETE, 102, 76, 51),
-            sw("white_wool", Items.WHITE_WOOL, 255, 255, 255),
-            sw("orange_wool", Items.ORANGE_WOOL, 216, 127, 51),
+            sw("white_concrete", CItems.WHITE_CONCRETE, 255, 255, 255),
+            sw("light_gray_concrete", CItems.LIGHT_GRAY_CONCRETE, 153, 153, 153),
+            sw("gray_concrete", CItems.GRAY_CONCRETE, 76, 76, 76),
+            sw("black_concrete", CItems.BLACK_CONCRETE, 25, 25, 25),
+            sw("red_concrete", CItems.RED_CONCRETE, 153, 51, 51),
+            sw("orange_concrete", CItems.ORANGE_CONCRETE, 216, 127, 51),
+            sw("yellow_concrete", CItems.YELLOW_CONCRETE, 229, 229, 51),
+            sw("lime_concrete", CItems.LIME_CONCRETE, 127, 204, 25),
+            sw("green_concrete", CItems.GREEN_CONCRETE, 102, 127, 51),
+            sw("cyan_concrete", CItems.CYAN_CONCRETE, 76, 127, 153),
+            sw("light_blue_concrete", CItems.LIGHT_BLUE_CONCRETE, 102, 153, 216),
+            sw("blue_concrete", CItems.BLUE_CONCRETE, 51, 76, 178),
+            sw("purple_concrete", CItems.PURPLE_CONCRETE, 127, 63, 178),
+            sw("magenta_concrete", CItems.MAGENTA_CONCRETE, 178, 76, 216),
+            sw("pink_concrete", CItems.PINK_CONCRETE, 242, 127, 165),
+            sw("brown_concrete", CItems.BROWN_CONCRETE, 102, 76, 51),
+            sw("white_wool", CItems.WHITE_WOOL, 255, 255, 255),
+            sw("orange_wool", CItems.ORANGE_WOOL, 216, 127, 51),
             sw("terracotta", Items.TERRACOTTA, 150, 92, 66),
-            sw("white_terracotta", Items.WHITE_TERRACOTTA, 209, 177, 161),
-            sw("orange_terracotta", Items.ORANGE_TERRACOTTA, 161, 83, 37),
-            sw("red_terracotta", Items.RED_TERRACOTTA, 142, 60, 46),
-            sw("brown_terracotta", Items.BROWN_TERRACOTTA, 77, 51, 35),
-            sw("yellow_terracotta", Items.YELLOW_TERRACOTTA, 186, 133, 35),
+            sw("white_terracotta", CItems.WHITE_TERRACOTTA, 209, 177, 161),
+            sw("orange_terracotta", CItems.ORANGE_TERRACOTTA, 161, 83, 37),
+            sw("red_terracotta", CItems.RED_TERRACOTTA, 142, 60, 46),
+            sw("brown_terracotta", CItems.BROWN_TERRACOTTA, 77, 51, 35),
+            sw("yellow_terracotta", CItems.YELLOW_TERRACOTTA, 186, 133, 35),
             sw("sandstone", Items.SANDSTONE, 247, 233, 163),
             sw("oak_planks", Items.OAK_PLANKS, 143, 119, 72),
             sw("stone", Items.STONE, 112, 112, 112),

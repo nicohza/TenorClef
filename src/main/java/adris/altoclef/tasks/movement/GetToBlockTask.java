@@ -1,5 +1,6 @@
 package adris.altoclef.tasks.movement;
 
+import adris.altoclef.multiversion.blockpos.BlockPosVer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.knowledge.KnowledgeFact;
 import adris.altoclef.knowledge.WorldKnowledge;
@@ -63,7 +64,7 @@ public class GetToBlockTask extends CustomBaritoneGoalTask implements ITaskRequi
 
     private Task tungstenLeg(AltoClef mod, ClientWorld world, boolean isPortal) {
         if (world == null || mod.getPlayer() == null) return null;
-        boolean far = !mod.getPlayer().getBlockPos().isWithinDistance(_position, 16);
+        boolean far = !BlockPosVer.isWithinDistance(mod.getPlayer().getBlockPos(), _position, 16);
         if (legStartMs != 0 && !far) {
             // Reached the handoff radius: score the leg with whichever mover drove it.
             adris.altoclef.movement.MoverStats.record(legTungsten, (System.currentTimeMillis() - legStartMs) / 1000.0, legBlocks, false);

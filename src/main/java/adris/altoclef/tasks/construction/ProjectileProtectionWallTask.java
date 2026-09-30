@@ -195,7 +195,9 @@ public class ProjectileProtectionWallTask extends Task implements ITaskRequiresG
 
         ActionResult result = mod.getController().interactBlock(mod.getPlayer(),hand, blockHitResult);
 
-        //#if MC >= 12102
+        //#if MC >= 260000
+        //$$ if (result instanceof net.minecraft.world.InteractionResult.Success success && success.shouldSwing()) {
+        //#elseif MC >= 12102
         //$$ if (result instanceof ActionResult.Success success && success.swingSource() == ActionResult.SwingSource.CLIENT) {
         //#else
         if (result.shouldSwingHand()) {

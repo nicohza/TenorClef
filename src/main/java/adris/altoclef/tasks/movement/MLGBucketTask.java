@@ -268,7 +268,7 @@ public class MLGBucketTask extends Task {
         Vec3d forwardFacing = LookHelper.toVec3d(look).multiply(1, 0, 1).normalize();
         Vec3d delta = WorldHelper.toVec3d(movingTorwards).subtract(mod.getPlayer().getPos()).multiply(1, 0, 1);
         Vec3d velocity = mod.getPlayer().getVelocity().multiply(1, 0, 1);
-        Vec3d pd = delta.subtract(velocity.multiply(3f));
+        Vec3d pd = delta.subtract(MathsHelper.scale(velocity, 3f));
         double forwardStrength = pd.dotProduct(forwardFacing);
         if (newForwardTarget) {
             LookHelper.lookAt(mod, movingTorwards);
@@ -367,7 +367,7 @@ public class MLGBucketTask extends Task {
         // Also consider how much further to the right we should move
         Vec3d rightDelta = MathsHelper.projectOntoPlane(deltaTarget, forwardFacing).multiply(1, 0, 1);
         // Do a little PD loop
-        Vec3d pd = rightDelta.subtract(rightVelocity.multiply(2));
+        Vec3d pd = rightDelta.subtract(MathsHelper.scale(rightVelocity, 2));
         // We're traveling too fast sideways
         Vec3d faceRight = forwardFacing.crossProduct(new Vec3d(0, 1, 0));
         boolean moveRight = pd.dotProduct(faceRight) > 0;

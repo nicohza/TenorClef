@@ -1,5 +1,8 @@
 package adris.altoclef.tasks.construction.compound;
 
+import adris.altoclef.multiversion.blockpos.BlockPosVer;
+import adris.altoclef.multiversion.ScreenVer;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.TaskCatalogue;
@@ -206,7 +209,7 @@ public class ConstructNetherPortalBucketTask extends Task {
         if (refreshTimer.elapsed()) {
             // NEVER refresh while a container/craft screen is open - double-clicking every
             // inventory slot desyncs the handler and causes "Ignoring click in mismatching container".
-            if (MinecraftClient.getInstance().currentScreen == null && !mod.getControllerExtras().isBreakingBlock()) {
+            if (ScreenVer.current(MinecraftClient.getInstance()) == null && !mod.getControllerExtras().isBreakingBlock()) {
                 Debug.logMessage("Duct tape: Refreshing inventory again just in case");
                 mod.getSlotHandler().refreshInventory();
             }
@@ -399,10 +402,10 @@ public class ConstructNetherPortalBucketTask extends Task {
                 // S331: s329o dug into a spider dungeon chasing cave lava and died there. A spawner near an
                 // underground lava hunt means a mob room: blacklist this lava and pick a site elsewhere.
                 if (here.getY() < 55 && mod.getBlockScanner().getNearestBlock(WorldHelper.toVec3d(here), Blocks.SPAWNER)
-                        .filter(s -> s.isWithinDistance(here, 14)).isPresent()) {
+                        .filter(s -> BlockPosVer.isWithinDistance(s, here, 14)).isPresent()) {
                     int marked = 0;
                     for (BlockPos lp : mod.getBlockScanner().getKnownLocations(Blocks.LAVA)) {
-                        if (lp.isWithinDistance(here, 24)) { mod.getBlockScanner().requestBlockUnreachable(lp, 0); marked++; }
+                        if (BlockPosVer.isWithinDistance(lp, here, 24)) { mod.getBlockScanner().requestBlockUnreachable(lp, 0); marked++; }
                     }
                     Debug.logWarning("[S331] spawner near lava hunt @" + here.toShortString() + " - blacklisted " + marked + " lava, relocating");
                     lavaStallAnchor = null;
@@ -412,7 +415,7 @@ public class ConstructNetherPortalBucketTask extends Task {
                 }
                 // S314: s310t swung between 232,61,193 (lava target) and 233,61,188 (failed water bail)
                 // 5 blocks apart, resetting a 4-block anchor, until a drowned killed it. Use 10.
-                if (lavaStallAnchor == null || !lavaStallAnchor.isWithinDistance(here, 10)) {
+                if (lavaStallAnchor == null || !BlockPosVer.isWithinDistance(lavaStallAnchor, here, 10)) {
                     lavaStallAnchor = here;
                     lavaStallTimer.reset();
                 } else if (lavaStallTimer.elapsed()) {
@@ -422,7 +425,7 @@ public class ConstructNetherPortalBucketTask extends Task {
                     // next pick is elsewhere.
                     int marked = 0;
                     for (BlockPos lp : mod.getBlockScanner().getKnownLocations(Blocks.LAVA)) {
-                        if (lp.isWithinDistance(here, 24)) { mod.getBlockScanner().requestBlockUnreachable(lp, 0); marked++; }
+                        if (BlockPosVer.isWithinDistance(lp, here, 24)) { mod.getBlockScanner().requestBlockUnreachable(lp, 0); marked++; }
                     }
                     Debug.logWarning("[S319] blacklisted " + marked + " lava blocks near stall");
                     lavaStallAnchor = null;
@@ -538,7 +541,7 @@ public class ConstructNetherPortalBucketTask extends Task {
         if (!lavas.isEmpty()) {
             for (BlockPos pos : lavas) {
                 if (alreadyExplored.contains(pos)) continue;
-                if (unportalableLakes.stream().anyMatch(b -> b.isWithinDistance(pos, 16))) continue;
+                if (unportalableLakes.stream().anyMatch(b -> BlockPosVer.isWithinDistance(b, pos, 16))) continue;
                 double sqDist = playerPos.getSquaredDistance(pos);
                 // S165: was Math.max(...), which skipped any candidate that could not beat
                 // BOTH trackers at once. With two trackers that prunes a perfectly good deep

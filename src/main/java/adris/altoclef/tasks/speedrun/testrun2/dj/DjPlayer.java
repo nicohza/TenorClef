@@ -133,7 +133,7 @@ public final class DjPlayer {
             if (v instanceof SoundEvent se) return se;
         } catch (Throwable ignored) {}
         //#if MC >= 12100
-        return SoundEvent.of(net.minecraft.util.Identifier.of("minecraft", "block.note_block.harp"));
+        return SoundEvent.of(net.minecraft.util.Identifier.of("minecraft:block.note_block.harp"));
         //#else
         //$$ return new SoundEvent(new net.minecraft.util.Identifier("minecraft", "block.note_block.harp"));
         //#endif

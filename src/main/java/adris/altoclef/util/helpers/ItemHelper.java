@@ -1,5 +1,8 @@
 package adris.altoclef.util.helpers;
 
+import adris.altoclef.multiversion.CItems;
+import adris.altoclef.multiversion.CBlocks;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.multiversion.BlockTagVer;
 import adris.altoclef.multiversion.item.ItemVer;
@@ -96,11 +99,11 @@ public class ItemHelper {
     public static final Item[] STRIPPABLE_LOGS = new Item[]{Items.ACACIA_LOG, Items.BIRCH_LOG, Items.DARK_OAK_LOG,
             Items.OAK_LOG, Items.JUNGLE_LOG, Items.SPRUCE_LOG, Items.CRIMSON_STEM, Items.WARPED_STEM, Items.MANGROVE_LOG,
             Items.CHERRY_LOG};
-    public static final Item[] DYE = new Item[]{Items.WHITE_DYE, Items.BLACK_DYE, Items.BLUE_DYE, Items.BROWN_DYE, Items.CYAN_DYE, Items.GRAY_DYE, Items.GREEN_DYE, Items.LIGHT_BLUE_DYE, Items.LIGHT_GRAY_DYE, Items.LIME_DYE, Items.MAGENTA_DYE, Items.ORANGE_DYE, Items.PINK_DYE, Items.PURPLE_DYE, Items.RED_DYE, Items.YELLOW_DYE};
-    public static final Item[] WOOL = new Item[]{Items.WHITE_WOOL, Items.BLACK_WOOL, Items.BLUE_WOOL, Items.BROWN_WOOL, Items.CYAN_WOOL, Items.GRAY_WOOL, Items.GREEN_WOOL, Items.LIGHT_BLUE_WOOL, Items.LIGHT_GRAY_WOOL, Items.LIME_WOOL, Items.MAGENTA_WOOL, Items.ORANGE_WOOL, Items.PINK_WOOL, Items.PURPLE_WOOL, Items.RED_WOOL, Items.YELLOW_WOOL};
-    public static final Item[] BED = new Item[]{Items.WHITE_BED, Items.BLACK_BED, Items.BLUE_BED, Items.BROWN_BED, Items.CYAN_BED, Items.GRAY_BED, Items.GREEN_BED, Items.LIGHT_BLUE_BED, Items.LIGHT_GRAY_BED, Items.LIME_BED, Items.MAGENTA_BED, Items.ORANGE_BED, Items.PINK_BED, Items.PURPLE_BED, Items.RED_BED, Items.YELLOW_BED};
-    public static final Item[] CARPET = new Item[]{Items.WHITE_CARPET, Items.BLACK_CARPET, Items.BLUE_CARPET, Items.BROWN_CARPET, Items.CYAN_CARPET, Items.GRAY_CARPET, Items.GREEN_CARPET, Items.LIGHT_BLUE_CARPET, Items.LIGHT_GRAY_CARPET, Items.LIME_CARPET, Items.MAGENTA_CARPET, Items.ORANGE_CARPET, Items.PINK_CARPET, Items.PURPLE_CARPET, Items.RED_CARPET, Items.YELLOW_CARPET};
-    public static final Item[] SHULKER_BOXES = new Item[]{Items.WHITE_SHULKER_BOX, Items.BLACK_SHULKER_BOX, Items.BLUE_SHULKER_BOX, Items.BROWN_SHULKER_BOX, Items.CYAN_SHULKER_BOX, Items.GRAY_SHULKER_BOX, Items.GREEN_SHULKER_BOX, Items.LIGHT_BLUE_SHULKER_BOX, Items.LIGHT_GRAY_SHULKER_BOX, Items.LIME_SHULKER_BOX, Items.MAGENTA_SHULKER_BOX, Items.ORANGE_SHULKER_BOX, Items.PINK_SHULKER_BOX, Items.PURPLE_SHULKER_BOX, Items.RED_SHULKER_BOX, Items.YELLOW_SHULKER_BOX};
+    public static final Item[] DYE = new Item[]{CItems.WHITE_DYE, CItems.BLACK_DYE, CItems.BLUE_DYE, CItems.BROWN_DYE, CItems.CYAN_DYE, CItems.GRAY_DYE, CItems.GREEN_DYE, CItems.LIGHT_BLUE_DYE, CItems.LIGHT_GRAY_DYE, CItems.LIME_DYE, CItems.MAGENTA_DYE, CItems.ORANGE_DYE, CItems.PINK_DYE, CItems.PURPLE_DYE, CItems.RED_DYE, CItems.YELLOW_DYE};
+    public static final Item[] WOOL = new Item[]{CItems.WHITE_WOOL, CItems.BLACK_WOOL, CItems.BLUE_WOOL, CItems.BROWN_WOOL, CItems.CYAN_WOOL, CItems.GRAY_WOOL, CItems.GREEN_WOOL, CItems.LIGHT_BLUE_WOOL, CItems.LIGHT_GRAY_WOOL, CItems.LIME_WOOL, CItems.MAGENTA_WOOL, CItems.ORANGE_WOOL, CItems.PINK_WOOL, CItems.PURPLE_WOOL, CItems.RED_WOOL, CItems.YELLOW_WOOL};
+    public static final Item[] BED = new Item[]{CItems.WHITE_BED, CItems.BLACK_BED, CItems.BLUE_BED, CItems.BROWN_BED, CItems.CYAN_BED, CItems.GRAY_BED, CItems.GREEN_BED, CItems.LIGHT_BLUE_BED, CItems.LIGHT_GRAY_BED, CItems.LIME_BED, CItems.MAGENTA_BED, CItems.ORANGE_BED, CItems.PINK_BED, CItems.PURPLE_BED, CItems.RED_BED, CItems.YELLOW_BED};
+    public static final Item[] CARPET = new Item[]{CItems.WHITE_CARPET, CItems.BLACK_CARPET, CItems.BLUE_CARPET, CItems.BROWN_CARPET, CItems.CYAN_CARPET, CItems.GRAY_CARPET, CItems.GREEN_CARPET, CItems.LIGHT_BLUE_CARPET, CItems.LIGHT_GRAY_CARPET, CItems.LIME_CARPET, CItems.MAGENTA_CARPET, CItems.ORANGE_CARPET, CItems.PINK_CARPET, CItems.PURPLE_CARPET, CItems.RED_CARPET, CItems.YELLOW_CARPET};
+    public static final Item[] SHULKER_BOXES = new Item[]{CItems.WHITE_SHULKER_BOX, CItems.BLACK_SHULKER_BOX, CItems.BLUE_SHULKER_BOX, CItems.BROWN_SHULKER_BOX, CItems.CYAN_SHULKER_BOX, CItems.GRAY_SHULKER_BOX, CItems.GREEN_SHULKER_BOX, CItems.LIGHT_BLUE_SHULKER_BOX, CItems.LIGHT_GRAY_SHULKER_BOX, CItems.LIME_SHULKER_BOX, CItems.MAGENTA_SHULKER_BOX, CItems.ORANGE_SHULKER_BOX, CItems.PINK_SHULKER_BOX, CItems.PURPLE_SHULKER_BOX, CItems.RED_SHULKER_BOX, CItems.YELLOW_SHULKER_BOX};
     public static final Item[] FLOWER = new Item[]{Items.ALLIUM, Items.AZURE_BLUET, Items.BLUE_ORCHID, Items.CORNFLOWER, Items.DANDELION, Items.LILAC, Items.LILY_OF_THE_VALLEY, Items.ORANGE_TULIP, Items.OXEYE_DAISY, Items.PINK_TULIP, Items.POPPY, Items.PEONY, Items.RED_TULIP, Items.ROSE_BUSH, Items.SUNFLOWER, Items.WHITE_TULIP};
     public static final Item[] LEATHER_ARMORS = new Item[]{Items.LEATHER_CHESTPLATE, Items.LEATHER_LEGGINGS, Items.LEATHER_HELMET, Items.LEATHER_BOOTS};
     public static final Item[] GOLDEN_ARMORS = new Item[]{Items.GOLDEN_CHESTPLATE, Items.GOLDEN_LEGGINGS, Items.GOLDEN_HELMET, Items.GOLDEN_BOOTS};
@@ -194,23 +197,23 @@ public class ItemHelper {
     // This is kinda jank ngl
     private static final Map<MapColor, ColorfulItems> colorMap = new HashMap<MapColor, ColorfulItems>() {
         {
-            p(DyeColor.RED, "red", Items.RED_DYE, Items.RED_WOOL, Items.RED_BED, Items.RED_CARPET, Items.RED_STAINED_GLASS, Items.RED_STAINED_GLASS_PANE, Items.RED_TERRACOTTA, Items.RED_GLAZED_TERRACOTTA, Items.RED_CONCRETE, Items.RED_CONCRETE_POWDER, Items.RED_BANNER, Items.RED_SHULKER_BOX, Blocks.RED_WALL_BANNER);
-            p(DyeColor.WHITE, "white", Items.WHITE_DYE, Items.WHITE_WOOL, Items.WHITE_BED, Items.WHITE_CARPET, Items.WHITE_STAINED_GLASS, Items.WHITE_STAINED_GLASS_PANE, Items.WHITE_TERRACOTTA, Items.WHITE_GLAZED_TERRACOTTA, Items.WHITE_CONCRETE, Items.WHITE_CONCRETE_POWDER, Items.WHITE_BANNER, Items.WHITE_SHULKER_BOX, Blocks.WHITE_WALL_BANNER);
-            p(DyeColor.BLACK, "black", Items.BLACK_DYE, Items.BLACK_WOOL, Items.BLACK_BED, Items.BLACK_CARPET, Items.BLACK_STAINED_GLASS, Items.BLACK_STAINED_GLASS_PANE, Items.BLACK_TERRACOTTA, Items.BLACK_GLAZED_TERRACOTTA, Items.BLACK_CONCRETE, Items.BLACK_CONCRETE_POWDER, Items.BLACK_BANNER, Items.BLACK_SHULKER_BOX, Blocks.BLACK_WALL_BANNER);
-            p(DyeColor.BLUE, "blue", Items.BLUE_DYE, Items.BLUE_WOOL, Items.BLUE_BED, Items.BLUE_CARPET, Items.BLUE_STAINED_GLASS, Items.BLUE_STAINED_GLASS_PANE, Items.BLUE_TERRACOTTA, Items.BLUE_GLAZED_TERRACOTTA, Items.BLUE_CONCRETE, Items.BLUE_CONCRETE_POWDER, Items.BLUE_BANNER, Items.BLUE_SHULKER_BOX, Blocks.BLUE_WALL_BANNER);
-            p(DyeColor.BROWN, "brown", Items.BROWN_DYE, Items.BROWN_WOOL, Items.BROWN_BED, Items.BROWN_CARPET, Items.BROWN_STAINED_GLASS, Items.BROWN_STAINED_GLASS_PANE, Items.BROWN_TERRACOTTA, Items.BROWN_GLAZED_TERRACOTTA, Items.BROWN_CONCRETE, Items.BROWN_CONCRETE_POWDER, Items.BROWN_BANNER, Items.BROWN_SHULKER_BOX, Blocks.BROWN_WALL_BANNER);
-            p(DyeColor.CYAN, "cyan", Items.CYAN_DYE, Items.CYAN_WOOL, Items.CYAN_BED, Items.CYAN_CARPET, Items.CYAN_STAINED_GLASS, Items.CYAN_STAINED_GLASS_PANE, Items.CYAN_TERRACOTTA, Items.CYAN_GLAZED_TERRACOTTA, Items.CYAN_CONCRETE, Items.CYAN_CONCRETE_POWDER, Items.CYAN_BANNER, Items.CYAN_SHULKER_BOX, Blocks.CYAN_WALL_BANNER);
-            p(DyeColor.GRAY, "gray", Items.GRAY_DYE, Items.GRAY_WOOL, Items.GRAY_BED, Items.GRAY_CARPET, Items.GRAY_STAINED_GLASS, Items.GRAY_STAINED_GLASS_PANE, Items.GRAY_TERRACOTTA, Items.GRAY_GLAZED_TERRACOTTA, Items.GRAY_CONCRETE, Items.GRAY_CONCRETE_POWDER, Items.GRAY_BANNER, Items.GRAY_SHULKER_BOX, Blocks.GRAY_WALL_BANNER);
-            p(DyeColor.GREEN, "green", Items.GREEN_DYE, Items.GREEN_WOOL, Items.GREEN_BED, Items.GREEN_CARPET, Items.GREEN_STAINED_GLASS, Items.GREEN_STAINED_GLASS_PANE, Items.GREEN_TERRACOTTA, Items.GREEN_GLAZED_TERRACOTTA, Items.GREEN_CONCRETE, Items.GREEN_CONCRETE_POWDER, Items.GREEN_BANNER, Items.GREEN_SHULKER_BOX, Blocks.GREEN_WALL_BANNER);
-            p(DyeColor.LIGHT_BLUE, "light_blue", Items.LIGHT_BLUE_DYE, Items.LIGHT_BLUE_WOOL, Items.LIGHT_BLUE_BED, Items.LIGHT_BLUE_CARPET, Items.LIGHT_BLUE_STAINED_GLASS, Items.LIGHT_BLUE_STAINED_GLASS_PANE, Items.LIGHT_BLUE_TERRACOTTA, Items.LIGHT_BLUE_GLAZED_TERRACOTTA, Items.LIGHT_BLUE_CONCRETE, Items.LIGHT_BLUE_CONCRETE_POWDER, Items.LIGHT_BLUE_BANNER, Items.LIGHT_BLUE_SHULKER_BOX, Blocks.LIGHT_BLUE_WALL_BANNER);
-            p(DyeColor.LIGHT_GRAY, "light_gray", Items.LIGHT_GRAY_DYE, Items.LIGHT_GRAY_WOOL, Items.LIGHT_GRAY_BED, Items.LIGHT_GRAY_CARPET, Items.LIGHT_GRAY_STAINED_GLASS, Items.LIGHT_GRAY_STAINED_GLASS_PANE, Items.LIGHT_GRAY_TERRACOTTA, Items.LIGHT_GRAY_GLAZED_TERRACOTTA, Items.LIGHT_GRAY_CONCRETE, Items.LIGHT_GRAY_CONCRETE_POWDER, Items.LIGHT_GRAY_BANNER, Items.LIGHT_GRAY_SHULKER_BOX, Blocks.LIGHT_GRAY_WALL_BANNER);
-            p(DyeColor.LIME, "lime", Items.LIME_DYE, Items.LIME_WOOL, Items.LIME_BED, Items.LIME_CARPET, Items.LIME_STAINED_GLASS, Items.LIME_STAINED_GLASS_PANE, Items.LIME_TERRACOTTA, Items.LIME_GLAZED_TERRACOTTA, Items.LIME_CONCRETE, Items.LIME_CONCRETE_POWDER, Items.LIME_BANNER, Items.LIME_SHULKER_BOX, Blocks.LIME_WALL_BANNER);
-            p(DyeColor.MAGENTA, "magenta", Items.MAGENTA_DYE, Items.MAGENTA_WOOL, Items.MAGENTA_BED, Items.MAGENTA_CARPET, Items.MAGENTA_STAINED_GLASS, Items.MAGENTA_STAINED_GLASS_PANE, Items.MAGENTA_TERRACOTTA, Items.MAGENTA_GLAZED_TERRACOTTA, Items.MAGENTA_CONCRETE, Items.MAGENTA_CONCRETE_POWDER, Items.MAGENTA_BANNER, Items.MAGENTA_SHULKER_BOX, Blocks.MAGENTA_WALL_BANNER);
-            p(DyeColor.ORANGE, "orange", Items.ORANGE_DYE, Items.ORANGE_WOOL, Items.ORANGE_BED, Items.ORANGE_CARPET, Items.ORANGE_STAINED_GLASS, Items.ORANGE_STAINED_GLASS_PANE, Items.ORANGE_TERRACOTTA, Items.ORANGE_GLAZED_TERRACOTTA, Items.ORANGE_CONCRETE, Items.ORANGE_CONCRETE_POWDER, Items.ORANGE_BANNER, Items.ORANGE_SHULKER_BOX, Blocks.ORANGE_WALL_BANNER);
-            p(DyeColor.PINK, "pink", Items.PINK_DYE, Items.PINK_WOOL, Items.PINK_BED, Items.PINK_CARPET, Items.PINK_STAINED_GLASS, Items.PINK_STAINED_GLASS_PANE, Items.PINK_TERRACOTTA, Items.PINK_GLAZED_TERRACOTTA, Items.PINK_CONCRETE, Items.PINK_CONCRETE_POWDER, Items.PINK_BANNER, Items.PINK_SHULKER_BOX, Blocks.PINK_WALL_BANNER);
-            p(DyeColor.PURPLE, "purple", Items.PURPLE_DYE, Items.PURPLE_WOOL, Items.PURPLE_BED, Items.PURPLE_CARPET, Items.PURPLE_STAINED_GLASS, Items.PURPLE_STAINED_GLASS_PANE, Items.PURPLE_TERRACOTTA, Items.PURPLE_GLAZED_TERRACOTTA, Items.PURPLE_CONCRETE, Items.PURPLE_CONCRETE_POWDER, Items.PURPLE_BANNER, Items.PURPLE_SHULKER_BOX, Blocks.PURPLE_WALL_BANNER);
-            p(DyeColor.RED, "red", Items.RED_DYE, Items.RED_WOOL, Items.RED_BED, Items.RED_CARPET, Items.RED_STAINED_GLASS, Items.RED_STAINED_GLASS_PANE, Items.RED_TERRACOTTA, Items.RED_GLAZED_TERRACOTTA, Items.RED_CONCRETE, Items.RED_CONCRETE_POWDER, Items.RED_BANNER, Items.RED_SHULKER_BOX, Blocks.RED_WALL_BANNER);
-            p(DyeColor.YELLOW, "yellow", Items.YELLOW_DYE, Items.YELLOW_WOOL, Items.YELLOW_BED, Items.YELLOW_CARPET, Items.YELLOW_STAINED_GLASS, Items.YELLOW_STAINED_GLASS_PANE, Items.YELLOW_TERRACOTTA, Items.YELLOW_GLAZED_TERRACOTTA, Items.YELLOW_CONCRETE, Items.YELLOW_CONCRETE_POWDER, Items.YELLOW_BANNER, Items.YELLOW_SHULKER_BOX, Blocks.YELLOW_WALL_BANNER);
+            p(DyeColor.RED, "red", CItems.RED_DYE, CItems.RED_WOOL, CItems.RED_BED, CItems.RED_CARPET, CItems.RED_STAINED_GLASS, CItems.RED_STAINED_GLASS_PANE, CItems.RED_TERRACOTTA, CItems.RED_GLAZED_TERRACOTTA, CItems.RED_CONCRETE, CItems.RED_CONCRETE_POWDER, CItems.RED_BANNER, CItems.RED_SHULKER_BOX, CBlocks.RED_WALL_BANNER);
+            p(DyeColor.WHITE, "white", CItems.WHITE_DYE, CItems.WHITE_WOOL, CItems.WHITE_BED, CItems.WHITE_CARPET, CItems.WHITE_STAINED_GLASS, CItems.WHITE_STAINED_GLASS_PANE, CItems.WHITE_TERRACOTTA, CItems.WHITE_GLAZED_TERRACOTTA, CItems.WHITE_CONCRETE, CItems.WHITE_CONCRETE_POWDER, CItems.WHITE_BANNER, CItems.WHITE_SHULKER_BOX, CBlocks.WHITE_WALL_BANNER);
+            p(DyeColor.BLACK, "black", CItems.BLACK_DYE, CItems.BLACK_WOOL, CItems.BLACK_BED, CItems.BLACK_CARPET, CItems.BLACK_STAINED_GLASS, CItems.BLACK_STAINED_GLASS_PANE, CItems.BLACK_TERRACOTTA, CItems.BLACK_GLAZED_TERRACOTTA, CItems.BLACK_CONCRETE, CItems.BLACK_CONCRETE_POWDER, CItems.BLACK_BANNER, CItems.BLACK_SHULKER_BOX, CBlocks.BLACK_WALL_BANNER);
+            p(DyeColor.BLUE, "blue", CItems.BLUE_DYE, CItems.BLUE_WOOL, CItems.BLUE_BED, CItems.BLUE_CARPET, CItems.BLUE_STAINED_GLASS, CItems.BLUE_STAINED_GLASS_PANE, CItems.BLUE_TERRACOTTA, CItems.BLUE_GLAZED_TERRACOTTA, CItems.BLUE_CONCRETE, CItems.BLUE_CONCRETE_POWDER, CItems.BLUE_BANNER, CItems.BLUE_SHULKER_BOX, CBlocks.BLUE_WALL_BANNER);
+            p(DyeColor.BROWN, "brown", CItems.BROWN_DYE, CItems.BROWN_WOOL, CItems.BROWN_BED, CItems.BROWN_CARPET, CItems.BROWN_STAINED_GLASS, CItems.BROWN_STAINED_GLASS_PANE, CItems.BROWN_TERRACOTTA, CItems.BROWN_GLAZED_TERRACOTTA, CItems.BROWN_CONCRETE, CItems.BROWN_CONCRETE_POWDER, CItems.BROWN_BANNER, CItems.BROWN_SHULKER_BOX, CBlocks.BROWN_WALL_BANNER);
+            p(DyeColor.CYAN, "cyan", CItems.CYAN_DYE, CItems.CYAN_WOOL, CItems.CYAN_BED, CItems.CYAN_CARPET, CItems.CYAN_STAINED_GLASS, CItems.CYAN_STAINED_GLASS_PANE, CItems.CYAN_TERRACOTTA, CItems.CYAN_GLAZED_TERRACOTTA, CItems.CYAN_CONCRETE, CItems.CYAN_CONCRETE_POWDER, CItems.CYAN_BANNER, CItems.CYAN_SHULKER_BOX, CBlocks.CYAN_WALL_BANNER);
+            p(DyeColor.GRAY, "gray", CItems.GRAY_DYE, CItems.GRAY_WOOL, CItems.GRAY_BED, CItems.GRAY_CARPET, CItems.GRAY_STAINED_GLASS, CItems.GRAY_STAINED_GLASS_PANE, CItems.GRAY_TERRACOTTA, CItems.GRAY_GLAZED_TERRACOTTA, CItems.GRAY_CONCRETE, CItems.GRAY_CONCRETE_POWDER, CItems.GRAY_BANNER, CItems.GRAY_SHULKER_BOX, CBlocks.GRAY_WALL_BANNER);
+            p(DyeColor.GREEN, "green", CItems.GREEN_DYE, CItems.GREEN_WOOL, CItems.GREEN_BED, CItems.GREEN_CARPET, CItems.GREEN_STAINED_GLASS, CItems.GREEN_STAINED_GLASS_PANE, CItems.GREEN_TERRACOTTA, CItems.GREEN_GLAZED_TERRACOTTA, CItems.GREEN_CONCRETE, CItems.GREEN_CONCRETE_POWDER, CItems.GREEN_BANNER, CItems.GREEN_SHULKER_BOX, CBlocks.GREEN_WALL_BANNER);
+            p(DyeColor.LIGHT_BLUE, "light_blue", CItems.LIGHT_BLUE_DYE, CItems.LIGHT_BLUE_WOOL, CItems.LIGHT_BLUE_BED, CItems.LIGHT_BLUE_CARPET, CItems.LIGHT_BLUE_STAINED_GLASS, CItems.LIGHT_BLUE_STAINED_GLASS_PANE, CItems.LIGHT_BLUE_TERRACOTTA, CItems.LIGHT_BLUE_GLAZED_TERRACOTTA, CItems.LIGHT_BLUE_CONCRETE, CItems.LIGHT_BLUE_CONCRETE_POWDER, CItems.LIGHT_BLUE_BANNER, CItems.LIGHT_BLUE_SHULKER_BOX, CBlocks.LIGHT_BLUE_WALL_BANNER);
+            p(DyeColor.LIGHT_GRAY, "light_gray", CItems.LIGHT_GRAY_DYE, CItems.LIGHT_GRAY_WOOL, CItems.LIGHT_GRAY_BED, CItems.LIGHT_GRAY_CARPET, CItems.LIGHT_GRAY_STAINED_GLASS, CItems.LIGHT_GRAY_STAINED_GLASS_PANE, CItems.LIGHT_GRAY_TERRACOTTA, CItems.LIGHT_GRAY_GLAZED_TERRACOTTA, CItems.LIGHT_GRAY_CONCRETE, CItems.LIGHT_GRAY_CONCRETE_POWDER, CItems.LIGHT_GRAY_BANNER, CItems.LIGHT_GRAY_SHULKER_BOX, CBlocks.LIGHT_GRAY_WALL_BANNER);
+            p(DyeColor.LIME, "lime", CItems.LIME_DYE, CItems.LIME_WOOL, CItems.LIME_BED, CItems.LIME_CARPET, CItems.LIME_STAINED_GLASS, CItems.LIME_STAINED_GLASS_PANE, CItems.LIME_TERRACOTTA, CItems.LIME_GLAZED_TERRACOTTA, CItems.LIME_CONCRETE, CItems.LIME_CONCRETE_POWDER, CItems.LIME_BANNER, CItems.LIME_SHULKER_BOX, CBlocks.LIME_WALL_BANNER);
+            p(DyeColor.MAGENTA, "magenta", CItems.MAGENTA_DYE, CItems.MAGENTA_WOOL, CItems.MAGENTA_BED, CItems.MAGENTA_CARPET, CItems.MAGENTA_STAINED_GLASS, CItems.MAGENTA_STAINED_GLASS_PANE, CItems.MAGENTA_TERRACOTTA, CItems.MAGENTA_GLAZED_TERRACOTTA, CItems.MAGENTA_CONCRETE, CItems.MAGENTA_CONCRETE_POWDER, CItems.MAGENTA_BANNER, CItems.MAGENTA_SHULKER_BOX, CBlocks.MAGENTA_WALL_BANNER);
+            p(DyeColor.ORANGE, "orange", CItems.ORANGE_DYE, CItems.ORANGE_WOOL, CItems.ORANGE_BED, CItems.ORANGE_CARPET, CItems.ORANGE_STAINED_GLASS, CItems.ORANGE_STAINED_GLASS_PANE, CItems.ORANGE_TERRACOTTA, CItems.ORANGE_GLAZED_TERRACOTTA, CItems.ORANGE_CONCRETE, CItems.ORANGE_CONCRETE_POWDER, CItems.ORANGE_BANNER, CItems.ORANGE_SHULKER_BOX, CBlocks.ORANGE_WALL_BANNER);
+            p(DyeColor.PINK, "pink", CItems.PINK_DYE, CItems.PINK_WOOL, CItems.PINK_BED, CItems.PINK_CARPET, CItems.PINK_STAINED_GLASS, CItems.PINK_STAINED_GLASS_PANE, CItems.PINK_TERRACOTTA, CItems.PINK_GLAZED_TERRACOTTA, CItems.PINK_CONCRETE, CItems.PINK_CONCRETE_POWDER, CItems.PINK_BANNER, CItems.PINK_SHULKER_BOX, CBlocks.PINK_WALL_BANNER);
+            p(DyeColor.PURPLE, "purple", CItems.PURPLE_DYE, CItems.PURPLE_WOOL, CItems.PURPLE_BED, CItems.PURPLE_CARPET, CItems.PURPLE_STAINED_GLASS, CItems.PURPLE_STAINED_GLASS_PANE, CItems.PURPLE_TERRACOTTA, CItems.PURPLE_GLAZED_TERRACOTTA, CItems.PURPLE_CONCRETE, CItems.PURPLE_CONCRETE_POWDER, CItems.PURPLE_BANNER, CItems.PURPLE_SHULKER_BOX, CBlocks.PURPLE_WALL_BANNER);
+            p(DyeColor.RED, "red", CItems.RED_DYE, CItems.RED_WOOL, CItems.RED_BED, CItems.RED_CARPET, CItems.RED_STAINED_GLASS, CItems.RED_STAINED_GLASS_PANE, CItems.RED_TERRACOTTA, CItems.RED_GLAZED_TERRACOTTA, CItems.RED_CONCRETE, CItems.RED_CONCRETE_POWDER, CItems.RED_BANNER, CItems.RED_SHULKER_BOX, CBlocks.RED_WALL_BANNER);
+            p(DyeColor.YELLOW, "yellow", CItems.YELLOW_DYE, CItems.YELLOW_WOOL, CItems.YELLOW_BED, CItems.YELLOW_CARPET, CItems.YELLOW_STAINED_GLASS, CItems.YELLOW_STAINED_GLASS_PANE, CItems.YELLOW_TERRACOTTA, CItems.YELLOW_GLAZED_TERRACOTTA, CItems.YELLOW_CONCRETE, CItems.YELLOW_CONCRETE_POWDER, CItems.YELLOW_BANNER, CItems.YELLOW_SHULKER_BOX, CBlocks.YELLOW_WALL_BANNER);
         }
 
         void p(DyeColor color, String colorName, Item dye, Item wool, Item bed, Item carpet, Item stainedGlass, Item stainedGlassPane, Item terracotta, Item glazedTerracotta, Item concrete, Item concretePowder, Item banner, Item shulker, Block wallBanner) {
@@ -402,7 +405,25 @@ public class ItemHelper {
 
     private static Map<Item, Integer> getFuelTimeMap() {
         if (fuelTimeMap == null) {
-            //#if MC >= 12102
+            //#if MC >= 260000
+            //$$ fuelTimeMap = new java.util.HashMap<>();
+            //$$ java.util.Map<net.minecraft.world.item.Item, Integer> fixedFuel = new java.util.HashMap<>();
+            //$$ fixedFuel.put(net.minecraft.world.item.Items.LAVA_BUCKET, 20000);
+            //$$ fixedFuel.put(net.minecraft.world.item.Items.COAL_BLOCK, 16000);
+            //$$ fixedFuel.put(net.minecraft.world.item.Items.DRIED_KELP_BLOCK, 4001);
+            //$$ fixedFuel.put(net.minecraft.world.item.Items.BLAZE_ROD, 2400);
+            //$$ fixedFuel.put(net.minecraft.world.item.Items.COAL, 1600);
+            //$$ fixedFuel.put(net.minecraft.world.item.Items.CHARCOAL, 1600);
+            //$$ fixedFuel.put(net.minecraft.world.item.Items.STICK, 100);
+            //$$ fixedFuel.put(net.minecraft.world.item.Items.BOWL, 100);
+            //$$ fixedFuel.put(net.minecraft.world.item.Items.BAMBOO, 50);
+            //$$ for (net.minecraft.world.item.Item it : net.minecraft.core.registries.BuiltInRegistries.ITEM) {
+            //$$     net.minecraft.world.item.ItemStack st = new net.minecraft.world.item.ItemStack(it);
+            //$$     if (fixedFuel.containsKey(it)) fuelTimeMap.put(it, fixedFuel.get(it));
+            //$$     else if (st.is(net.minecraft.tags.ItemTags.LOGS_THAT_BURN) || st.is(net.minecraft.tags.ItemTags.PLANKS)) fuelTimeMap.put(it, 300);
+            //$$     else if (st.is(net.minecraft.tags.ItemTags.WOODEN_SLABS)) fuelTimeMap.put(it, 150);
+            //$$ }
+            //#elseif MC >= 12102
             //$$ fuelTimeMap = new java.util.HashMap<>();
             //$$ net.minecraft.item.FuelRegistry fuels = net.minecraft.client.MinecraftClient.getInstance().world != null ? net.minecraft.client.MinecraftClient.getInstance().world.getFuelRegistry() : null;
             //$$ if (fuels != null) for (Item it : fuels.getFuelItems()) fuelTimeMap.put(it, fuels.getFuelTicks(new net.minecraft.item.ItemStack(it)));
@@ -492,16 +513,30 @@ public class ItemHelper {
     }
 
     //#if MC >= 12005
+    //#if MC >= 260000
+    //$$ public static net.minecraft.tags.TagKey<net.minecraft.world.item.Item> toolFamily(net.minecraft.world.item.Item item) {
+    //#else
     public static net.minecraft.registry.tag.TagKey<net.minecraft.item.Item> toolFamily(net.minecraft.item.Item item) {
+    //#endif
         if (item == null) return null;
         net.minecraft.item.ItemStack stack = new net.minecraft.item.ItemStack(item);
-        if (stack.isIn(net.minecraft.registry.tag.ItemTags.PICKAXES)) return net.minecraft.registry.tag.ItemTags.PICKAXES;
-        if (stack.isIn(net.minecraft.registry.tag.ItemTags.AXES)) return net.minecraft.registry.tag.ItemTags.AXES;
-        if (stack.isIn(net.minecraft.registry.tag.ItemTags.SHOVELS)) return net.minecraft.registry.tag.ItemTags.SHOVELS;
-        if (stack.isIn(net.minecraft.registry.tag.ItemTags.HOES)) return net.minecraft.registry.tag.ItemTags.HOES;
-        if (stack.isIn(net.minecraft.registry.tag.ItemTags.SWORDS)) return net.minecraft.registry.tag.ItemTags.SWORDS;
+        if (stackIn(stack, net.minecraft.registry.tag.ItemTags.PICKAXES)) return net.minecraft.registry.tag.ItemTags.PICKAXES;
+        if (stackIn(stack, net.minecraft.registry.tag.ItemTags.AXES)) return net.minecraft.registry.tag.ItemTags.AXES;
+        if (stackIn(stack, net.minecraft.registry.tag.ItemTags.SHOVELS)) return net.minecraft.registry.tag.ItemTags.SHOVELS;
+        if (stackIn(stack, net.minecraft.registry.tag.ItemTags.HOES)) return net.minecraft.registry.tag.ItemTags.HOES;
+        if (stackIn(stack, net.minecraft.registry.tag.ItemTags.SWORDS)) return net.minecraft.registry.tag.ItemTags.SWORDS;
         return null;
     }
+
+    //#if MC >= 260000
+    //$$ public static boolean stackIn(net.minecraft.world.item.ItemStack stack, net.minecraft.tags.TagKey<net.minecraft.world.item.Item> tag) {
+    //$$     return stack.is(tag);
+    //$$ }
+    //#else
+    public static boolean stackIn(net.minecraft.item.ItemStack stack, net.minecraft.registry.tag.TagKey<net.minecraft.item.Item> tag) {
+        return stack.isIn(tag);
+    }
+    //#endif
     //#else
     //$$ public static Object toolFamily(net.minecraft.item.Item item) { return null; }
     //#endif
@@ -509,15 +544,15 @@ public class ItemHelper {
     public static double toolQuality(net.minecraft.item.Item item) {
         //#if MC >= 12102
         //$$ net.minecraft.item.ItemStack stack = new net.minecraft.item.ItemStack(item);
-        //$$ if (stack.isIn(net.minecraft.registry.tag.ItemTags.SWORDS)) {
+        //$$ if (stackIn(stack, net.minecraft.registry.tag.ItemTags.SWORDS)) {
         //$$     return meleeDps(item);
         //$$ }
         //$$ net.minecraft.block.BlockState reference;
-        //$$ if (stack.isIn(net.minecraft.registry.tag.ItemTags.PICKAXES)) {
+        //$$ if (stackIn(stack, net.minecraft.registry.tag.ItemTags.PICKAXES)) {
         //$$     reference = net.minecraft.block.Blocks.STONE.getDefaultState();
-        //$$ } else if (stack.isIn(net.minecraft.registry.tag.ItemTags.AXES)) {
+        //$$ } else if (stackIn(stack, net.minecraft.registry.tag.ItemTags.AXES)) {
         //$$     reference = net.minecraft.block.Blocks.OAK_LOG.getDefaultState();
-        //$$ } else if (stack.isIn(net.minecraft.registry.tag.ItemTags.SHOVELS)) {
+        //$$ } else if (stackIn(stack, net.minecraft.registry.tag.ItemTags.SHOVELS)) {
         //$$     reference = net.minecraft.block.Blocks.DIRT.getDefaultState();
         //$$ } else {
         //$$     reference = net.minecraft.block.Blocks.STONE.getDefaultState();

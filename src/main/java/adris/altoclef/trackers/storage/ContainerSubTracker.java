@@ -9,13 +9,34 @@ import adris.altoclef.trackers.Tracker;
 import adris.altoclef.trackers.TrackerManager;
 import adris.altoclef.util.Dimension;
 import adris.altoclef.util.helpers.WorldHelper;
+//#if MC < 260000
 import net.minecraft.block.*;
+//#else
+//$$ import net.minecraft.world.level.block.AbstractFurnaceBlock;
+//$$ import net.minecraft.world.level.block.BarrelBlock;
+//$$ import net.minecraft.world.level.block.Block;
+//$$ import net.minecraft.world.level.block.state.BlockState;
+//$$ import net.minecraft.world.level.block.Blocks;
+//$$ import net.minecraft.world.level.block.ChestBlock;
+//$$ import net.minecraft.world.level.block.DispenserBlock;
+//$$ import net.minecraft.world.level.block.HopperBlock;
+//$$ import net.minecraft.world.level.block.ShulkerBoxBlock;
+//#endif
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+//#if MC < 260000
 import net.minecraft.client.gui.screen.ingame.*;
+//#else
+//$$ import net.minecraft.client.gui.screens.inventory.BlastFurnaceScreen;
+//$$ import net.minecraft.client.gui.screens.inventory.FurnaceScreen;
+//$$ import net.minecraft.client.gui.screens.inventory.ContainerScreen;
+//$$ import net.minecraft.client.gui.screens.inventory.HopperScreen;
+//$$ import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
+//$$ import net.minecraft.client.gui.screens.inventory.SmokerScreen;
+//#endif
 import net.minecraft.item.Item;
 import net.minecraft.screen.ScreenHandler;
-import net.minecraft.util.Pair;
+import adris.altoclef.util.Pair;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;

@@ -1,5 +1,7 @@
 package adris.altoclef.tasks.speedrun.testrun2;
 
+import adris.altoclef.multiversion.ScreenVer;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.construction.DestroyBlockTask;
@@ -566,8 +568,8 @@ public final class T2Solve {
     private static boolean slowGui() {
         try {
             var mc = MinecraftClient.getInstance();
-            if (mc == null || mc.currentScreen == null) return false;
-            String n = mc.currentScreen.getClass().getSimpleName();
+            if (mc == null || ScreenVer.current(mc) == null) return false;
+            String n = ScreenVer.current(mc).getClass().getSimpleName();
             return n.contains("Furnace") || n.contains("Brew");
         } catch (Throwable t) {
             return false;
@@ -577,8 +579,8 @@ public final class T2Solve {
     private static boolean workGui() {
         try {
             var mc = MinecraftClient.getInstance();
-            if (mc == null || mc.currentScreen == null) return false;
-            String n = mc.currentScreen.getClass().getSimpleName();
+            if (mc == null || ScreenVer.current(mc) == null) return false;
+            String n = ScreenVer.current(mc).getClass().getSimpleName();
             return n.contains("Craft") || n.contains("Inventor") || n.contains("Furnace")
                     || n.contains("Anvil") || n.contains("Chest") || n.contains("Barrel")
                     || n.contains("Shulker") || n.contains("Hopper") || n.contains("Merchant")
@@ -607,8 +609,8 @@ public final class T2Solve {
     private static boolean guiOpen() {
         try {
             var mc = MinecraftClient.getInstance();
-            if (mc == null || mc.currentScreen == null) return false;
-            String n = mc.currentScreen.getClass().getSimpleName();
+            if (mc == null || ScreenVer.current(mc) == null) return false;
+            String n = ScreenVer.current(mc).getClass().getSimpleName();
             if (n.contains("Chat") || n.contains("T2Menu") || n.contains("GameMenu")
                     || n.contains("Death") || n.contains("Title") || n.contains("Pause")) {
                 return false;

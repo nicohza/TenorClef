@@ -1,5 +1,6 @@
 package adris.altoclef.trackers;
 
+import adris.altoclef.multiversion.ChunkPosVer;
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.eventbus.EventBus;
@@ -373,7 +374,7 @@ public class BlockScanner {
         while (!queue.isEmpty() && visited.size() < maxCount && !forceStop) {
             Node node = queue.poll();
 
-            if (node.distance > cutOffRadius || visited.contains(node.pos) || !mod.getWorld().getChunkManager().isChunkLoaded(node.pos.x, node.pos.z))
+            if (node.distance > cutOffRadius || visited.contains(node.pos) || !mod.getWorld().getChunkManager().isChunkLoaded(ChunkPosVer.x(node.pos), ChunkPosVer.z(node.pos)))
                 continue;
 
             boolean isPriorityChunk = getChunkDist(node.pos, playerChunkPos) <= 2;
@@ -383,10 +384,10 @@ public class BlockScanner {
             visited.add(node.pos);
             scanChunk(node.pos, playerChunkPos);
 
-            queue.add(new Node(new ChunkPos(node.pos.x + 1, node.pos.z + 1), node.distance + 1));
-            queue.add(new Node(new ChunkPos(node.pos.x - 1, node.pos.z + 1), node.distance + 1));
-            queue.add(new Node(new ChunkPos(node.pos.x - 1, node.pos.z - 1), node.distance + 1));
-            queue.add(new Node(new ChunkPos(node.pos.x + 1, node.pos.z - 1), node.distance + 1));
+            queue.add(new Node(new ChunkPos(ChunkPosVer.x(node.pos) + 1, ChunkPosVer.z(node.pos) + 1), node.distance + 1));
+            queue.add(new Node(new ChunkPos(ChunkPosVer.x(node.pos) - 1, ChunkPosVer.z(node.pos) + 1), node.distance + 1));
+            queue.add(new Node(new ChunkPos(ChunkPosVer.x(node.pos) - 1, ChunkPosVer.z(node.pos) - 1), node.distance + 1));
+            queue.add(new Node(new ChunkPos(ChunkPosVer.x(node.pos) + 1, ChunkPosVer.z(node.pos) - 1), node.distance + 1));
         }
         if (forceStop) {
             // reset again, might have changed some values from the time forceStop was called
@@ -418,7 +419,7 @@ public class BlockScanner {
     }
 
     private int getChunkDist(ChunkPos pos1, ChunkPos pos2) {
-        return Math.abs(pos1.x - pos2.x) + Math.abs(pos1.z - pos2.z);
+        return Math.abs(ChunkPosVer.x(pos1) - ChunkPosVer.x(pos2)) + Math.abs(ChunkPosVer.z(pos1) - ChunkPosVer.z(pos2));
     }
 
 
@@ -448,7 +449,7 @@ public class BlockScanner {
      */
     private void scanChunk(ChunkPos chunkPos, ChunkPos playerChunkPos) {
         World world = mod.getWorld();
-        WorldChunk chunk = mod.getWorld().getChunk(chunkPos.x, chunkPos.z);
+        WorldChunk chunk = mod.getWorld().getChunk(ChunkPosVer.x(chunkPos), ChunkPosVer.z(chunkPos));
         scannedChunks.put(chunkPos, world.getTime());
 
         boolean isPriorityChunk = getChunkDist(chunkPos, playerChunkPos) <= 2;

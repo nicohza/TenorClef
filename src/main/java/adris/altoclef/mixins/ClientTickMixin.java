@@ -1,5 +1,7 @@
 package adris.altoclef.mixins;
 
+import adris.altoclef.multiversion.ScreenVer;
+
 import adris.altoclef.Debug;
 import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.events.ClientTickEvent;
@@ -50,7 +52,7 @@ public final class ClientTickMixin {
             MinecraftClient self = MinecraftClient.getInstance();
             if (self == null) {
                 AutoWorldState.clearRerollDrive();
-            } else if (self.currentScreen instanceof TitleScreen) {
+            } else if (ScreenVer.current(self) instanceof TitleScreen) {
                 // The normal path will pick it up; stop polling this tick.
                 AutoWorldState.clearRerollDrive();
             } else if (self.world == null && self.getLevelStorage() != null) {
@@ -70,8 +72,8 @@ public final class ClientTickMixin {
                 // that silence is what made run W look like a harness fault instead of a bug.
                 AutoWorldState.clearRerollDrive();
                 Debug.logHarness("AUTOWORLD: reroll drive gave up after 45s — client still in "
-                        + "a world (screen=" + (self.currentScreen == null
-                        ? "null" : self.currentScreen.getClass().getSimpleName())
+                        + "a world (screen=" + (ScreenVer.current(self) == null
+                        ? "null" : ScreenVer.current(self).getClass().getSimpleName())
                         + "), the reset cannot proceed. Screen and world are both stuck.");
             }
         }
@@ -86,6 +88,7 @@ public final class ClientTickMixin {
         try {
             adris.altoclef.tasks.speedrun.testrun2.T2Deadman.clientTickAlive();
         } catch (Throwable ignored) {}
+        if (net.minecraft.client.MinecraftClient.getInstance().player != null) adris.altoclef.AltoClef.ensureLoaded();
         EventBus.publish(new ClientTickEvent());
     }
 }

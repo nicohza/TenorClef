@@ -16,22 +16,42 @@ plugins {
     id 'xyz.wagyourtail.jvmdowngrader' version '1.2.2'
 }
 
-apply plugin: 'fabric-loom'
+// Minecraft 26.x is unobfuscated: Loom's no-remap plugin, Mojang names, no mappings and no remapJar.
+def unobfuscated = mcVersion >= 260000
+apply plugin: unobfuscated ? 'net.fabricmc.fabric-loom' : 'fabric-loom'
 apply plugin: 'com.replaymod.preprocess'
 
 preprocess {
     patternAnnotation.set("adris.altoclef.multiversion.Pattern")
 }
 
+// The unobfuscated Loom has no mappings, and its mappingConfiguration getter throws, which the preprocessor
+// probes reflectively. Hand it an identity tiny file instead (26.x names are already the Mojang names);
+// the real 26.3 <-> 1.21.11 renames come from versions/mapping-26.3-1.21.11.txt.
+class IdentityTinyMappings {
+    File tinyMappings
+}
+if (unobfuscated) {
+    def identityTiny = layout.buildDirectory.file('identity-mappings.tiny').get().asFile
+    identityTiny.parentFile.mkdirs()
+    identityTiny.text = 'tiny\t2\t0\tofficial\tintermediary\tnamed\n'
+    def fake = new IdentityTinyMappings(tinyMappings: identityTiny)
+    project.extensions.getByName('loom').metaClass.getMappingConfiguration = { -> fake }
+}
+
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = unobfuscated ? JavaVersion.VERSION_25 : JavaVersion.VERSION_21
+    targetCompatibility = unobfuscated ? JavaVersion.VERSION_25 : JavaVersion.VERSION_21
 }
 
 
 
 tasks.withType(JavaCompile).configureEach {
-    options.release = 21
+    options.release = unobfuscated ? 25 : 21
+    if (unobfuscated) {
+        // Gradle itself stays on JDK 21: the preprocessor's embedded Kotlin cannot parse Java 25 version strings.
+        javaCompiler = javaToolchains.compilerFor { languageVersion = JavaLanguageVersion.of(25) }
+    }
 }
 
 base {
@@ -42,7 +62,7 @@ group = project.maven_group
 
 // TenorClef always runs on Ostinato. These are the Minecraft versions Ostinato is built for; every other
 // version stays in the preprocess chain (it cannot be trimmed, see settings.gradle.kts) but is not compiled.
-def ostinatoVersions = [11601, 12104, 12111]
+def ostinatoVersions = [11601, 12104, 12111, 260300]
 project.ext.ostinatoTarget = ostinatoVersions.contains(mcVersion)
 if (!project.ext.ostinatoTarget) {
     def skipped = ['compileJava', 'compileTestJava', 'processTestResources', 'test', 'jar', 'shadowJar', 'remapJar',
@@ -89,6 +109,7 @@ def fabricApiVersions = [
         12101: "0.110.0+1.21.1",
         12104: "0.119.2+1.21.4",
         12111: "0.140.0+1.21.11",
+        260300: "0.161.0+26.3",
 ]
 
 def loaderVersions = [
@@ -98,10 +119,13 @@ def loaderVersions = [
         12101: project.loader_version,
         12104: "0.16.10",
         12111: "0.18.3",
+        260300: "0.19.5",
 ]
 
 def getJavaVersion() {
-    if (mcVersion >= 12006) {
+    if (mcVersion >= 260000) {
+        return JavaVersion.VERSION_25;
+    } else if (mcVersion >= 12006) {
         return JavaVersion.VERSION_21;
     } else if (mcVersion >= 11700) {
         return JavaVersion.VERSION_17;
@@ -134,12 +158,16 @@ jvmdg {
 dependencies {
     //to change the versions see the gradle.properties file
     minecraft("com.mojang:minecraft:${project.name}")
-    mappings("net.fabricmc:yarn:${mappingsVersions[mcVersion]}:v2")
-    modImplementation("net.fabricmc:fabric-loader:${loaderVersions.containsKey(mcVersion) ? loaderVersions[mcVersion] : project.loader_version}")
+    if (!unobfuscated) {
+        mappings("net.fabricmc:yarn:${mappingsVersions[mcVersion]}:v2")
+    }
+    // The no-remap Loom plugin has no mod configurations: fabric mods are ordinary dependencies there.
+    def modImpl = unobfuscated ? 'implementation' : 'modImplementation'
+    "${modImpl}"("net.fabricmc:fabric-loader:${loaderVersions.containsKey(mcVersion) ? loaderVersions[mcVersion] : project.loader_version}")
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.3.5")))
 
     // Fabric API. This is technically optional, but you probably want it anyway.
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersions[mcVersion]}")
+    "${modImpl}"("net.fabricmc.fabric-api:fabric-api:${fabricApiVersions[mcVersion]}")
 
     // Jackson JSON
     implementation 'com.fasterxml.jackson.core:jackson-core:2.16.0'
@@ -220,6 +248,18 @@ dependencies {
         }
         println "[altoclef] Ostinato Baritone for ${project.name}: ${jars1214[0].name}"
         modImplementation files(jars1214[0])
+    } else if (mcVersion == 260300) {
+        // 26.3 uses Ostinato branch 26.3 (mojmap names, Java 25).
+        def jars263 = []
+        ostinatoSearchDirs.each { dir ->
+            if (dir.exists()) dir.eachFileMatch(~/baritone-unoptimized-fabric-.*26\.3.*\.jar/) { f -> jars263 << f }
+        }
+        jars263 = jars263.unique { it.absolutePath }.sort { -it.lastModified() }
+        if (jars263.isEmpty()) {
+            throw new GradleException("Missing Ostinato 26.3 Baritone jar. Place it as libs/baritone-unoptimized-fabric-ostinato-26.3.jar.")
+        }
+        println "[altoclef] Ostinato Baritone for ${project.name}: ${jars263[0].name}"
+        implementation files(jars263[0])
     } else {
         // Only 1.21.11 can use main's matching Ostinato artifact. 1.21 and 1.21.1
         // must resolve their matching Baritone artifact instead of a 1.21.11 jar.
@@ -227,7 +267,7 @@ dependencies {
         [ostinatoDist, ostinatoDistInTree].each { dir ->
             if (dir.exists()) {
                 dir.eachFileMatch(~/baritone-unoptimized-fabric-.*\.jar/) { f ->
-                    if (!f.name.contains("1.16.1") && !f.name.contains("ostinato-1.16") && !f.name.contains("1.21.4")) {
+                    if (!f.name.contains("1.16.1") && !f.name.contains("ostinato-1.16") && !f.name.contains("1.21.4") && !f.name.contains("26.3")) {
                         ostinatoJars << f
                     }
                 }
@@ -236,12 +276,12 @@ dependencies {
         ostinatoJars = ostinatoJars.unique { it.absolutePath }.sort { -it.lastModified() }
         if (ostinatoJars.isEmpty() && ostinatoLibs.exists()) {
             ostinatoLibs.eachFileMatch(~/baritone-unoptimized-fabric-ostinato.*\.jar/) { f ->
-                if (!f.name.contains("1.16.1") && !f.name.contains("1.21.4")) ostinatoJars << f
+                if (!f.name.contains("1.16.1") && !f.name.contains("1.21.4") && !f.name.contains("26.3")) ostinatoJars << f
             }
             // Also accept any non-1.16.1 unoptimized fabric jar staged into libs/ by CI.
             if (ostinatoJars.isEmpty()) {
                 ostinatoLibs.eachFileMatch(~/baritone-unoptimized-fabric-.*\.jar/) { f ->
-                    if (!f.name.contains("1.16.1") && !f.name.contains("ostinato-1.16") && !f.name.contains("1.21.4")) {
+                    if (!f.name.contains("1.16.1") && !f.name.contains("ostinato-1.16") && !f.name.contains("1.21.4") && !f.name.contains("26.3")) {
                         ostinatoJars << f
                     }
                 }
@@ -254,7 +294,7 @@ dependencies {
                 def jar = ostinatoJars[0]
                 println "[altoclef] Ostinato Baritone for ${project.name}: ${jar.name}"
                 modImplementation files(jar)
-                include files(jar)
+                // Not `include files(jar)`: Loom rejects flat-file jars in processIncludeJars (see the 1.16.1 note above).
             } else {
                 println "[altoclef] Ostinato tip jar not found for ${project.name} — configure continues without Baritone (stage ../Ostinato/dist or libs/; see docs/DEVELOPMENT.md)"
             }
@@ -321,39 +361,48 @@ shadowJar {
     configurations = [project.configurations.shadow]
 }
 
-remapJar {
-    dependsOn("shadowJar")
-    input.set(shadowJar.archiveFile)
-}
-
-downgradeJar {
-    dependsOn("remapJar")
-    inputFile.set(remapJar.archiveFile)
-}
-
-tasks.register('replaceJar') {
-    // do not downgrade java version if we do not need to
-    if (getJavaVersion() == java.targetCompatibility) {
-        return
+if (unobfuscated) {
+    // Nothing to remap: the shaded jar is the mod jar.
+    tasks.named('jar') { archiveClassifier = 'slim' }
+    shadowJar { archiveClassifier = '' }
+    tasks.register('replaceJar') { dependsOn shadowJar }
+    build { dependsOn tasks.replaceJar }
+} else {
+    remapJar {
+        dependsOn("shadowJar")
+        input.set(shadowJar.archiveFile)
     }
 
-    dependsOn downgradeJar
-    doLast {
-        def originalJar = tasks.remapJar.archiveFile.get().asFile
-        def downgradedJar = file("${originalJar.parent}/${originalJar.name.replace('.jar', '-downgraded.jar')}")
-        if (downgradedJar.exists()) {
-            originalJar.delete()
-            downgradedJar.renameTo(originalJar)
-        } else {
-            throw new GradleException("Downgraded JAR not found: ${downgradedJar}")
+    downgradeJar {
+        dependsOn("remapJar")
+        inputFile.set(remapJar.archiveFile)
+    }
+
+    tasks.register('replaceJar') {
+        // do not downgrade java version if we do not need to
+        if (getJavaVersion() == java.targetCompatibility) {
+            return
+        }
+
+        dependsOn downgradeJar
+        doLast {
+            def originalJar = tasks.remapJar.archiveFile.get().asFile
+            def downgradedJar = file("${originalJar.parent}/${originalJar.name.replace('.jar', '-downgraded.jar')}")
+            if (downgradedJar.exists()) {
+                originalJar.delete()
+                downgradedJar.renameTo(originalJar)
+            } else {
+                throw new GradleException("Downgraded JAR not found: ${downgradedJar}")
+            }
         }
     }
-}
 
 
-build {
-    dependsOn tasks.replaceJar
+    build {
+        dependsOn tasks.replaceJar
+    }
 }
+
 
 processResources {
     inputs.property("version", project.version)
@@ -397,11 +446,17 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             // add all the jars that should be included when publishing to maven
-            artifact(remapJar) {
-                builtBy remapJar
-            }
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
+            if (unobfuscated) {
+                artifact(shadowJar) {
+                    builtBy shadowJar
+                }
+            } else {
+                artifact(remapJar) {
+                    builtBy remapJar
+                }
+                artifact(sourcesJar) {
+                    builtBy remapSourcesJar
+                }
             }
         }
     }

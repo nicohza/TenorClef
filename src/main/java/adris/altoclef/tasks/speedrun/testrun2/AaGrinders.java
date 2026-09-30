@@ -1,5 +1,7 @@
 package adris.altoclef.tasks.speedrun.testrun2;
 
+import adris.altoclef.multiversion.CItems;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.TaskCatalogue;
 import adris.altoclef.tasks.movement.TimeoutWanderTask;
@@ -53,7 +55,7 @@ public final class AaGrinders {
             case "trade" -> tradeKit(mod);
             case "golem" -> golemKit(mod);
             case "honey", "honey_bottle" -> catalogue("honey_bottle", 1, Items.HONEY_BOTTLE);
-            case "banner" -> catalogue("white_banner", 1, Items.WHITE_BANNER);
+            case "banner" -> catalogue("white_banner", 1, CItems.WHITE_BANNER);
             case "raid" -> raidKit(mod);
             case "breed" -> catalogue("wheat", 16, Items.WHEAT);
             case "tame" -> catalogue("bone", 16, Items.BONE);
@@ -120,7 +122,7 @@ public final class AaGrinders {
         if (count(mod, Items.CROSSBOW) < 1) return catalogue("crossbow", 1, Items.CROSSBOW);
         if (count(mod, Items.ARROW) < 32) return catalogue("arrow", 32, Items.ARROW);
         if (count(mod, Items.TOTEM_OF_UNDYING) < 1) return catalogue("totem_of_undying", 1, Items.TOTEM_OF_UNDYING);
-        if (count(mod, Items.WHITE_BANNER) < 1) return catalogue("white_banner", 1, Items.WHITE_BANNER);
+        if (count(mod, CItems.WHITE_BANNER) < 1) return catalogue("white_banner", 1, CItems.WHITE_BANNER);
         return new TimeoutWanderTask();
     }
 

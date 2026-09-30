@@ -1,9 +1,20 @@
 package adris.altoclef.util.slots;
 
+import adris.altoclef.multiversion.ScreenVer;
+
 import adris.altoclef.Debug;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+//#if MC < 260000
 import net.minecraft.client.gui.screen.ingame.*;
+//#else
+//$$ import net.minecraft.client.gui.screens.inventory.BlastFurnaceScreen;
+//$$ import net.minecraft.client.gui.screens.inventory.CraftingScreen;
+//$$ import net.minecraft.client.gui.screens.inventory.FurnaceScreen;
+//$$ import net.minecraft.client.gui.screens.inventory.ContainerScreen;
+//$$ import net.minecraft.client.gui.screens.inventory.SmithingScreen;
+//$$ import net.minecraft.client.gui.screens.inventory.SmokerScreen;
+//#endif
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.screen.GenericContainerScreenHandler;
 import net.minecraft.screen.PlayerScreenHandler;
@@ -68,7 +79,7 @@ public abstract class Slot {
     }
 
     private static ContainerType getCurrentType() {
-        Screen screen = MinecraftClient.getInstance().currentScreen;
+        Screen screen = ScreenVer.current(MinecraftClient.getInstance());
         if (screen instanceof FurnaceScreen || screen instanceof SmithingScreen || screen instanceof SmokerScreen ||
                 screen instanceof BlastFurnaceScreen) {
             return ContainerType.FURNACE_OR_SMITH_OR_SMOKER_OR_BLAST;

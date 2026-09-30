@@ -1,5 +1,6 @@
 package adris.altoclef.tasks.speedrun.testrun2.combat;
 
+import adris.altoclef.util.helpers.MathsHelper;
 import adris.altoclef.AltoClef;
 import adris.altoclef.tasks.speedrun.testrun2.McCompat;
 import adris.altoclef.tasks.speedrun.testrun2.core.T2Input;
@@ -70,7 +71,7 @@ public final class ProjectileDodge {
         Vec3d w = p.subtract(origin);
         double t = w.dotProduct(d);
         if (t < 0) t = 0;
-        Vec3d closest = origin.add(d.multiply(t));
+        Vec3d closest = origin.add(MathsHelper.scale(d, t));
         return closest.distanceTo(p);
     }
 }

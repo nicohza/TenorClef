@@ -1,5 +1,7 @@
 package adris.altoclef.tasks.speedrun.beatgame;
 
+import adris.altoclef.multiversion.CItems;
+
 import adris.altoclef.multiversion.versionedfields.Items;
 import adris.altoclef.tasks.speedrun.BeatMinecraftConfig;
 import net.minecraft.item.Item;
@@ -65,8 +67,8 @@ public class UselessItems {
                 Items.OAK_DOOR,
 
                 Items.STRING,
-                Items.WHITE_TERRACOTTA,
-                Items.RED_TERRACOTTA,
+                CItems.WHITE_TERRACOTTA,
+                CItems.RED_TERRACOTTA,
 
                 Items.MOSS_BLOCK,
                 Items.MOSS_CARPET,
@@ -108,13 +110,13 @@ public class UselessItems {
                 Items.DRIPSTONE_BLOCK,
                 Items.POINTED_DRIPSTONE,
                 Items.ARROW,
-                Items.YELLOW_TERRACOTTA,
+                CItems.YELLOW_TERRACOTTA,
                 Items.TUFF,
                 Items.SPRUCE_STAIRS,
                 Items.SPRUCE_DOOR,
                 Items.SPRUCE_FENCE,
                 Items.SPRUCE_FENCE_GATE,
-                Items.ORANGE_TERRACOTTA,
+                CItems.ORANGE_TERRACOTTA,
                 Items.HEART_OF_THE_SEA,
                 Items.POTION,
                 Items.FLOWERING_AZALEA,

@@ -1,5 +1,7 @@
 package adris.altoclef.chains;
 
+import adris.altoclef.multiversion.ScreenVer;
+
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasksystem.TaskChain;
@@ -119,7 +121,7 @@ public class PlayerInteractionFixChain extends TaskChain {
         // Refresh inventory - skip while any screen is open (craft/chest); refreshInventory
         // double-clicks every slot and causes "Ignoring click in mismatching container".
         if (!t2Hold && generalDuctTapeSwapTimeout.elapsed()) {
-            if (MinecraftClient.getInstance().currentScreen != null) {
+            if (ScreenVer.current(MinecraftClient.getInstance()) != null) {
                 return Float.NEGATIVE_INFINITY;
             }
             if (!mod.getControllerExtras().isBreakingBlock()) {
@@ -199,7 +201,7 @@ public class PlayerInteractionFixChain extends TaskChain {
             return false;
 
         // Only check look if we've had the same screen open for a while
-        Screen openScreen = MinecraftClient.getInstance().currentScreen;
+        Screen openScreen = ScreenVer.current(MinecraftClient.getInstance());
         if (openScreen != lastScreen) {
             mouseMovingButScreenOpenTimeout.reset();
         }

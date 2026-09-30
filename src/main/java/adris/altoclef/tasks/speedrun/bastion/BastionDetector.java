@@ -1,5 +1,6 @@
 package adris.altoclef.tasks.speedrun.bastion;
 
+import adris.altoclef.multiversion.blockpos.BlockPosVer;
 import adris.altoclef.AltoClef;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -69,7 +70,7 @@ public class BastionDetector {
         int count = 0;
         for (net.minecraft.block.Block b : blocks) {
             Optional<BlockPos> p = mod.getBlockScanner().getNearestBlock(b);
-            if (p.isPresent() && p.get().isWithinDistance(center, radius)) {
+            if (p.isPresent() && BlockPosVer.isWithinDistance(p.get(), center, radius)) {
                 count++;
             }
         }

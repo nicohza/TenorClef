@@ -1,18 +1,36 @@
-# TenorClef 0.20.0
+# TenorClef 0.22.2
 
-First TenorClef release. Every build runs on [Ostinato](https://github.com/vexrypt-rgb/Ostinato) (the Baritone fork), not upstream Baritone.
+Every build runs on [Ostinato](https://github.com/vexrypt-rgb/Ostinato) (the Baritone fork), not upstream Baritone.
+Fixes on top of 0.22.0. (0.22.1 was tagged with incomplete notes; use 0.22.2.)
 
 ## Downloads
 
 | Minecraft | TenorClef jar | Ostinato |
 |---|---|---|
-| 1.21.4 | `tenorclef-mc1.21.4-v0.20.0.jar` | Ostinato v1.0.0 `ostinato-mc1.21.4-*.jar` |
-| 1.16.1 | `tenorclef-mc1.16.1-v0.20.0.jar` | Ostinato v1.0.0 `ostinato-mc1.16.1-*.jar` |
+| 1.21.4 | `tenorclef-mc1.21.4-v0.22.2.jar` | Ostinato v1.0.2 `ostinato-mc1.21.4-*.jar` |
+| 1.16.1 | `tenorclef-mc1.16.1-v0.22.2.jar` | Ostinato v1.0.2 `ostinato-mc1.16.1-*.jar` |
+| 1.21.11 (experimental) | `tenorclef-mc1.21.11-v0.22.2.jar` | Ostinato v1.0.2 `ostinato-mc1.21.11-*.jar` |
+| 26.3 (experimental) | `tenorclef-mc26.3-v0.22.2.jar` | Ostinato v1.0.2 `ostinato-mc26.3-*.jar` (Java 25) |
 
 Install Fabric Loader, Fabric API, the TenorClef jar and the matching Ostinato jar. Do not add a second Baritone jar.
 
+## Fixes
+
+- Dive: the bot sinks under a roof edge instead of jumping into it, and no longer freezes against it.
+- Swimming out onto a shallow shore ledge climbs it instead of sinking.
+- Chat logs a "swim stall" line when a swim movement is stuck, to make reports easier to diagnose.
+
+# TenorClef 0.22.0
+
+This release rolls up everything since 0.20.0 (the 0.21.0 tag was never published).
+
 ## Highlights
 
-- Ostinato only: builds link against Ostinato; the upstream Baritone fallback is gone.
-- Swarm: bots running Ostinato can form a signed, whisper-based link, share status, and split a schematic build across the group with `#swarm build`.
-- 1.21.11 is experimental and 26.3 is not supported yet; neither is part of this release.
+- Freecam: `#freecam` with a GUI toggle, a ghost of the bot showing its current task, and an opacity slider. Includes fixes for respawn and a ghost mixin crash.
+- Showcase command and tab: parkour, swim, dive, boat, kinematic and physics demos, with a sealed pool corridor so the bot has to swim.
+- Movement fixes from the bundled Ostinato jars: swim entry off shallow ledges, waterfall swimming, boat placement, robust jump templates, scissor underflow.
+- Starts on quick-play worlds; 1.21.4 GUI and dropdown fixes.
+
+## Experimental builds
+
+- 1.21.11 and 26.3 compile and package from the same source, but have not been played in-game. Treat them as previews.
