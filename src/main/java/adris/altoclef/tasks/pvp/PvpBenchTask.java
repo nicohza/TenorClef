@@ -147,12 +147,16 @@ public class PvpBenchTask extends Task {
             Debug.logWarning("pvpbench needs singleplayer");
             return;
         }
+        //#if MC == 12104
         server.submit(() -> {
             var src = server.getCommandSource().withLevel(4);
             PlayerEntity p = server.getPlayerManager().getPlayerList().isEmpty() ? null : server.getPlayerManager().getPlayerList().get(0);
             if (p != null) src = src.withPosition(new net.minecraft.util.math.Vec3d(0, p.getY(), 0)).withWorld((net.minecraft.server.world.ServerWorld) p.getWorld());
             for (String c : cmds) server.getCommandManager().executeWithPrefix(src, c);
         }).join();
+        //#else
+        //$$ Debug.logWarning("pvpbench server commands are only wired for 1.21.4");
+        //#endif
     }
 
     @Override
