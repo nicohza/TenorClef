@@ -657,7 +657,10 @@ public class ConstructNetherPortalBucketTask extends Task {
                             BlockPos toCheck = lava.add(offset).add(sizeOffset).add(dx,dy,dz);
                             assert MinecraftClient.getInstance().world != null;
                             BlockState state = MinecraftClient.getInstance().world.getBlockState(toCheck);
-                            if (state.getBlock() == Blocks.LAVA || state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.BEDROCK) {
+                            // scoop1 bench: a frame block marked unreachable was re-picked every search
+                            // ("Portal frame unreachable" x40 in one rep, live pool beside it). Skip such spots.
+                            if (state.getBlock() == Blocks.LAVA || state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.BEDROCK
+                                    || mod.getBlockScanner().isUnreachable(toCheck)) {
                                 found = false;
                                 break moveAlongLine;
                             }
