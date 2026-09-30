@@ -135,6 +135,7 @@ public class ConstructNetherPortalBucketTask extends Task {
     private final List<BlockPos> unportalableLakes = new ArrayList<>();
     private Task getToLakeTask = null;
     private BlockPos currentDestroyTarget = null;
+    private int frameRetries = 0;
 
     private boolean firstSearch = false;
 
@@ -451,6 +452,20 @@ public class ConstructNetherPortalBucketTask extends Task {
 
             // We need to place obsidian here.
             if (mod.getBlockScanner().isUnreachable(framePos)) {
+                // clip1 bench: abandoning a half-built frame left no other spot near the only lake
+                // (unreachable + LAVA_GAP filters) and the rep timed out on the lake search. If obsidian
+                // is already down, clear the mark and retry here a few times first.
+                int placed = 0;
+                for (Vec3i r : PORTAL_FRAME) {
+                    if (mod.getWorld().getBlockState(portalOrigin.add(r)).getBlock() == Blocks.OBSIDIAN) placed++;
+                }
+                if (placed > 0 && frameRetries < 3) {
+                    frameRetries++;
+                    Debug.logHarness("FRAME retry=" + frameRetries + " placed=" + placed + " frame=" + framePos.toShortString());
+                    mod.getBlockScanner().clearUnreachable(framePos);
+                    return wanderTask;
+                }
+                frameRetries = 0;
                 Debug.logMessage("Portal frame unreachable, picking a new lava lake spot");
                 portalOrigin = null;
                 currentDestroyTarget = null;

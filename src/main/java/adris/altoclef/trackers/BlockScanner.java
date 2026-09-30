@@ -82,6 +82,10 @@ public class BlockScanner {
     }
 
 
+    public void clearUnreachable(BlockPos pos) {
+        blacklist.remove(pos);
+    }
+
     public boolean isUnreachable(BlockPos pos) {
         return blacklist.unreachable(pos);
     }

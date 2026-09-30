@@ -62,6 +62,10 @@ public abstract class AbstractObjectBlacklist<T> {
         return false;
     }
 
+    public void remove(T item) {
+        entries.remove(item);
+    }
+
     public void clear() {
         entries.clear();
     }
