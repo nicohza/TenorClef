@@ -163,6 +163,14 @@ public class CollectBucketLiquidTask extends ResourceTask {
             return WorldHelper.isSourceBlock(blockPos, false);
         };
 
+        // Portal bench stall1 rep1: the closest safe lava was buried (solid above), so the bot mined
+        // toward it off the pad edge and fell 40 blocks while a 25-block open pool sat 8 blocks away.
+        // Prefer sources with open space above whenever any are known.
+        Predicate<BlockPos> isOpenSourceLiquid = isSafeSourceLiquid.and(p -> !mod.getWorld().getBlockState(p.up()).isSolid());
+        if (mod.getBlockScanner().anyFound(isOpenSourceLiquid, toCollect)) {
+            isSafeSourceLiquid = isOpenSourceLiquid;
+        }
+
         // Find nearest water and right click it
         if (mod.getBlockScanner().anyFound(isSafeSourceLiquid, toCollect)) {
             // We want to MINIMIZE this distance to liquid.
