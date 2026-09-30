@@ -632,6 +632,7 @@ package adris.altoclef.benchmark;
 //$$                mc.execute(() -> adris.altoclef.AltoClef.getInstance().runUserTask(task));
 //$$                long t0 = worldTime(mc), last = -1;
 //$$                String result = "TIMEOUT", state = "", lastLogged = "", lastChain = "", lastHazard = "";
+//$$                long lastPoolLog = -1;
 //$$                int lavaBuckets = 0; long traceUntil = -1;
 //$$                while (true) {
 //$$                    Thread.sleep(25);
@@ -665,7 +666,8 @@ package adris.altoclef.benchmark;
 //$$                        String hz = String.format(Locale.ROOT, "hp=%.0f fire=%b lava=%b pos=%s", mc.player.getHealth(), mc.player.isOnFire(), mc.player.isInLava(), mc.player.getBlockPos().toShortString());
 //$$                        if (!hz.equals(lastHazard)) { Debug.logHarness("PORTAL t=" + el + " " + hz + " chain=" + chain); lastHazard = hz; }
 //$$                    }
-//$$                    if (el % 200 == 0) {
+//$$                    if (el / 50 != lastPoolLog) {
+//$$                        lastPoolLog = el / 50;
 //$$                        int lavaLeft = 0, obsInPool = 0;
 //$$                        for (int x = 8; x <= 12; x++) for (int z = -2; z <= 2; z++) {
 //$$                            net.minecraft.block.BlockState bs = mc.world.getBlockState(new BlockPos(ox + x, y0 - 1, oz + z));
