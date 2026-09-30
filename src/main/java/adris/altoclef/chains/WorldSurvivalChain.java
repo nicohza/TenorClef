@@ -63,6 +63,11 @@ public class WorldSurvivalChain extends SingleTaskChain {
             return 100;
         }
 
+        if (_extinguishWaterPosition == null && EscapeFromLavaTask.reflexWaterPos != null) {
+            _extinguishWaterPosition = EscapeFromLavaTask.reflexWaterPos;
+            EscapeFromLavaTask.reflexWaterPos = null;
+        }
+
         // Extinguish with water
         if (mod.getModSettings().shouldExtinguishSelfWithWater()) {
             if (!(mainTask instanceof EscapeFromLavaTask && isCurrentlyRunning(mod)) && mod.getPlayer().isOnFire() && !mod.getPlayer().hasStatusEffect(StatusEffects.FIRE_RESISTANCE) && !mod.getWorld().getDimension().ultrawarm()) {

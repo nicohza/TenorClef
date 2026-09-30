@@ -43,6 +43,10 @@ public class EscapeFromLavaTask extends CustomBaritoneGoalTask {
     private int ticks = 0;
     private final Predicate<BlockPos> avoidPlacingRiskyBlock;
 
+    // Where the water reflex last poured; WorldSurvivalChain scoops it back up so it doesn't spread
+    // through a lava pool (portal bench edge2: every rep's pool solidified after one pour).
+    public static BlockPos reflexWaterPos = null;
+
     public EscapeFromLavaTask(AltoClef mod,float strength) {
         this.strength = strength;
         avoidPlacingRiskyBlock = (blockPos -> mod.getPlayer().getBoundingBox().intersects(new Box(blockPos))
@@ -115,6 +119,7 @@ public class EscapeFromLavaTask extends CustomBaritoneGoalTask {
             LookHelper.lookAt(new Rotation(LookHelper.getLookRotation().getYaw(), 90));
             if (mod.getSlotHandler().forceEquipItem(Items.WATER_BUCKET)) {
                 mod.getInputControls().tryPress(Input.CLICK_RIGHT);
+                reflexWaterPos = mod.getPlayer().getBlockPos();
             }
             return null;
         }
