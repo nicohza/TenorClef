@@ -85,7 +85,7 @@ public class ConstructNetherPortalBucketTask extends Task {
     // The "portalable" region includes the portal (1 x 6 x 4 structure) and an outer buffer for its construction and water bullshit.
     // The "portal origin relative to region" corresponds to the portal origin with respect to the "portalable" region (see _portalOrigin).
     // This can only really be explained visually, sorry!
-    private static final int LAVA_GAP = 6;
+    private static final int LAVA_GAP = 9;
     private static final Vec3i PORTALABLE_REGION_SIZE = new Vec3i(4, 6, 6);
     private static final Vec3i PORTAL_ORIGIN_RELATIVE_TO_REGION = new Vec3i(1, 0, 2);
     private final TimerGame lavaSearchTimer = new TimerGame(5);
@@ -670,7 +670,8 @@ public class ConstructNetherPortalBucketTask extends Task {
                 }
                 // Casting water spreads up to 7 blocks; with a 1-block gap it ran into the lake and
                 // turned it to obsidian (pathbench portal pool1 rep0: 15/25 pool blocks solid, then
-                // 6 lava left < lake minimum, timeout). Keep lava at least LAVA_GAP blocks away.
+                // 6 lava left < lake minimum, timeout). Gap 6 still failed (merge1 rep2: pool one level down
+                // re-spread the water, 24/25 solid). Keep lava at least LAVA_GAP blocks away.
                 if (found) {
                     lavaGap:
                     for (int dx = -LAVA_GAP; dx < sizeAllocation.getX() + LAVA_GAP; ++dx) {
