@@ -91,6 +91,9 @@ public class WorldSurvivalChain extends SingleTaskChain {
                 }
                 setTask(new DoToClosestBlockTask(GetToBlockTask::new, Blocks.WATER));
                 return 90;
+            } else if (_extinguishWaterPosition != null && isNearLava(mod)) {
+                // Scooping the water back while lava is adjacent re-exposes us and loops the lava reflex; wait.
+                // keep _extinguishWaterPosition for later
             } else if (mod.getItemStorage().hasItem(Items.BUCKET) && _extinguishWaterPosition != null && mod.getBlockScanner().isBlockAtPosition(_extinguishWaterPosition, Blocks.WATER)) {
                 // Pick up the water
                 setTask(new InteractWithBlockTask(new ItemTarget(Items.BUCKET, 1), Direction.UP, _extinguishWaterPosition.down(), true));
@@ -180,5 +183,14 @@ public class WorldSurvivalChain extends SingleTaskChain {
     @Override
     protected void onStop() {
         super.onStop();
+    }
+
+    private static boolean isNearLava(AltoClef mod) {
+        if (mod.getPlayer().isInLava() || mod.getPlayer().isOnFire()) return true;
+        BlockPos p = mod.getPlayer().getBlockPos();
+        for (BlockPos q : BlockPos.iterate(p.add(-1, -1, -1), p.add(1, 1, 1))) {
+            if (mod.getWorld().getBlockState(q).getBlock() == Blocks.LAVA) return true;
+        }
+        return false;
     }
 }
