@@ -3,7 +3,9 @@ package adris.altoclef.tasks.speedrun.testrun2;
 import adris.altoclef.AltoClef;
 import adris.altoclef.Debug;
 import adris.altoclef.tasks.movement.PickupDroppedItemTask;
+import adris.altoclef.tasksystem.FailureReason;
 import adris.altoclef.tasksystem.Task;
+import adris.altoclef.tasksystem.TaskResult;
 import adris.altoclef.util.ItemTarget;
 import adris.altoclef.util.helpers.TungstenHelper;
 import net.minecraft.item.Items;
@@ -15,7 +17,8 @@ import net.minecraft.item.Items;
 public class DeathRecycleTask extends Task {
 
     private static final int MAX_TICKS = 20 * 8;
-    private Task pickup;
+    private PickupDroppedItemTask pickup;
+    private ItemTarget[] targets;
     private int ticks;
     private boolean done;
 
@@ -26,7 +29,16 @@ public class DeathRecycleTask extends Task {
         pickup = null;
         Debug.logMessage("TESRUN2 death-recycle: looking for grave drops");
         try { TungstenHelper.stop(); } catch (Throwable ignored) {}
-        pickup = new PickupDroppedItemTask(new ItemTarget[]{
+        targets = graveTargets();
+        pickup = new PickupDroppedItemTask(targets, false);
+    }
+
+    static boolean graveVisible() {
+        return AltoClef.getInstance().getEntityTracker().itemDropped(graveTargets());
+    }
+
+    private static ItemTarget[] graveTargets() {
+        return new ItemTarget[]{
                 new ItemTarget(Items.IRON_PICKAXE, 1),
                 new ItemTarget(Items.IRON_INGOT, 16),
                 new ItemTarget(Items.ENDER_EYE, 12),
@@ -36,7 +48,7 @@ public class DeathRecycleTask extends Task {
                 new ItemTarget(Items.WATER_BUCKET, 1),
                 new ItemTarget(Items.BUCKET, 1),
                 new ItemTarget(Items.IRON_SWORD, 1)
-        }, false);
+        };
     }
 
     @Override
@@ -44,6 +56,16 @@ public class DeathRecycleTask extends Task {
         ticks++;
         if (ticks >= MAX_TICKS) {
             done = true;
+            fail(FailureReason.TIMEOUT, "grave pickup timed out", false);
+            return null;
+        }
+        // S254: with no grave drops in view, PickupDroppedItemTask wanders; s253t walked a
+        // fresh respawn through night skeletons for 25s this way, four deaths in a row.
+        if (!AltoClef.getInstance().getEntityTracker().itemDropped(targets)) {
+            done = true;
+            // Drops seen at start and gone later = picked up (or despawned: not verifiable here).
+            if (ticks <= 1) fail(FailureReason.TARGET_UNAVAILABLE, "no grave drops in view", false);
+            else succeed();
             return null;
         }
         return pickup;

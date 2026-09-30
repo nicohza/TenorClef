@@ -27,7 +27,7 @@ import java.util.Locale;
  *   <li>{@code phases}/{@code help} - list modes and phase order</li>
  * </ul>
  * Optional flags (any order after mode): {@code pearls=N} {@code rods=N}
- * {@code skipfood}|{@code food} {@code mover=auto|tungsten|baritone} {@code verbose} {@code nohud}
+ * {@code skipfood}|{@code food} {@code mover=auto|tungsten|ostinato} {@code verbose} {@code nohud}
  */
 public class TestRunCommand extends Command {
 
@@ -45,7 +45,7 @@ public class TestRunCommand extends Command {
             "  status      live phase + timers/counts",
             "  verbose     toggle verbose phase logs (session)",
             "  phases|help this text",
-            "Flags: pearls=14 rods=7 skipfood|food mover=auto|tungsten|baritone verbose nohud",
+            "Flags: pearls=14 rods=7 skipfood|food mover=auto|tungsten|ostinato verbose nohud",
             "Also: @status @coords @inventory @stop @pause @unpause"
     );
 

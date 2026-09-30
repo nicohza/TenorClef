@@ -165,7 +165,32 @@ public final class T2History {
                 + " pick=" + pick + " buck=" + buck
                 + " iron=" + iron + " ore=" + ironOre
                 + " rods=" + rods + " pearls=" + pearls + " eyes=" + eyes
-                + " hp=" + (mod.getPlayer() == null ? -1 : (int) mod.getPlayer().getHealth());
+                + " hp=" + (mod.getPlayer() == null ? -1f : mod.getPlayer().getHealth())
+                + " hun=" + (mod.getPlayer() == null ? -1 : mod.getPlayer().getHungerManager().getFoodLevel())
+                + " fire=" + (mod.getPlayer() != null && mod.getPlayer().isOnFire())
+                + " food=" + foodCount(mod)
+                + bstate(mod);
+    }
+
+    /** ip=interaction paused (blocks break/place), bp=Baritone pathing, calc=search in progress. s269t sat 20 min in a 1x1 hole. */
+    private static String bstate(AltoClef mod) {
+        try {
+            var pb = mod.getClientBaritone().getPathingBehavior();
+            return " ip=" + mod.getExtraBaritoneSettings().isInteractionPaused()
+                    + " bp=" + pb.isPathing() + " calc=" + pb.getInProgress().isPresent()
+                    + " goal=" + mod.getClientBaritone().getCustomGoalProcess().isActive();
+        } catch (Throwable t) {
+            return " ip=?";
+        }
+    }
+
+    private static int foodCount(AltoClef mod) {
+        try {
+            return mod.getFoodChain().hasFood() ? (int) mod.getItemStorage().getItemStacksPlayerInventory(false).stream()
+                    .filter(adris.altoclef.multiversion.item.ItemVer::isFood).mapToInt(net.minecraft.item.ItemStack::getCount).sum() : 0;
+        } catch (Throwable t) {
+            return -1;
+        }
     }
 
     private static String mobs(AltoClef mod) {
@@ -173,10 +198,13 @@ public final class T2History {
         try {
             // Magma cubes/slimes are not HostileEntity; s245t died to one while this said mobs=none.
             var list = new java.util.ArrayList<net.minecraft.entity.Entity>();
-            var h = mod.getEntityTracker().getTrackedEntities(net.minecraft.entity.mob.HostileEntity.class);
+            // S282: tracker lookups are by exact class, so HostileEntity.class matched nothing (mobs=none next to a witch).
+            var h = mod.getEntityTracker().getHostiles();
             if (h != null) list.addAll(h);
             var sl = mod.getEntityTracker().getTrackedEntities(net.minecraft.entity.mob.SlimeEntity.class);
             if (sl != null) list.addAll(sl);
+            var hg = mod.getEntityTracker().getTrackedEntities(net.minecraft.entity.mob.HoglinEntity.class);
+            if (hg != null) list.addAll(hg);
             if (list.isEmpty() || mod.getPlayer() == null) return "mobs=none";
             var me = mod.getPlayer().getPos();
             int n = 0;

@@ -9,7 +9,7 @@ import net.minecraft.util.math.Vec3d;
  * testrun2's view of Tungsten, backed by the real {@link TungstenMovement} bridge.
  * (This used to be an all-false stub, so @testrun2 never used Tungsten even with the jar present.)
  *
- * "Primary" = the travel mover preference is not BARITONE and the Tungsten jar is bound.
+ * "Primary" = the travel mover preference is not OSTINATO and the Tungsten jar is bound.
  * Everything falls back to Baritone when Tungsten is missing.
  */
 public final class TungstenHelper {
@@ -23,11 +23,11 @@ public final class TungstenHelper {
 
     public static void setPrimary(boolean primary) {
         TungstenMovement.setTravelMover(primary ? TungstenMovement.TravelMover.TUNGSTEN
-                : TungstenMovement.TravelMover.BARITONE);
+                : TungstenMovement.TravelMover.OSTINATO);
     }
 
     public static boolean isPrimary() {
-        return TungstenMovement.getTravelMover() != TungstenMovement.TravelMover.BARITONE
+        return TungstenMovement.getTravelMover() != TungstenMovement.TravelMover.OSTINATO
                 && TungstenMovement.isAvailable();
     }
 

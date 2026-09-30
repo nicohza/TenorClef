@@ -73,6 +73,50 @@ public class ModernSpeedrunTask extends Task {
     private Task active;
     private Task closer;
     private int lootTicks;
+    private boolean swordGaveUp;
+    private boolean lavaGuardAdded;
+
+    /** True for a Nether block with lava above or beside it: breaking it lets the lava flow in. */
+    /**
+     * S263: breaking gold blocks within sight of a piglin without gold armor turns the group
+     * hostile. s260t mined nether gold ore next to one at full hp and was killed in 3s.
+     */
+    private static boolean angersPiglin(BlockPos pos) {
+        try {
+            if (WorldHelper.getCurrentDimension() != Dimension.NETHER) return false;
+            AltoClef mod = AltoClef.getInstance();
+            var b = mod.getWorld().getBlockState(pos).getBlock();
+            if (b != Blocks.NETHER_GOLD_ORE && b != Blocks.GILDED_BLACKSTONE && b != Blocks.GOLD_BLOCK) return false;
+            // S266: gold armor does NOT excuse this - vanilla angers piglins at any gold-ore break
+            // (s262t: helm on, TradeWithPiglins mined gold, 18hp -> dead in 2s).
+            var ps = mod.getEntityTracker().getTrackedEntities(net.minecraft.entity.mob.PiglinEntity.class);
+            if (ps == null) return false;
+            for (var e : ps) {
+                if (e != null && e.isAlive() && e.getBlockPos().isWithinDistance(pos, 16)) return true;
+            }
+        } catch (Throwable ignored) {}
+        return false;
+    }
+
+    private static boolean holdsBackLava(BlockPos pos) {
+        try {
+            if (WorldHelper.getCurrentDimension() != Dimension.NETHER) return false;
+            var w = AltoClef.getInstance().getWorld();
+            if (w == null) return false;
+            for (BlockPos n : new BlockPos[]{pos.up(), pos.add(0, 0, -1), pos.add(0, 0, 1), pos.add(1, 0, 0), pos.add(-1, 0, 0)}) {
+                if (w.getBlockState(n).getBlock() == Blocks.LAVA) return true;
+            }
+            // S260: s258t mined out its floor chasing gold and fell 5 blocks into lava. Refuse a
+            // break that opens a drop onto lava within 4 blocks below.
+            for (int k = 1; k <= 4; k++) {
+                BlockPos d = pos.add(0, -k, 0);
+                var st = w.getBlockState(d);
+                if (st.getBlock() == Blocks.LAVA) return true;
+                if (!st.isAir()) break;
+            }
+        } catch (Throwable ignored) {}
+        return false;
+    }
     private int phaseTicks;
     private int tradeTicks;
     /**
@@ -83,8 +127,12 @@ public class ModernSpeedrunTask extends Task {
      * and the bot walked into a fortress bare-headed — E110 at 9:51 in the last run.
      */
     private int goldHelmTicks;
+    private BlockPos lastBailPos; private long lastBailMs; private int bailRepeat; // S350
+    private int helmTotalTicks = 0; // S348
     private int helmGoldHuntTicks;
     private boolean starveHunt;
+    private boolean ironHunt;
+    private int starveDoneTicks;
     private boolean helmLatched;
     private Object helmLife = null;
     /** S193 nether climb hysteresis: stall counter, best Y reached, and give-up cooldown. */
@@ -413,6 +461,13 @@ public class ModernSpeedrunTask extends Task {
 
     @Override
     protected void onStart() {
+        // S251: s250t mined out a block holding back nether lava and the flow killed it.
+        // Baritone's pathing avoids fluid-adjacent breaks, but mine targets (gold ore) do not.
+        if (!lavaGuardAdded) {
+            lavaGuardAdded = true;
+            AltoClef.getInstance().getBehaviour().avoidBlockBreaking(ModernSpeedrunTask::holdsBackLava);
+            AltoClef.getInstance().getBehaviour().avoidBlockBreaking(ModernSpeedrunTask::angersPiglin);
+        }
         if (sessionLive && phase != Phase.DONE) {
             T2Log.warn("E80", "parent onStart ignored, still ph=" + phase + " t=" + SpeedrunClock.now());
             T2History.note("onStart swallowed — keep " + phase);
@@ -516,7 +571,7 @@ public class ModernSpeedrunTask extends Task {
         try {
             moverLine = adris.altoclef.movement.TungstenMovement.statusLine();
         } catch (Throwable t) {
-            moverLine = "mover=baritone (status unavailable)";
+            moverLine = "mover=ostinato (status unavailable)";
         }
         Debug.logMessage("TESRUN2 start " + moverLine + " eyes=" + SpeedrunOpt.EYES
                 + " rods=" + SpeedrunOpt.BLAZE_RODS
@@ -675,6 +730,14 @@ public class ModernSpeedrunTask extends Task {
                 : new TimeoutWanderTask(24);
         wdEscapeTicks = ESCAPE_TICKS;
         wdTicks = 0;
+        // S298: s297u stood still 40s x3 inside CollectGoldIngotTask with no clue which subtask froze.
+        StringBuilder chain = new StringBuilder();
+        for (Task t = active; t != null && chain.length() < 600; t = t.getSub()) {
+            chain.append(" > ").append(t.getClass().getSimpleName());
+            String ds = t.getDebugState();
+            if (ds != null && !ds.isEmpty()) chain.append('[').append(ds).append(']');
+        }
+        T2Log.force("S298", "stall chain" + chain);
         T2Log.warn("S200", "no progress " + (limit / 20) + "s ph=" + phase + " @" + p.toShortString()
                 + " child=" + (active == null ? "-" : active.getClass().getSimpleName())
                 + " -> " + wdEscape.getClass().getSimpleName());
@@ -773,8 +836,26 @@ public class ModernSpeedrunTask extends Task {
                 + SpawnScout.SPAWN_LOOT_RADIUS + " blocks (reroll #" + SpawnScout.rerolls() + ")");
     }
 
+    // S328 (owner: bot swims past salmon in reach without hitting). Fish were only hunted inside
+    // CollectFoodTask. While in water, hit any cod/salmon in reach at full attack charge without
+    // touching the current task or rotation; the drop is picked up on the way.
+    private void swimFishSwipe(AltoClef mod) {
+        try {
+            var p = mod.getPlayer();
+            if (p == null || !p.isTouchingWater() || p.getAttackCooldownProgress(0f) < 0.9f) return;
+            for (var e : mod.getWorld().getEntitiesByClass(net.minecraft.entity.passive.FishEntity.class,
+                    p.getBoundingBox().expand(3.5), f -> f.isAlive()
+                            && (f instanceof net.minecraft.entity.passive.CodEntity || f instanceof net.minecraft.entity.passive.SalmonEntity))) {
+                if (!p.canSee(e) || !mod.getControllerExtras().inRange(e)) continue;
+                mod.getControllerExtras().attack(e);
+                return;
+            }
+        } catch (Throwable ignored) {}
+    }
+
     private Task onTickInner(AltoClef mod) {
         statusTicks++;
+        swimFishSwipe(mod);
         // S161: shared bail cooldown. It has to be driven from here because the whole point
         // of a give-up is that SurfaceBailTask stops being ticked.
         SurfaceBailTask.tickShared();
@@ -968,7 +1049,7 @@ public class ModernSpeedrunTask extends Task {
             T2History.note("closer dropped — in nether");
         }
 
-        int hp = (int) mod.getPlayer().getHealth();
+        int hp = (int) Math.ceil(mod.getPlayer().getHealth());
         if (lastHp > 0 && hp <= 0) {
             recycleArmed = true;
             deathDim = WorldHelper.getCurrentDimension();
@@ -990,7 +1071,12 @@ public class ModernSpeedrunTask extends Task {
                 return stick(new EnterNetherPortalTask(Dimension.NETHER));
             }
             if (deathLock == 0) recraftPause = 20 * 3;
-            return stick(new DeathRecycleTask());
+            if (!DeathRecycleTask.graveVisible()) {
+                T2History.note("WHY death: no grave drops in view, skip recycle");
+                deathLock = 0;
+            } else {
+                return stick(new DeathRecycleTask());
+            }
         }
 
         if (WorldHelper.getCurrentDimension() == Dimension.END) {
@@ -1093,6 +1179,24 @@ public class ModernSpeedrunTask extends Task {
             usedCloser = false;
             closer = null;
             if (phase != Phase.PORTAL && phaseTicks >= 40) setPhase(Phase.PORTAL);
+            // S261: this shortcut skipped portal()'s S228 food stock. s259t respawned, walked
+            // back in with food=0 twice and died in the fortress both times.
+            if (food(mod) < 16 && !starveHunt) {
+                starveHunt = true;
+                T2Log.force("S261", "food=" + food(mod) + " - stocking before walk-in");
+            }
+            if (starveHunt && food(mod) >= 40) { starveHunt = false; T2Log.force("S279", "walk-in food hunt done food=" + food(mod)); }
+            // S339: s338o stocked food while standing in its freshly lit portal; the portal fired 3s later
+            // and it arrived with food=8, never healed from hp 5 and died to blazes. Step out first.
+            if (starveHunt) {
+                BlockPos feet = mod.getPlayer().getBlockPos();
+                if (mod.getWorld().getBlockState(feet).getBlock() == Blocks.NETHER_PORTAL
+                        || mod.getWorld().getBlockState(feet.up()).getBlock() == Blocks.NETHER_PORTAL) {
+                    T2Log.force("S339", "standing in portal while stocking food - stepping out");
+                    return new TimeoutWanderTask(6);
+                }
+            }
+            if (starveHunt) return new adris.altoclef.tasks.resources.CollectFoodTask(40);
             T2History.note("WHY walk-in: portal + iron pick");
             return stick(new EnterNetherPortalTask(Dimension.NETHER));
         }
@@ -1207,7 +1311,28 @@ public class ModernSpeedrunTask extends Task {
         if (waterCooldown > 0) waterCooldown--;
         if (SpeedrunOpt.AVOID_DEEP_WATER && inWater(mod)
                 && waterCooldown <= 0
-                && phase != Phase.END && phase != Phase.NETHER) {
+                && phase != Phase.END && phase != Phase.NETHER
+                // S310: don't yank the bot out of the water mid fish-hunt while it has air.
+                && !(System.currentTimeMillis() < adris.altoclef.tasks.resources.CollectFoodTask.fishingUntilMs
+                        && mod.getPlayer().getAir() > 150)
+                // S283: s281t swam 19 min in an ocean: the 20s bail timed out (shore 20+ blocks away), the
+                // 15s cooldown had already expired, so it bailed again at once and the portal builder never got
+                // a tick to fill its empty bucket from the water it was floating in. Let it fill first.
+                && !(phase == Phase.PORTAL && mod.getItemStorage().hasItem(Items.BUCKET)
+                        && !mod.getItemStorage().hasItem(Items.WATER_BUCKET)
+                        && mod.getPlayer().getHealth() > 10)) {
+            // S350: s349o sat 4.5 h at one water spot: MovementSwim up failed forever, each bail timed out,
+            // a wander, then the same bail. Third bail at the same spot inside 3 min: pillar straight up.
+            BlockPos bp = mod.getPlayer().getBlockPos();
+            long nowMs = System.currentTimeMillis();
+            bailRepeat = (lastBailPos != null && lastBailPos.isWithinDistance(bp, 4) && nowMs - lastBailMs < 180_000) ? bailRepeat + 1 : 0;
+            lastBailPos = bp; lastBailMs = nowMs;
+            if (bailRepeat >= 2) {
+                bailRepeat = 0;
+                waterCooldown = 20 * 15;
+                T2Log.force("S350", "water bail failing at " + bp.toShortString() + " - pillar out");
+                return stick(new HolePillarTask());
+            }
             waterCooldown = 20 * 15;
             T2Log.warn("E10", "submerged — bail once");
             return stick(new WaterBailTask());
@@ -1219,6 +1344,14 @@ public class ModernSpeedrunTask extends Task {
         // Melee hostiles in face (creeper / zombie / baby zombie villager) — own the fight so
         // stick() can drop back into CollectIron instead of leaving a silent noop after KillAura.
         // Still no ranged chase (skeletons/witches filtered in closeHostile).
+        // S345: s344o meleed a creeper at hp 9.8 while wading and was blown up 0.4s later. Mob defense only
+        // flees once the fuse is lit, which is too late in water. Low hp: back off instead of swinging.
+        if (!netherish && creeperInFace(mod) && mod.getPlayer().getHealth() <= 12) {
+            T2History.note("WHY S345: low-hp creeper in face, flee");
+            if (!(active instanceof adris.altoclef.tasks.movement.RunAwayFromCreepersTask))
+                active = new adris.altoclef.tasks.movement.RunAwayFromCreepersTask(7);
+            return active;
+        }
         if (!netherish && (creeperInFace(mod) || closeHostile(mod))) {
             lastCombatPulse = phaseTicks;
             ironNeedsKick = (phase == Phase.IRON);
@@ -1249,9 +1382,26 @@ public class ModernSpeedrunTask extends Task {
         // S235: s234 flipped CraftInInventory<->Construct x259. The 2x2 craft reports finished
         // for a tick while the table sits in the output slot; the closer grabbed the slot, the
         // craft was interrupted, and S221 asked for the table again. Yield while S221 is unmet.
+        // S294: starveHunt was only set inside portal(), which the closer latch skips. s293t built
+        // with the closer from 4:37 to 27:04 at hun 18 -> 3, food=0, and never hunted. Check it here.
+        if (phase == Phase.PORTAL && !starveHunt && WorldHelper.getCurrentDimension() == Dimension.OVERWORLD) {
+            int hun0 = mod.getPlayer().getHungerManager().getFoodLevel();
+            float hp0 = mod.getPlayer().getHealth();
+            if ((hun0 <= 6 || (hun0 < 18 && hp0 <= 12)) && food(mod) < 1) {
+                starveHunt = true;
+                T2Log.force("S294", "hun=" + hun0 + " hp=" + hp0 + " no food - closer yields to food hunt");
+            }
+        }
         boolean closerYields = starveHunt || needsNetherTable(mod)
                 || (active != null && active != closer && !(active instanceof ConstructNetherPortalBucketTask)
                     && !active.isFinished());
+        // S307: s304t idled 45s+ with child "-" after the table craft: the latch kept handing back
+        // a closer that had finished while it yielded. A finished closer is dead; drop it.
+        if (closer != null && closer.isFinished()) {
+            T2Log.force("S307", "closer finished while latched - dropping it");
+            closer = null;
+            usedCloser = false;
+        }
         if (usedCloser && closer != null && phase == Phase.PORTAL && !closerYields) {
             // S240: record the closer as the live child. Leaving a finished Craft/HolePillar in
             // `active` made T2Brain log it every other tick: fake FLIP x100 lines in s240t.
@@ -1319,6 +1469,19 @@ public class ModernSpeedrunTask extends Task {
         // Pick is enough to leave IRON. Sword/shield table crafts walk
         // back into the hole we just climbed out of.
         // skipIronPick only skips the iron pick craft — still need wooden+ before PORTAL
+        // S332: stay in IRON until the 2nd bucket (+ flint/shield) is covered; see iron().
+        if (phase != Phase.PORTAL && mod.getItemStorage().getItemCount(Items.IRON_PICKAXE) >= 1 && !skipIronPick) {
+            int bk = mod.getItemStorage().getItemCount(Items.BUCKET, Items.WATER_BUCKET, Items.LAVA_BUCKET);
+            if (bk < 2 && mod.getItemStorage().getItemCount(Items.IRON_INGOT) < Math.max(0, 2 - bk) * 3 + 2) return Phase.IRON;
+        }
+        // S341: s340o lost both buckets at 13:07 (fall, E116 drop) with iron=1 and sat 24 min in PORTAL with a
+        // null child until it starved. With no bucket at all and <3 iron, PORTAL cannot proceed: go mine iron.
+        if (phase == Phase.PORTAL && mod.getItemStorage().getItemCount(Items.IRON_PICKAXE) >= 1
+                && mod.getItemStorage().getItemCount(Items.BUCKET, Items.WATER_BUCKET, Items.LAVA_BUCKET) == 0
+                && mod.getItemStorage().getItemCount(Items.IRON_INGOT) < 3) {
+            T2History.note("WHY iron: S341 PORTAL with 0 buckets iron=" + mod.getItemStorage().getItemCount(Items.IRON_INGOT));
+            return Phase.IRON;
+        }
         if (mod.getItemStorage().getItemCount(Items.IRON_PICKAXE) >= 1 || (skipIronPick && hasMiningPick(mod))) {
             return Phase.PORTAL;
         }
@@ -1348,6 +1511,12 @@ public class ModernSpeedrunTask extends Task {
         Phase next;
         if (mod.getItemStorage().getItemCount(Items.WOODEN_PICKAXE) >= 1 || mod.getItemStorage().getItemCount(Items.STONE_PICKAXE) >= 1) {
             next = Phase.IRON;
+            // S249: LOOT existed but nothing ever routed to it; s250t spawned 85 blocks from a
+            // village and walked past it to mine. Detour for chests once a pick is in hand.
+            if (!lootGaveUp && WorldHelper.getCurrentDimension() == Dimension.OVERWORLD
+                    && (phase == Phase.LOOT || closestLootChest(mod).isPresent())) {
+                next = Phase.LOOT;
+            }
         } else {
             next = Phase.BOOTSTRAP;
         }
@@ -1390,7 +1559,12 @@ public class ModernSpeedrunTask extends Task {
             if (woodPause <= 0) McCompat.setMove(false, false);
         }
         boolean hasTable = mod.getItemStorage().getItemCount(Items.CRAFTING_TABLE) >= 1;
-        try { hasTable = hasTable || mod.getBlockScanner().anyFound(Blocks.CRAFTING_TABLE); } catch (Throwable ignored) {}
+        // S257: only a NEARBY table counts. s256t respawned and walked 100 blocks back to the
+        // death-site table (night, skeletons) three times in a row; 4 more logs is cheaper.
+        try {
+            hasTable = hasTable || mod.getBlockScanner().getNearestBlock(mod.getPlayer().getPos(), Blocks.CRAFTING_TABLE)
+                    .map(t -> t.isWithinDistance(mod.getPlayer().getPos(), 32)).orElse(false);
+        } catch (Throwable ignored) {}
         // S238: only go to the table once we can pay for the pick (3 planks + 2 sticks). s235
         // respawned with logs=0, and CraftInTable paced around the old table with nothing to craft.
         int plankEq = totalPlanks(mod) + totalLogs(mod) * 4;
@@ -1544,6 +1718,12 @@ public class ModernSpeedrunTask extends Task {
 
     private Task loot(AltoClef mod) {
         lootTicks++;
+        if (lootTicks > LOOT_MAX_TICKS || looted.size() >= SpeedrunOpt.LOOT_MAX_CHESTS) {
+            lootGaveUp = true;
+            T2History.note("WHY loot done — cap reached, go IRON");
+            setPhase(Phase.IRON);
+            return iron(mod);
+        }
         Optional<BlockPos> chest = closestLootChest(mod);
         if (chest.isPresent() && looted.size() < SpeedrunOpt.LOOT_MAX_CHESTS) {
             BlockPos pos = chest.get();
@@ -1571,6 +1751,36 @@ public class ModernSpeedrunTask extends Task {
     }
 
     private Task iron(AltoClef mod) {
+        // S323: s321t chased a cave skeleton during IRON with only a stone pickaxe and was shot from 16hp;
+        // the S320 sword only came in PORTAL. Craft it as soon as IRON starts (same 30s give-up).
+        if (portalSwordTicks < 600 && mod.getItemStorage().getItemCount(Items.STONE_SWORD, Items.IRON_SWORD) < 1
+                && mod.getItemStorage().getItemCount(Items.COBBLESTONE, Items.BLACKSTONE) >= 2
+                && (mod.getItemStorage().getItemCount(Items.STICK) >= 1 || totalPlanks(mod) >= 2 || totalLogs(mod) >= 1)) {
+            if (portalSwordTicks++ == 0) T2Log.force("S323", "craft stone sword at IRON start");
+            return TaskCatalogue.getItemTask(Items.STONE_SWORD, 1);
+        }
+        // S289: s287t mined iron with no food until hun=5 hp=4 and two wolves finished it. IRON had no
+        // food gate (only PORTAL does). Hunt a small stock once hunger drops and nothing is left to eat.
+        int ironHun = mod.getPlayer().getHungerManager().getFoodLevel();
+        if (ironHun <= 12 && food(mod) < 1) ironHunt = true;
+        if (ironHunt && food(mod) >= 20) ironHunt = false;
+        if (ironHunt) {
+            T2History.note("WHY iron: hun=" + ironHun + " no food - hunt first");
+            return new adris.altoclef.tasks.resources.CollectFoodTask(20);
+        }
+        // S264: s261t wore out both picks tunnelling E70 offset-walks underground, then spent
+        // 25 min offset-walking into solid stone with 11 unsmeltable ore. No pick = get one first.
+        if (mod.getItemStorage().getItemCount(Items.WOODEN_PICKAXE) < 1 && mod.getItemStorage().getItemCount(Items.STONE_PICKAXE) < 1
+                && mod.getItemStorage().getItemCount(Items.IRON_PICKAXE) < 1) {
+            T2History.note("WHY iron: no pickaxe left - craft stone pick");
+            return TaskCatalogue.getItemTask(Items.STONE_PICKAXE, 1);
+        }
+        // S275: pickPhase() moves to IRON the moment a wooden pick exists, so bootstrap's stone-pick
+        // step never ran. s274t broke two wooden picks digging to iron and was still in BOOTSTRAP at 6 min.
+        if (mod.getItemStorage().getItemCount(Items.STONE_PICKAXE) < 1 && mod.getItemStorage().getItemCount(Items.IRON_PICKAXE) < 1) {
+            T2History.note("WHY iron: upgrade wooden pick to stone");
+            return TaskCatalogue.getItemTask(Items.STONE_PICKAXE, 1);
+        }
         // `ironN` = total metal stock: ingots PLUS unmelted ore (RAW_IRON preprocesses to
         // IRON_ORE on 1.16.1). This is deliberately NOT the same thing as the `iron=` field
         // in the logs, which is ingots only — see trap 9 in the project memory.
@@ -1583,11 +1793,20 @@ public class ModernSpeedrunTask extends Task {
         } catch (Throwable ignored) {}
         if (mod.getItemStorage().getItemCount(Items.IRON_PICKAXE) >= 1 || (skipIronPick && hasMiningPick(mod))) {
             pickCraftLock = false;
+            // S332: s330o left IRON with 1 bucket and iron=4; flint+shield ate 2, so PORTAL spent 8 min
+            // hunting iron for the 2nd bucket far from the lava. Finish bucket iron (+2 for flint/shield) here.
+            int bk = mod.getItemStorage().getItemCount(Items.BUCKET, Items.WATER_BUCKET, Items.LAVA_BUCKET);
+            int ing = mod.getItemStorage().getItemCount(Items.IRON_INGOT);
+            int ironNeed = Math.max(0, 2 - bk) * 3 + 2;
+            if (bk < 2 && ing < ironNeed) {
+                T2History.note("WHY iron: S332 buckets=" + bk + " ingots=" + ing + " need " + ironNeed + " before PORTAL");
+                return TaskCatalogue.getItemTask(Items.IRON_INGOT, ironNeed);
+            }
             T2History.note("WHY iron: pick done — skip sword/shield table, go PORTAL");
             return null;
         }
         // S201: phase leaves BOOTSTRAP once any pick exists, so the sword check lives here too.
-        if (mod.getItemStorage().getItemCount(Items.STONE_PICKAXE) >= 1 && mod.getItemStorage().getItemCount(Items.STONE_SWORD) < 1
+        if (!swordGaveUp && mod.getItemStorage().getItemCount(Items.STONE_PICKAXE) >= 1 && mod.getItemStorage().getItemCount(Items.STONE_SWORD) < 1
                 && mod.getItemStorage().getItemCount(Items.IRON_SWORD) < 1 && mod.getItemStorage().getItemCount(Items.COBBLESTONE) >= 2
                 // S244: needs a stick. s245t had 0 sticks/planks/logs; the table recipe never finished
                 // and E92 closed it every 3s for 45s (x17 flip) until S200 wandered off.
@@ -1909,6 +2128,15 @@ public class ModernSpeedrunTask extends Task {
 
     private Task portal(AltoClef mod) {
         if (WorldHelper.getCurrentDimension() == Dimension.NETHER) return null;
+        // S320: no run since s308t crafted a sword (S201 never fired: the iron-pick branch returns
+        // first). s308t/s311t/s317t all died to cave skeletons during the portal build. Make a
+        // stone sword on the way into PORTAL; give up after 30s so it can't stall the phase.
+        if (portalSwordTicks < 600 && mod.getItemStorage().getItemCount(Items.STONE_SWORD, Items.IRON_SWORD) < 1
+                && mod.getItemStorage().getItemCount(Items.COBBLESTONE, Items.BLACKSTONE) >= 2
+                && (mod.getItemStorage().getItemCount(Items.STICK) >= 1 || totalPlanks(mod) >= 2 || totalLogs(mod) >= 1)) {
+            if (portalSwordTicks++ == 0) T2Log.force("S320", "craft stone sword before portal build");
+            return TaskCatalogue.getItemTask(Items.STONE_SWORD, 1);
+        }
         // S218: the starve branch below sat after the construct latch, so a long portal build
         // never ate (deepgate: hun=2 for 8+ min, 161x E103, bread branch 0x). Food first.
         int hun = 20;
@@ -1921,12 +2149,30 @@ public class ModernSpeedrunTask extends Task {
             T2Log.force("S218", "hun=" + hun + " hp=" + hp + " no food - hunting before portal");
         }
         // S228: the Nether has no easy food, so never enter it with a thin buffer; top up to 20.
-        if (food(mod) < 8 && !starveHunt) {
+        // S274: food() is a hunger-point score, not items. s273t entered with score ~20 (3 cooked
+        // items), ate all 3 within 45s of arriving, then fought at hp=8 with food=0. Stock 40.
+        if (food(mod) < 16 && !starveHunt) {
             starveHunt = true;
             T2Log.force("S228", "food=" + food(mod) + " - stocking before Nether");
         }
-        if (starveHunt && food(mod) >= 20) starveHunt = false;
-        if (starveHunt) return new adris.altoclef.tasks.resources.CollectFoodTask(20);
+        // S279: s278t's hunt ended at 5:01 with food=0 (one-tick score read during a craft GUI, cursor
+        // slot counted). Require 2s of a real stock before ending the hunt, and say why.
+        if (starveHunt && food(mod) >= 40) {
+            if (++starveDoneTicks >= 40) {
+                starveHunt = false;
+                starveDoneTicks = 0;
+                T2Log.force("S279", "food hunt done food=" + food(mod));
+            }
+        } else {
+            starveDoneTicks = 0;
+        }
+        // S287: s286t hunted a cow down a cave at y=32 with hp 10 -> 0.7 while a zombie hit it. When hurt
+        // underground, surface first; the hunt resumes in the open where mobs are visible and burn by day.
+        if (starveHunt && hp <= 10 && mod.getWorld().getLightLevel(net.minecraft.world.LightType.SKY, mod.getPlayer().getBlockPos()) < 8) {
+            T2History.note("WHY portal: hurt underground during food hunt - surface first");
+            return new SurfaceBailTask();
+        }
+        if (starveHunt) return new adris.altoclef.tasks.resources.CollectFoodTask(40);
         // S221: helmlatch run: helm craft in the Nether had no table or planks, wandered 45s+
         // and got shot by piglins twice. Carry a table through the portal.
         // S239: no Construct exemption. s240t flipped CraftInInventory<->Construct x100: a live
@@ -1988,16 +2234,49 @@ public class ModernSpeedrunTask extends Task {
         return new ConstructNetherPortalBucketTask();
     }
 
+    private static boolean lavaNear(net.minecraft.world.World w, BlockPos p) {
+        for (int dx = -1; dx <= 1; dx++) for (int dy = -1; dy <= 1; dy++) for (int dz = -1; dz <= 1; dz++) {
+            if (w.getBlockState(p.add(dx, dy, dz)).getBlock() == net.minecraft.block.Blocks.LAVA) return true;
+        }
+        return false;
+    }
+
     private Task nether(AltoClef mod) {
         int rods = mod.getItemStorage().getItemCount(Items.BLAZE_ROD);
         int pearls = mod.getItemStorage().getItemCount(Items.ENDER_PEARL);
         int gold = mod.getItemStorage().getItemCount(Items.GOLD_INGOT) + mod.getItemStorage().getItemCount(Items.GOLD_BLOCK) * 9
                 + mod.getItemStorage().getItemCount(Items.GOLD_NUGGET) / 9;
+        // S259: interaction is paused inside a portal, so gold mining from the arrival portal
+        // does nothing until WorldSurvivalChain's shimmy fires. Walk to a safe floor first.
+        if (WorldHelper.isInNetherPortal()) {
+            BlockPos me = mod.getPlayer().getBlockPos();
+            for (BlockPos c : new BlockPos[]{me.add(1,0,0), me.add(-1,0,0), me.add(0,0,1), me.add(0,0,-1),
+                    me.add(2,0,0), me.add(-2,0,0), me.add(0,0,2), me.add(0,0,-2)}) {
+                var w = mod.getWorld();
+                // S269: s265t died 1s after arrival stepping out next to lava. The 2-block
+                // candidates also need a safe cell in between, and no lava beside the floor.
+                BlockPos mid = new BlockPos((me.getX() + c.getX()) / 2, c.getY(), (me.getZ() + c.getZ()) / 2);
+                if (w.getBlockState(c).isAir() && w.getBlockState(c.up()).isAir()
+                        && w.getBlockState(c.down()).isSolidBlock(w, c.down())
+                        && !lavaNear(w, c) && (c.getManhattanDistance(me) < 2 || (!lavaNear(w, mid)
+                        && w.getBlockState(mid.down()).isSolidBlock(w, mid.down())))) {
+                    T2History.note("WHY nether: step out of arrival portal");
+                    return new GetToBlockTask(c);
+                }
+            }
+        }
         // Never time out the helm. 40s skip was sending us to a fortress
         // unarmored, then mining gold over lava.
         if (!wearingGold(mod)) {
             goldHelmTicks++;
             T2History.note("WHY nether: gold helm on head before fortress");
+            // S348: s347o had gold but no reachable table and no planks, and looped craft<->wander at one
+            // spot for 28 min. S215 only bounds the gold hunt; bound the whole helm effort at 3 min.
+            if (++helmTotalTicks > 20 * 180) {
+                helmLatched = true;
+                T2Log.force("S348", "helm effort over 180s, proceeding without helm");
+                return null;
+            }
             // S243: time the equip from when the helm is IN HAND, not from when the craft began.
             // s243t crafted it after 9s of goldHelmTicks and latched "worn" the same tick, then
             // fought blazes bare-headed with the helm in its pocket.
@@ -2037,6 +2316,9 @@ public class ModernSpeedrunTask extends Task {
                 return null;
             }
             if (gold < 5) {
+                // S300: goldHelmTicks is the CRAFT stall timer. s299t counted the gold hunt too, so the
+                // craft was declared "stalled" 2s after it began and the bot wandered off from its own table.
+                goldHelmTicks = 0;
                 T2Log.warn("E96", "need 5 gold for helm");
                 // Stay high. CollectGoldIngot loves lava-lake ore.
                 // S191: a Y level, not the exact block 12 overhead. That block is usually
@@ -2117,7 +2399,13 @@ public class ModernSpeedrunTask extends Task {
                         + mod.getItemStorage().getItemCount(Items.CRIMSON_PLANKS) + mod.getItemStorage().getItemCount(Items.WARPED_PLANKS);
                 boolean anyTable = false;
                 try { anyTable = mod.getBlockScanner().anyFound(Blocks.CRAFTING_TABLE); } catch (Throwable ignored) {}
-                if (planks >= 4 && !anyTable) {
+                if (anyTable) {
+                    // S300: a placed table is right here (we likely just put it down); craft at it.
+                    T2History.note("WHY E96: table placed nearby — retry helm craft there");
+                    active = null;
+                    return TaskCatalogue.getItemTask(Items.GOLDEN_HELMET, 1);
+                }
+                if (planks >= 4) {
                     T2History.note("WHY E96: no table — craft one from planks");
                     active = null;
                     return TaskCatalogue.getItemTask(Items.CRAFTING_TABLE, 1);
@@ -2130,6 +2418,20 @@ public class ModernSpeedrunTask extends Task {
             return TaskCatalogue.getItemTask(Items.GOLDEN_HELMET, 1);
         }
         goldHelmTicks = 0;
+
+        // S301: pick the crafting table back up after the helm craft. s299t left its only table
+        // behind and later stalled trying to mine nether stems for planks to make another.
+        if (tablePickupTicks < 20 * 20 && mod.getItemStorage().getItemCount(Items.CRAFTING_TABLE) < 1) {
+            java.util.Optional<net.minecraft.util.math.BlockPos> table = java.util.Optional.empty();
+            try {
+                table = mod.getBlockScanner().getNearestBlock(Blocks.CRAFTING_TABLE);
+            } catch (Throwable ignored) {}
+            if (table.isPresent() && table.get().isWithinDistance(mod.getPlayer().getPos(), 8)) {
+                if (tablePickupTicks++ == 0) T2History.note("S301 pick up crafting table at " + table.get().toShortString());
+                return new adris.altoclef.tasks.resources.MineAndCollectTask(Items.CRAFTING_TABLE, 1,
+                        new net.minecraft.block.Block[]{Blocks.CRAFTING_TABLE}, adris.altoclef.util.MiningRequirement.HAND);
+            }
+        }
 
         if (pearls < SpeedrunOpt.PEARLS && gold >= 8 && tradeTicks < TRADE_MAX_TICKS) {
             tradeTicks++;
@@ -2196,7 +2498,28 @@ public class ModernSpeedrunTask extends Task {
 
     private Task offsetWalk(AltoClef mod) {
         BlockPos here = mod.getPlayer().getBlockPos();
-        BlockPos dest = here.add(8, 0, 6);
+        // S277: the fixed +8,+6 offset walked s276t into a lake bed (dest y=56 under water) and it
+        // drowned. Try the four rotations and take the first whose surface column is not water.
+        int[][] offs = {{8, 6}, {-6, 8}, {-8, -6}, {6, -8}};
+        // S316: s312t was at y=59 on a lake bed; every rotation was wet so it fell back to +8,+6 at
+        // y=59 underwater. That GetToBlock fought the surfacing path each tick until it drowned.
+        // Aim at the dry surface block, and when nothing is dry (or we're submerged) bail to air.
+        BlockPos dest = null;
+        for (int[] o : offs) {
+            BlockPos c = here.add(o[0], 0, o[1]);
+            try {
+                BlockPos top = mod.getWorld().getTopPosition(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING, c);
+                if (!mod.getWorld().getFluidState(top.down()).isEmpty() || !mod.getWorld().getFluidState(c).isEmpty()) continue;
+                dest = top.getY() - here.getY() <= 6 ? top : c;
+            } catch (Throwable ignored) {
+                dest = c;
+            }
+            break;
+        }
+        if (dest == null || mod.getPlayer().isSubmergedInWater()) {
+            T2History.note("S316 E99: no dry walk-off tile - water bail");
+            return new WaterBailTask();
+        }
         T2History.note("WHY E99: GetToBlock " + dest.getX() + "," + dest.getZ());
         try {
             return new GetToBlockTask(dest);
@@ -2664,7 +2987,9 @@ public class ModernSpeedrunTask extends Task {
             // unreachable ore (-164,58,56) for 90s+. Only real iron progress resets the window.
             return stick(iron(mod));
         }
-        if (ironStill == 20 * 12) {
+        boolean noPick = mod.getItemStorage().getItemCount(Items.WOODEN_PICKAXE) < 1 && mod.getItemStorage().getItemCount(Items.STONE_PICKAXE) < 1
+                && mod.getItemStorage().getItemCount(Items.IRON_PICKAXE) < 1;
+        if (ironStill == 20 * 12 && !noPick) {
             T2Log.warn("E70", "iron frozen 12s @" + x + "," + z + " — walk");
             McCompat.cancelPathing();
             adris.altoclef.tasks.speedrun.testrun2.core.T2Input.noJump();
@@ -2728,6 +3053,7 @@ public class ModernSpeedrunTask extends Task {
         if (phase == Phase.IRON && !dark && ironN < 3 && mod.getItemStorage().getItemCount(Items.IRON_PICKAXE) < 1 && craftStuck >= 20 * 6) {
             T2Log.warn("E92", "craft table with 0 iron — mine first");
             T2History.note("WHY E92: close table, collect iron");
+            swordGaveUp = true; // S258: s257t flipped S201<->E92 for 45s
             craftStuck = 0;
             forceSurface = false;
             pickCraftLock = false;
@@ -2769,13 +3095,16 @@ public class ModernSpeedrunTask extends Task {
     }
 
     /** S221: no golden helmet yet and no table to craft one with in the Nether. */
+    private int tablePickupTicks;
+    private int portalSwordTicks;
+
     private boolean needsNetherTable(AltoClef mod) {
         return mod.getItemStorage().getItemCount(Items.GOLDEN_HELMET) < 1 && !wearingGold(mod)
                 && mod.getItemStorage().getItemCount(Items.CRAFTING_TABLE) < 1;
     }
 
     private Task startCloser(AltoClef mod) {
-        if (closer == null) {
+        if (closer == null || closer.isFinished()) {
             T2Log.warn("E40", "closer=ConstructNetherPortalBucketTask");
             closer = new ConstructNetherPortalBucketTask();
         }
@@ -2894,9 +3223,14 @@ public class ModernSpeedrunTask extends Task {
     private boolean inWater(AltoClef mod) {
         try {
             boolean head = mod.getPlayer().isSubmergedInWater();
+            // S277: bobbing at a lake surface surfaces the head for a tick and reset the streak, so
+            // E10 never fired while s276t sank and drowned. Only leaving the water resets it.
             if (head) wetStreak++;
-            else wetStreak = 0;
-            return wetStreak >= 20;
+            else if (!mod.getPlayer().isTouchingWater()) wetStreak = 0;
+            // S291: Ostinato now sprint-swims and dives on purpose; a 1s-submerged bail hijacked its
+            // water paths. Only rescue when air is running out, hp is low, or it has been under 60s.
+            if (wetStreak < 20) return false;
+            return mod.getPlayer().getAir() < 120 || mod.getPlayer().getHealth() <= 8 || wetStreak >= 20 * 60;
         } catch (Throwable t) {
             wetStreak = 0;
             return false;

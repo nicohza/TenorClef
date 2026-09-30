@@ -1,34 +1,33 @@
 # Ostinato wiring
 
-TenorClef currently uses a matching published Baritone artifact for its stable modern
-targets. Ostinato is required for the 1.16.1 legacy pairing and is the engine under
-development for the experimental 1.21.11 port. Do not use a 1.21.11 Ostinato jar with
-a 1.21 or 1.21.1 client.
+TenorClef always runs on Ostinato. It is only compiled for the Minecraft versions Ostinato
+is built for; never load a jar built for one Minecraft version into another.
 
 ## Compatibility
 
 | TenorClef module | Ostinato source | Status |
 | --- | --- | --- |
-| `1.21.1` | Matching published Baritone artifact | Primary supported pairing |
-| `1.21.4` | Ostinato branch `1.21.4`, staged as `libs/baritone-unoptimized-fabric-1.21.4.jar` | Anarchy-server target; compiles |
-| `1.21` | Matching published Baritone artifact | Maintained pairing |
-| `1.21.11` | `main`, Fabric artifact | Experimental; source port does not compile yet |
-| `1.16.1` | branch `1.16.1`, Fabric artifact | Legacy pairing |
+| `1.21.4` | Ostinato `main` (MC 1.21.4), staged as `libs/baritone-unoptimized-fabric-1.21.4.jar` | Primary; compiles in CI |
+| `1.16.1` | Ostinato branch `1.16.1`, staged as `libs/baritone-unoptimized-fabric-1.16.1.jar` | Legacy pairing; compiles in CI |
+| `1.21.11` | Ostinato branch `1.21.11`, Fabric artifact (CI builds it) | Experimental |
+| `1.21.1` … `1.16.5` | none | Preprocess-only: not compiled, packaged or tested |
 
-## Build the stable modern target
+The preprocess chain cannot be trimmed (see `settings.gradle.kts`), so the preprocess-only
+modules still exist. The preprocessor resolves types on each of them while it remaps sources
+down to 1.16.1, so they keep the matching upstream Baritone as a **compile-only** dependency for
+that analysis. Nothing built from them is shipped or run.
 
-Run `gradlew.bat :1.21.1:build` on Windows or `./gradlew :1.21.1:build` on macOS/Linux.
-The project resolves a Baritone artifact for Minecraft 1.21.1. This target compiled
-successfully on 2026-09-17.
+## Build
 
-The build intentionally ignores `../Ostinato/dist` for 1.21 and 1.21.1. This prevents
-an incompatible 1.21.11 artifact from being selected merely because it is newer.
+Run `gradlew.bat :1.21.4:build` on Windows or `./gradlew :1.21.4:build` on macOS/Linux.
 
-## Legacy 1.16.1
+To refresh a staged jar, build the matching Ostinato branch and copy its
+`dist/baritone-unoptimized-fabric-*.jar` over the file in `libs/`:
 
-Check out Ostinato's `1.16.1` branch and build its Fabric artifact first. Place the
-result in `../Ostinato/dist/` (or use a sibling `Ostinato-1.16.1/dist/` directory),
-then run `gradlew.bat :1.16.1:build` from TenorClef.
+- `1.21.4`: JDK 21, `main`, `./gradlew :fabric:build`.
+- `1.16.1`: JDK 8, `./gradlew build -Pbaritone.fabric_build`.
+- `1.21.11`: JDK 21, build branch `1.21.11` with `./gradlew :fabric:build`, then place the jar in
+  `../Ostinato/dist/` (or `libs/baritone-unoptimized-fabric-ostinato-*.jar`).
 
 ## Tungsten
 

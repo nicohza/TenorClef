@@ -270,7 +270,18 @@ public class FoodChain extends SingleTaskChain {
         for (ItemStack stack : mod.getItemStorage().getItemStacksPlayerInventory(true)) {
             if (ItemVer.isFood(stack)) {
                 // Ignore protected items
-                if (!ItemHelper.canThrowAwayStack(mod, stack)) continue;
+                // S306: "protected" means don't throw away, not don't eat. CollectFoodTask protects
+                // BREAD etc., so s303t sat at half a heart, hunger 3, with bread in the hotbar.
+                // Only hold back protected golden apples unless we're in real trouble.
+                if (!ItemHelper.canThrowAwayStack(mod, stack)
+                        && (stack.getItem() == Items.GOLDEN_APPLE || stack.getItem() == Items.ENCHANTED_GOLDEN_APPLE)
+                        && health > 6) continue;
+
+                // S333: S306 let protected food be eaten, so raw meat held for cooking got eaten raw (s331o).
+                // Raw cookables wait for the furnace unless we are in real trouble.
+                Item it = stack.getItem();
+                if ((it == Items.PORKCHOP || it == Items.BEEF || it == Items.CHICKEN || it == Items.MUTTON || it == Items.RABBIT
+                        || it == Items.COD || it == Items.SALMON || it == Items.POTATO) && health > 8 && hunger > 4) continue;
 
                 // Ignore spider eyes
                 if (stack.getItem() == Items.SPIDER_EYE) {
@@ -298,7 +309,9 @@ public class FoodChain extends SingleTaskChain {
                 float score = saturationGoodScore - saturationLossPenalty - hungerLossPenalty - hungerNotFilledPenalty;
 
                 if (stack.getItem() == Items.ROTTEN_FLESH) {
-                    score -= config.foodPickRottenFleshPenalty;
+                    // S325: s324b held rotten flesh at hp 12, hun 14 with nothing else; the -100 penalty made hasFood
+                    // false so it never ate or regenerated and a zombie finished it. Hurt or starving, eat it.
+                    score = (health <= 12 || hunger <= 6) ? Math.max(score, 0.5f) : score - config.foodPickRottenFleshPenalty;
                 }
                 if (score > bestFoodScore) {
                     bestFoodScore = score;

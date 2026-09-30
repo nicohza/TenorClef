@@ -49,6 +49,7 @@ import java.util.function.Predicate;
 // TODO: Optimise shielding against spiders and skeletons
 
 public class MobDefenseChain extends SingleTaskChain {
+    private long perchSinceMs;
     private static final double DANGER_KEEP_DISTANCE = 30;
     private static final double CREEPER_KEEP_DISTANCE = 10;
     private static final double ARROW_KEEP_DISTANCE_HORIZONTAL = 2;
@@ -64,6 +65,37 @@ public class MobDefenseChain extends SingleTaskChain {
     private boolean doingFunkyStuff = false;
     private boolean wasPuttingOutFire = false;
     private CustomBaritoneGoalTask runAwayTask;
+    private long fleeHoldUntilMs;
+    private long lastHitMs;
+    private String why = "?";
+    private Task pillarTask;
+    private int pillarY;
+
+    /** S281: s280t re-created the flee task every tick near a hoglin; each restart re-planned from scratch,
+     *  the bot stood at one block for 10s and finally fled into lava. Keep the running flee task instead. */
+    private CustomBaritoneGoalTask keepRunAway() {
+        // S296: s294t's 70-priority flees (danger/eating/hoglin) had no hold and dropped to idle a tick
+        // later (70->0 x many, skeleton death at hp 6.8). Every flee holds 5s.
+        fleeHoldUntilMs = Math.max(fleeHoldUntilMs, System.currentTimeMillis() + 5000);
+        if (runAwayTask instanceof RunAwayFromHostilesTask && !runAwayTask.isFinished()) return runAwayTask;
+        return new RunAwayFromHostilesTask(DANGER_KEEP_DISTANCE, true);
+    }
+    private long fleeStreakStartMs;
+    private long fleeStreakLastMs;
+    /** S334: true once a 70-flee has run 30s without a 2s break; logs why once. Resets after 10s off. */
+    private boolean fleeStreakTooLong(String why) {
+        long now = System.currentTimeMillis();
+        if (now - fleeStreakLastMs > 2000) fleeStreakStartMs = now;
+        if (now - fleeStreakStartMs > 30_000) {
+            if (now - fleeStreakLastMs < 2000 && fleeStreakStartMs > 0 && now - fleeStreakStartMs < 30_100)
+                adris.altoclef.tasks.speedrun.testrun2.T2History.note("S334 flee streak 30s capped why=" + why);
+            if (now - fleeStreakStartMs > 40_000) fleeStreakStartMs = now; // 10s off, then may flee again
+            fleeStreakLastMs = now;
+            return now - fleeStreakStartMs > 30_000 || now - fleeStreakStartMs < 0;
+        }
+        fleeStreakLastMs = now;
+        return false;
+    }
     private float prevHealth = 20;
     private boolean needsChangeOnAttack = false;
     private Entity lockedOnEntity = null;
@@ -126,7 +158,7 @@ public class MobDefenseChain extends SingleTaskChain {
             if (toDealWith instanceof EndermanEntity || toDealWith instanceof SlimeEntity || toDealWith instanceof BlazeEntity) {
 
                 numberOfProblematicEntities += 1;
-            } else if (toDealWith instanceof DrownedEntity && toDealWith.getEquippedItems() == Items.TRIDENT) {
+            } else if (toDealWith instanceof DrownedEntity && ((DrownedEntity) toDealWith).getMainHandStack().getItem() == Items.TRIDENT) {
                 // Drowned with tridents are also REALLY dangerous, maybe we should increase this??
                 numberOfProblematicEntities += 5;
             }
@@ -137,8 +169,15 @@ public class MobDefenseChain extends SingleTaskChain {
     @Override
     public float getPriority() {
         if (adris.altoclef.tasks.pvp.PvpTask.anyActive()) return 0;
-        cachedLastPriority = getPriorityInner();
-        cachedLastPriority = S222holdBudget(cachedLastPriority);
+        float before = cachedLastPriority;
+        why = "?";
+        float inner = getPriorityInner();
+        cachedLastPriority = S222holdBudget(inner);
+        // S292: s291t flipped 80<->(<50) every 0.5s under skeleton fire with no logged exit. Name the path.
+        if (before >= 65 && cachedLastPriority < 50) {
+            adris.altoclef.tasks.speedrun.testrun2.T2History.note("S292 mobdef drop " + (int) before + "->" + cachedLastPriority + " inner=" + inner + " why=" + why
+                    + " run=" + (runAwayTask != null) + " hold=" + (fleeHoldUntilMs - System.currentTimeMillis()));
+        }
         prevHealth = AltoClef.getInstance().getPlayer().getHealth();
         return cachedLastPriority;
     }
@@ -236,8 +275,40 @@ public class MobDefenseChain extends SingleTaskChain {
 
         // Run away if a weird mob is close by.
         Optional<Entity> universallyDangerous = getUniversallyDangerousMob(mod);
-        if (universallyDangerous.isPresent() && mod.getPlayer().getHealth() <= 10) {
-            runAwayTask = new RunAwayFromHostilesTask(DANGER_KEEP_DISTANCE, true);
+        // S276: a hoglin hits for ~6; waiting until hp<=10 left one or two hits of margin.
+        // S297: s296t fled a hoglin on flat netherrack; knockback kept throwing it off the flee path
+        // ("too far from path", "No path found") until it died. Hoglins cannot climb 2 blocks, so pillar up.
+        if (universallyDangerous.isPresent() && (universallyDangerous.get() instanceof HoglinEntity || universallyDangerous.get() instanceof ZoglinEntity)) {
+            int py = mod.getPlayer().getBlockY();
+            boolean blocks = mod.getItemStorage().getItemCount(Items.NETHERRACK, Items.COBBLESTONE, Items.DIRT, Items.BLACKSTONE, Items.BASALT) >= 3;
+            if (pillarTask != null && !pillarTask.isFinished() && py < pillarY) {
+                setTask(pillarTask);
+                return 70;
+            }
+            if (blocks && universallyDangerous.get().distanceTo(mod.getPlayer()) < 7
+                    && mod.getPlayer().getY() - universallyDangerous.get().getY() < 2) {
+                pillarY = py + 3;
+                pillarTask = new adris.altoclef.tasks.movement.GetToYTask(pillarY);
+                adris.altoclef.tasks.speedrun.testrun2.T2History.note("S297 pillar from " + universallyDangerous.get().getType().getTranslationKey() + " y=" + py + "->" + pillarY);
+                setTask(pillarTask);
+                return 70;
+            }
+            // Safely above it: wait instead of walking back down.
+            // S317: s313t idled on a hoglin pillar for 3.5 minutes in the open until a ghast killed it.
+            // Cap the perch wait at 20s and never wait while a ghast is around.
+            long nowMs = System.currentTimeMillis();
+            if (perchSinceMs == 0) perchSinceMs = nowMs;
+            boolean ghast = !mod.getEntityTracker().getTrackedEntities(net.minecraft.entity.mob.GhastEntity.class).isEmpty();
+            if ((nowMs - perchSinceMs > 20_000 || ghast) && perchSinceMs > 0) {
+                if (nowMs - perchSinceMs < 20_300) adris.altoclef.tasks.speedrun.testrun2.T2History.note("S317 perch wait over ghast=" + ghast);
+            } else if (mod.getPlayer().getY() - universallyDangerous.get().getY() >= 2 && universallyDangerous.get().distanceTo(mod.getPlayer()) < 10) {
+                if (!(mainTask instanceof adris.altoclef.tasks.movement.IdleTask)) setTask(new adris.altoclef.tasks.movement.IdleTask());
+                return 70;
+            }
+        }
+        if (!universallyDangerous.isPresent() || !(universallyDangerous.get() instanceof HoglinEntity || universallyDangerous.get() instanceof ZoglinEntity)) perchSinceMs = 0;
+        if (universallyDangerous.isPresent() && mod.getPlayer().getHealth() <= 14 && !fleeStreakTooLong("danger " + universallyDangerous.get().getType().getTranslationKey())) {
+            runAwayTask = keepRunAway();
             setTask(runAwayTask);
             return 70;
         }
@@ -247,6 +318,22 @@ public class MobDefenseChain extends SingleTaskChain {
         Item offhandItem = StorageHelper.getItemStackInSlot(offhandSlot).getItem();
         // Run away from creepers
         CreeperEntity blowingUp = getClosestFusingCreeper(mod);
+        if (blowingUp == null && System.currentTimeMillis() < creeperFleeUntilMs && runAwayTask instanceof RunAwayFromCreepersTask && !runAwayTask.isFinished()) {
+            setTask(runAwayTask);
+            return 85;
+        }
+        // S327 (owner: "why not just kill the creeper?"): with a sword and decent hp, fight it. Sword hits knock
+        // it back and reset the approach; a stone sword kills in 4 hits. Flee only unarmed, hurt, or late fuse.
+        if (blowingUp != null && mod.getItemStorage().getItemCount(net.minecraft.item.Items.STONE_SWORD, net.minecraft.item.Items.IRON_SWORD, net.minecraft.item.Items.DIAMOND_SWORD) > 0
+                && mod.getPlayer().getHealth() >= 10 && blowingUp.getClientFuseTime(1) < 0.5f) {
+            if (creeperKill == null || creeperKillId != blowingUp.getId()) {
+                creeperKill = new adris.altoclef.tasks.entity.KillEntityTask(blowingUp);
+                creeperKillId = blowingUp.getId();
+            }
+            creeperFleeUntilMs = 0;
+            setTask(creeperKill);
+            return 85;
+        }
         if (blowingUp != null) {
             if ((!mod.getFoodChain().needsToEat() || mod.getPlayer().getHealth() < 9)
                     && hasShield(mod)
@@ -271,7 +358,10 @@ public class MobDefenseChain extends SingleTaskChain {
                 doingFunkyStuff = true;
                 runAwayTask = new RunAwayFromCreepersTask(CREEPER_KEEP_DISTANCE);
                 setTask(runAwayTask);
-                return 50 + blowingUp.getClientFuseTime(1) * 50;
+                // S326: s325o alternated this (55-65) with RunAwayFromHostiles (65/80) 44 times in 5s, each
+                // cancelling the other path, and stood still until blown up. Creeper flee wins and holds 1.5s.
+                creeperFleeUntilMs = System.currentTimeMillis() + 1500;
+                return Math.max(85, 55 + blowingUp.getClientFuseTime(1) * 50);
             }
         }
         synchronized (BaritoneHelper.MINECRAFT_LOCK) {
@@ -300,13 +390,38 @@ public class MobDefenseChain extends SingleTaskChain {
             }
         }
 
-        if (mod.getFoodChain().needsToEat() || mod.getMLGBucketChain().isFalling(mod)
+        // S335: s333o stood down to eat at hp<12 with a zombie in melee range; the zombie hit every bite
+        // and killed it. With a hostile within 5 blocks and hp<=12, don't yield to eating — fall through to the
+        // eatingHurt flee so the bite happens while running.
+        boolean meleeThreat = mod.getPlayer().getHealth() <= 12 && mod.getEntityTracker().getTrackedEntities(net.minecraft.entity.mob.HostileEntity.class)
+                .stream().anyMatch(h -> h.isAlive() && h.distanceTo(mod.getPlayer()) < 5);
+        // S354: s353o stood down to eat rotten flesh while a skeleton shot it from range (hp 20->6, dead).
+        // A recent hit or a visible ranged mob within 20 blocks is a threat too.
+        if (!meleeThreat && mod.getPlayer().getHealth() <= 16) {
+            // S356: s355o still ate between arrows - hurtTime lasts 10 ticks. Any hit in the last 6s counts.
+            if (mod.getPlayer().hurtTime > 0) lastHitMs = System.currentTimeMillis();
+            meleeThreat = System.currentTimeMillis() - lastHitMs < 6000 || mod.getEntityTracker().getTrackedEntities(net.minecraft.entity.mob.AbstractSkeletonEntity.class)
+                    .stream().anyMatch(h -> h.isAlive() && h.distanceTo(mod.getPlayer()) < 20 && mod.getPlayer().canSee(h));
+        }
+        if ((mod.getFoodChain().needsToEat() && !meleeThreat) || mod.getMLGBucketChain().isFalling(mod)
                 || !mod.getMLGBucketChain().doneMLG() || mod.getMLGBucketChain().isChorusFruiting()) {
             killAura.stopShielding(mod);
             stopShielding(mod);
+            why = "eat/mlg eat=" + mod.getFoodChain().needsToEat() + " fall=" + mod.getMLGBucketChain().isFalling(mod);
             return Float.NEGATIVE_INFINITY;
         }
 
+        // S285: s283t died twice at hp 6-7 holding food: the force field swapped to the weapon and
+        // swung every tick, cancelling each bite. When hurt and eating, let the bite finish and keep fleeing.
+        // S334: s332o fled 2.5 min / 330 blocks at hp 6 with food=0 into deep water and a drowned. A bite that
+        // can never happen (no food) must not hold the flee; and no 70-flee streak runs past 30s.
+        boolean eatingHurt = (mod.getFoodChain().isTryingToEat() || mod.getFoodChain().needsToEat()) && mod.getFoodChain().hasFood() && mod.getPlayer().getHealth() <= 12
+                && !fleeStreakTooLong("eating");
+        if (eatingHurt) {
+            runAwayTask = keepRunAway();
+            setTask(runAwayTask);
+            return 70;
+        }
         // Force field
         doForceField(mod);
 
@@ -327,7 +442,7 @@ public class MobDefenseChain extends SingleTaskChain {
         // Dodge all mobs cause we boutta die son
         if (isInDanger(mod) && !escapeDragonBreath(mod) && !mod.getFoodChain().isShouldStop()) {
             if (targetEntity == null || WorldHelper.isSurroundedByHostiles()) {
-                runAwayTask = new RunAwayFromHostilesTask(DANGER_KEEP_DISTANCE, true);
+                runAwayTask = keepRunAway();
                 setTask(runAwayTask);
                 return 70;
             }
@@ -341,6 +456,13 @@ public class MobDefenseChain extends SingleTaskChain {
 
             synchronized (BaritoneHelper.MINECRAFT_LOCK) {
                 for (LivingEntity hostile : hostiles) {
+                    // S304: don't hunt drowned in water - chasing them underwater costs air and time;
+                    // the bot just keeps moving and they fall behind.
+                    if (hostile instanceof DrownedEntity && (hostile.isTouchingWater() || mod.getPlayer().isTouchingWater())) continue;
+                    // S313: s309t wore a gold helm, mob defense still swung at a piglin (pri 65), the
+                    // group turned hostile and shot it from 19hp to death. Piglins are neutral to a
+                    // gold wearer; hitting one is what makes them hostile. Never pick them as targets.
+                    if (hostile instanceof PiglinEntity && mod.getPlayer().getEquippedStack(net.minecraft.entity.EquipmentSlot.HEAD).getItem() == Items.GOLDEN_HELMET) continue;
                     boolean isRangedOrPoisonous = (hostile instanceof SkeletonEntity
                             || hostile instanceof WitchEntity || hostile instanceof PillagerEntity
                             || hostile instanceof PiglinEntity || hostile instanceof StrayEntity
@@ -387,6 +509,7 @@ public class MobDefenseChain extends SingleTaskChain {
                 // projectiles, isInDanger) so this only stops optional chasing.
                 long nowMs = System.currentTimeMillis();
                 if (disengageUntilMs > nowMs) {
+                    why = "disengage-cooldown";
                     clearEngagement(mod);
                     return 0;
                 }
@@ -415,11 +538,67 @@ public class MobDefenseChain extends SingleTaskChain {
                 }
                 // Prefer fighting zombies/spiders over fleeing when only melee hostiles
                 boolean onlySimpleMelee = toDealWithList.stream().allMatch(e ->
-                        e instanceof ZombieEntity || e instanceof SpiderEntity || e instanceof SilverfishEntity);
+                        (e instanceof ZombieEntity && !(e instanceof net.minecraft.entity.mob.DrownedEntity dd && dd.getMainHandStack().getItem() == Items.TRIDENT)) || e instanceof SpiderEntity || e instanceof SilverfishEntity);
                 if (onlySimpleMelee) {
                     canDealWith = Math.max(canDealWith, toDealWithList.size());
                 }
 
+                // S346: s345o fled (RunAwayFromHostiles) for 20s while a spider chewed it from hp 10 to 2 and
+                // killed it. Spiders outrun the player; running is futile. A spider in reach: turn and kill it.
+                Entity closeSpider = toDealWithList.stream().filter(e -> e instanceof SpiderEntity && e.isAlive()
+                        && e.squaredDistanceTo(mod.getPlayer()) < 16).findFirst().orElse(null);
+                if (closeSpider != null && damage > 0) {
+                    runAwayTask = null;
+                    fleeHoldUntilMs = 0;
+                    lockedOnEntity = closeSpider;
+                    setTask(scopedKillTask(mod, closeSpider));
+                    return 80;
+                }
+
+                // S280: s279t chased a skeleton bare-handed (pick=0, no sword) from hp 19 to death in 15s.
+                // Without a real weapon, or once hurt, never chase a ranged mob; break line of sight instead.
+                Entity nearest = toDealWithList.get(0);
+                boolean rangedTarget = nearest instanceof net.minecraft.entity.mob.AbstractSkeletonEntity
+                        || nearest instanceof WitchEntity || nearest instanceof PillagerEntity
+                        // S284: s283t charged a blaze at hp 6 while on fire and burned to death.
+                        || nearest instanceof net.minecraft.entity.mob.BlazeEntity
+                        // S288: s287t punched a creeper at 2:08 (no weapon) from full hp and was blown up.
+                        || nearest instanceof CreeperEntity
+                        // S349: s348o was impaled by a Drowned; it is a ZombieEntity, so it counted as simple melee.
+                        || (nearest instanceof net.minecraft.entity.mob.DrownedEntity d
+                            && d.getMainHandStack().getItem() == Items.TRIDENT);
+                // S312: s308t fled a skeleton inside a dark cave with only a pickaxe (damage<4) and was
+                // shot from 20hp to death; running in a cave never breaks line of sight. Underground,
+                // with any tool and hp>12, close in and kill the skeleton instead.
+                boolean caveSkeleton = nearest instanceof net.minecraft.entity.mob.AbstractSkeletonEntity
+                        && damage >= 2 && mod.getPlayer().getHealth() > 12
+                        && mod.getWorld().getLightLevel(net.minecraft.world.LightType.SKY, mod.getPlayer().getBlockPos()) <= 0;
+                // S347: s346o flip-flopped a portal-relocate wander with this 5s flee for 2 min at full hp (a
+                // skeleton behind cave rock), stood still and finally dug into lava. No line of sight, no flee.
+                // S351: s350o was shot 19->2 digging a 1x1 hole: canSee failed from inside the hole, the flee was
+                // skipped and the kill branch charged the skeleton with a wooden pick. Recent damage counts as seen,
+                // and an unseen, harmless ranged mob is ignored rather than charged.
+                boolean rangedSeen = mod.getPlayer().canSee(nearest) || mod.getPlayer().hurtTime > 0
+                        || mod.getPlayer().getRecentDamageSource() != null;
+                boolean weakVsRanged = damage < 4 || mod.getPlayer().getHealth() <= 10;
+                if (rangedTarget && !caveSkeleton && weakVsRanged && !rangedSeen) {
+                    runAwayTask = null;
+                    return 0;
+                }
+                if (rangedTarget && !caveSkeleton && rangedSeen && weakVsRanged) {
+                    needsChangeOnAttack = false;
+                    fleeHoldUntilMs = System.currentTimeMillis() + 5000;
+                    runAwayTask = keepRunAway();
+                    setTask(runAwayTask);
+                    return 80;
+                }
+                // S293: s292t flee(80) -> a zombie became nearest -> kill branch nulled the flee -> idle(0),
+                // twice a second while the skeleton kept shooting. While the flee hold runs, keep fleeing.
+                if (System.currentTimeMillis() < fleeHoldUntilMs) {
+                    runAwayTask = keepRunAway();
+                    setTask(runAwayTask);
+                    return 80;
+                }
                 if (canDealWith >= getDangerousnessScore(toDealWithList) || needsChangeOnAttack) {
                     // we just decided to attack, so we should either get it, or hit something before running away again
                     if (!(mainTask instanceof KillEntitiesTask)) {
@@ -435,7 +614,7 @@ public class MobDefenseChain extends SingleTaskChain {
                     return 65;
                 } else {
                     // We can't deal with it
-                    runAwayTask = new RunAwayFromHostilesTask(DANGER_KEEP_DISTANCE, true);
+                    runAwayTask = keepRunAway();
                     setTask(runAwayTask);
                     return 80;
                 }
@@ -446,6 +625,13 @@ public class MobDefenseChain extends SingleTaskChain {
         }
         // By default, if we aren't "immediately" in danger but were running away, keep
         // running away until we're good.
+        // S290: s289t fled a skeleton, lost line of sight a tick later, the flee finished and the run
+        // task walked straight back into its arrows (80<->50 flip every second until death). Hold 5s.
+        if (System.currentTimeMillis() < fleeHoldUntilMs) {
+            if (runAwayTask == null || runAwayTask.isFinished()) runAwayTask = new RunAwayFromHostilesTask(DANGER_KEEP_DISTANCE, true);
+            setTask(runAwayTask);
+            return 65;
+        }
         if (runAwayTask != null && !runAwayTask.isFinished()) {
             setTask(runAwayTask);
             return cachedLastPriority;
@@ -469,6 +655,7 @@ public class MobDefenseChain extends SingleTaskChain {
             mainTask.stop();
             mainTask = null;
         }
+        why = "idle";
         runAwayTask = null;
         return 0;
     }
@@ -604,6 +791,10 @@ public class MobDefenseChain extends SingleTaskChain {
     }
 
 
+    private long creeperFleeUntilMs;
+    private Task creeperKill;
+    private int creeperKillId;
+
     private CreeperEntity getClosestFusingCreeper(AltoClef mod) {
         double worstSafety = Float.POSITIVE_INFINITY;
         CreeperEntity target = null;
@@ -611,13 +802,15 @@ public class MobDefenseChain extends SingleTaskChain {
             List<CreeperEntity> creepers = mod.getEntityTracker().getTrackedEntities(CreeperEntity.class);
             for (CreeperEntity creeper : creepers) {
                 if (creeper == null) continue;
-                if (creeper.getClientFuseTime(1) < 0.001) continue;
+                // S321: s318t let a creeper walk up (17 -> 0 blocks in 7s) and only fled once the fuse lit, 1s before
+                // the blast. Treat any creeper within 4.5 blocks as the threat so the run-away starts pre-fuse.
+                if (creeper.getClientFuseTime(1) < 0.001 && creeper.squaredDistanceTo(mod.getPlayer()) > 4.5 * 4.5) continue;
 
                 // We want to pick the closest creeper, but FIRST pick creepers about to blow
                 // At max fuse, the cost goes to basically zero.
                 double safety = getCreeperSafety(mod.getPlayer().getPos(), creeper);
                 if (safety < worstSafety) {
-                    target = creeper;
+                    target = creeper;                    worstSafety = safety;
                 }
             }
         } catch (ConcurrentModificationException | ArrayIndexOutOfBoundsException | NullPointerException e) {

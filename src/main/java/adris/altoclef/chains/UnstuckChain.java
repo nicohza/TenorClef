@@ -141,7 +141,11 @@ public class UnstuckChain extends SingleTaskChain {
     @Override
     public float getPriority() {
         if (mainTask instanceof GetOutOfWaterTask && mainTask.isActive()) {
-            return 55;
+            // S293: s292t logged "S183 water escape confirmed dry" every tick for 12+ min at one spot:
+            // the task finished but stayed active, so this chain held 55 over the run task forever.
+            if (!mainTask.isFinished()) return 55;
+            mainTask.stop();
+            mainTask = null;
         }
 
         isProbablyStuck = false;

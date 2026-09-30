@@ -82,6 +82,8 @@ public class WaterBailTask extends Task {
             // Only "dry for DRY_TICKS" is a real exit; running out the clock still wet is a failure.
             if (dryTicks < DRY_TICKS) {
                 fail(FailureReason.TIMEOUT, "water-bail timed out still wet after " + ticks + " ticks", false);
+            } else {
+                succeed();
             }
             done = true;
             return null;
@@ -101,7 +103,9 @@ public class WaterBailTask extends Task {
         lastX = x;
         lastZ = z;
 
-        if (shoreTask == null && noProgressTicks > SHORE_AFTER_TICKS) {
+        // S273: in open ocean EscapeFromWaterGoal is flat (every water block scores 8), so the bot
+        // swam a straight line for minutes (s272t: x -86 -> 58 at z=72). Aim at a real shore at once.
+        if (shoreTask == null && (noProgressTicks > SHORE_AFTER_TICKS || ticks % 40 == 1)) {
             BlockPos shore = findShore(mod);
             if (shore != null) {
                 shoreTask = new GetToBlockTask(shore);
@@ -111,6 +115,26 @@ public class WaterBailTask extends Task {
                         + shore.getX() + "," + shore.getY() + "," + shore.getZ());
             }
         }
+        // S255: s254t stood ground=true in a portal-pit puddle, spd=0 for 20s; neither swimming nor
+        // the diagonal shore path moved it. With a spare bucket, just pick the source up.
+        if (noProgressTicks > SHORE_AFTER_TICKS * 2
+                && mod.getItemStorage().hasItem(net.minecraft.item.Items.BUCKET)) {
+            BlockPos feet = mod.getPlayer().getBlockPos();
+            for (BlockPos p : new BlockPos[]{feet, feet.up(), feet.add(1, 0, 0), feet.add(-1, 0, 0),
+                    feet.add(0, 0, 1), feet.add(0, 0, -1), feet.down()}) {
+                var fs = mod.getWorld().getFluidState(p);
+                if (fs.isStill() && fs.getFluid().matchesType(net.minecraft.fluid.Fluids.WATER)) {
+                    T2Log.force("S255", "water bail stuck - scooping source at " + p.toShortString());
+                    return new adris.altoclef.tasks.construction.ClearLiquidTask(p);
+                }
+            }
+        }
+        // S324: a shore target that stops making progress is dropped and re-picked.
+        if (shoreTask != null && noProgressTicks > SHORE_AFTER_TICKS * 3) {
+            T2Log.force("S324", "shore path stalled - re-picking");
+            shoreTask = null;
+            noProgressTicks = 0;
+        }
         if (shoreTask != null) return shoreTask;
 
         return new GetOutOfWaterTask();
@@ -119,7 +143,7 @@ public class WaterBailTask extends Task {
     private BlockPos findShore(AltoClef mod) {
         if (mod.getPlayer() == null || mod.getWorld() == null) return null;
         BlockPos from = mod.getPlayer().getBlockPos();
-        for (int r = 1; r <= 16; r++) {
+        for (int r = 1; r <= SHORE_RADIUS; r++) {
             for (int dx = -r; dx <= r; dx++) {
                 for (int dz = -r; dz <= r; dz++) {
                     if (Math.abs(dx) != r && Math.abs(dz) != r) continue;
@@ -129,14 +153,18 @@ public class WaterBailTask extends Task {
                             var state = mod.getWorld().getBlockState(p);
                             var up = mod.getWorld().getBlockState(p.up());
                             if (!state.getFluidState().isEmpty()) continue;
-                            if (!state.isAir() && up.isAir()) return p.up();
+                            // S324: s322t aimed at y=44 air pockets under the ocean (shipwrecks, door pockets) and sat
+                            // at spd=0. A shore must be open to the sky.
+                            if (!state.isAir() && up.isAir() && mod.getWorld().isSkyVisible(p.up())) return p.up();
                         } catch (Throwable ignored) {}
                     }
                 }
             }
         }
-        return from.up(4);
+        return null;
     }
+
+    private static final int SHORE_RADIUS = 64;
 
     @Override
     public boolean isFinished() {

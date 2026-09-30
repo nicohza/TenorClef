@@ -82,12 +82,33 @@ public class ConstructNetherPortalBucketTask extends Task {
     // The "portalable" region includes the portal (1 x 6 x 4 structure) and an outer buffer for its construction and water bullshit.
     // The "portal origin relative to region" corresponds to the portal origin with respect to the "portalable" region (see _portalOrigin).
     // This can only really be explained visually, sorry!
+    private static final int LAVA_GAP = 6;
     private static final Vec3i PORTALABLE_REGION_SIZE = new Vec3i(4, 6, 6);
     private static final Vec3i PORTAL_ORIGIN_RELATIVE_TO_REGION = new Vec3i(1, 0, 2);
     private final TimerGame lavaSearchTimer = new TimerGame(5);
     private final TimerGame lavaStallTimer = new TimerGame(40);
     private BlockPos lavaStallAnchor = null;
+    private int lavaRelocateCount;
+    // S337: s336o relocated 20 blocks every 40s for 10+ min across an ocean with no lava in view;
+    // each hop re-searched the same empty water. Grow the hop with repeated stalls (in water, faster).
+    // S338: s337o stalled beside a y=10 lava lake and the relocation wander walked into it.
+    // Underground, climb to the surface instead of wandering among the lava.
+    private Task relocateLava(AltoClef mod, BlockPos here) {
+        lavaRelocateCount++;
+        boolean wet = mod.getPlayer().isTouchingWater();
+        if (here.getY() < 45) {
+            Debug.logWarning("[S338] relocate #" + lavaRelocateCount + " underground y=" + here.getY() + " - surfacing instead of wandering");
+            lavaRelocate = new adris.altoclef.tasks.speedrun.testrun2.SurfaceBailTask();
+            return lavaRelocate;
+        }
+        float hop = Math.min(200, 20 + 30 * lavaRelocateCount * (wet ? 2 : 1));
+        Debug.logWarning("[S337] relocate #" + lavaRelocateCount + " hop=" + hop + " wet=" + wet);
+        lavaRelocate = new TimeoutWanderTask(hop);
+        return lavaRelocate;
+    }
     private Task lavaRelocate;
+    private Task lowHpClimb;
+    private Task lakeWander;
     private final MovementProgressChecker progressChecker = new MovementProgressChecker();
     private final TimeoutWanderTask wanderTask = new TimeoutWanderTask(5);
     // Stored here to cache lava blacklist
@@ -102,6 +123,7 @@ public class ConstructNetherPortalBucketTask extends Task {
     private final TimerGame secondBucketIronStallTimer = new TimerGame(25);
     // S216b: static - onStart ran every few seconds and kept resetting a per-instance timer (deepgate: 33 min gated).
     private static long deepLakeFirstSeenMs = 0;
+    private static final int MID_LAKE_Y = 25;
     private int secondBucketIronLast = -1;
     private Task secondBucketRelocate;
     /** Set when Construct gives up so EarlyOverworld can tear down goToNether and re-acquire. */
@@ -238,6 +260,14 @@ public class ConstructNetherPortalBucketTask extends Task {
 
         // Complementary fluid when we already hold lava XOR water with no empty to scoop.
         if (lavaBuckets > 0 && waterBuckets == 0 && emptyBuckets == 0) {
+            // S342: s341o held 2 lava + 0 empty with iron=3 for 25 min: the water-bucket task waded in, the
+            // parent's water-bail (exempt only with an empty bucket, S283) pulled it out, x100. Craft the
+            // empty bucket on land first so the scoop runs under the S283 exemption.
+            if (mod.getItemStorage().getItemCount(Items.IRON_INGOT) >= 3) {
+                setDebugState("S342 crafting empty bucket for water (have lava)");
+                progressChecker.reset();
+                return TaskCatalogue.getItemTask(Items.BUCKET, 1);
+            }
             setDebugState("Getting water (have lava)");
             progressChecker.reset();
             return TaskCatalogue.getItemTask(Items.WATER_BUCKET, 1);
@@ -328,7 +358,13 @@ public class ConstructNetherPortalBucketTask extends Task {
 
             if (!foundSpot) {
                 setDebugState("(timeout: Looking for lava lake)");
-                return new TimeoutWanderTask();
+                // S318: a fresh TimeoutWanderTask every tick restarted the wander before it went
+                // anywhere; s314t jittered around -485,64,690 for 10 minutes. Reuse one.
+                boolean wanderDone;
+                try { wanderDone = lakeWander == null || lakeWander.isFinished(); }
+                catch (NullPointerException npe) { wanderDone = false; } // not started yet: no origin
+                if (wanderDone) lakeWander = new TimeoutWanderTask(60);
+                return lakeWander;
             }
         }
 
@@ -350,22 +386,60 @@ public class ConstructNetherPortalBucketTask extends Task {
                 continue;
             }
 
+            // S211 fix: holding lava is progress. Without this the anchor survives a whole compact
+            // build (bot stays within 10 blocks) and fires ~40s in, blacklisting a lake mid-frame
+            // (pathbench portal rep1: 8 frame blocks placed, then relocated and timed out).
+            if (mod.getItemStorage().hasItem(Items.LAVA_BUCKET)) lavaStallAnchor = null;
             // Get lava early so placing it is faster
             if (!mod.getItemStorage().hasItem(Items.LAVA_BUCKET) && frameBlock != Blocks.LAVA) {
                 // S211: run ironregate bobbed in water at 222,66,208 for 80s on "Collecting lava"
                 // (progressChecker is reset here, so nothing ever noticed). If we stay within a
                 // few blocks for 40s without a lava bucket, abandon this site and relocate.
                 BlockPos here = mod.getPlayer().getBlockPos();
-                if (lavaStallAnchor == null || !lavaStallAnchor.isWithinDistance(here, 4)) {
+                // S331: s329o dug into a spider dungeon chasing cave lava and died there. A spawner near an
+                // underground lava hunt means a mob room: blacklist this lava and pick a site elsewhere.
+                if (here.getY() < 55 && mod.getBlockScanner().getNearestBlock(WorldHelper.toVec3d(here), Blocks.SPAWNER)
+                        .filter(s -> s.isWithinDistance(here, 14)).isPresent()) {
+                    int marked = 0;
+                    for (BlockPos lp : mod.getBlockScanner().getKnownLocations(Blocks.LAVA)) {
+                        if (lp.isWithinDistance(here, 24)) { mod.getBlockScanner().requestBlockUnreachable(lp, 0); marked++; }
+                    }
+                    Debug.logWarning("[S331] spawner near lava hunt @" + here.toShortString() + " - blacklisted " + marked + " lava, relocating");
+                    lavaStallAnchor = null;
+                    portalOrigin = null;
+                    currentDestroyTarget = null;
+                    return relocateLava(mod, here);
+                }
+                // S314: s310t swung between 232,61,193 (lava target) and 233,61,188 (failed water bail)
+                // 5 blocks apart, resetting a 4-block anchor, until a drowned killed it. Use 10.
+                if (lavaStallAnchor == null || !lavaStallAnchor.isWithinDistance(here, 10)) {
                     lavaStallAnchor = here;
                     lavaStallTimer.reset();
                 } else if (lavaStallTimer.elapsed()) {
                     Debug.logWarning("[S211] lava collect stalled 40s @" + here.toShortString() + " - relocating portal site");
+                    // S319: s316t relocated 34 times but the wander came back to the same unreachable
+                    // lava around 520,60,-185 for 37 minutes. Blacklist lava near the stall so the
+                    // next pick is elsewhere.
+                    int marked = 0;
+                    for (BlockPos lp : mod.getBlockScanner().getKnownLocations(Blocks.LAVA)) {
+                        if (lp.isWithinDistance(here, 24)) { mod.getBlockScanner().requestBlockUnreachable(lp, 0); marked++; }
+                    }
+                    Debug.logWarning("[S319] blacklisted " + marked + " lava blocks near stall");
                     lavaStallAnchor = null;
                     portalOrigin = null;
                     currentDestroyTarget = null;
-                    lavaRelocate = new TimeoutWanderTask(20);
-                    return lavaRelocate;
+                    return relocateLava(mod, here);
+                }
+                // S315: s311t chased cave lava down to y=30 at 9.5hp with no food; a skeleton and an
+                // 8-block drop killed it. Don't hunt lava underground while hurt - climb out first.
+                if (mod.getPlayer().getHealth() <= 12 && mod.getPlayer().getBlockY() < 55) {
+                    if (!(lowHpClimb != null && !lowHpClimb.isFinished())) {
+                        Debug.logWarning("[S315] hp=" + mod.getPlayer().getHealth() + " y=" + mod.getPlayer().getBlockY() + " - no cave lava while hurt, climbing out");
+                        lowHpClimb = new adris.altoclef.tasks.speedrun.testrun2.SurfaceBailTask();
+                    }
+                    setDebugState("S315 climbing out before lava");
+                    progressChecker.reset();
+                    return lowHpClimb;
                 }
                 setDebugState("Collecting lava");
                 progressChecker.reset();
@@ -457,6 +531,8 @@ public class ConstructNetherPortalBucketTask extends Task {
         BlockPos nearestLake = null;
         double deepestFallbackSq = Double.POSITIVE_INFINITY;
         BlockPos deepestFallback = null;
+        double midSq = Double.POSITIVE_INFINITY;
+        BlockPos midLake = null;
         List<BlockPos> lavas = mod.getBlockScanner().getKnownLocations(Blocks.LAVA);
 
         if (!lavas.isEmpty()) {
@@ -482,26 +558,43 @@ public class ConstructNetherPortalBucketTask extends Task {
                     deepestFallbackSq = sqDist;
                     deepestFallback = pos;
                 }
+                if (pos.getY() < SAFE_LAKE_Y && pos.getY() >= MID_LAKE_Y && sqDist < midSq) {
+                    midSq = sqDist;
+                    midLake = pos;
+                }
             }
         }
         if (nearestLake != null) {
             Debug.logMessage("T2 [" + T2Codes.S165_SURFACE_LAKE + "] lava lake at y="
                     + nearestLake.getY() + " (surface, safe)");
+            deepTarget = null;
             return nearestLake;
         }
         if (deepestFallback != null && deepLakeFirstSeenMs == 0) deepLakeFirstSeenMs = System.currentTimeMillis();
+        // S248: s249t wandered 2 min "Looking for lava lake" past lakes at y=33-34. Only the
+        // very deep ones (y~9) earned the 3 min wait; a mid-depth lake is fine after 45s.
+        if (midLake != null && System.currentTimeMillis() - deepLakeFirstSeenMs >= 45_000) {
+            Debug.logMessage("T2 [S248] mid-depth lava lake at y=" + midLake.getY() + " accepted");
+            deepTarget = null;
+            return midLake;
+        }
         if (deepestFallback != null && System.currentTimeMillis() - deepLakeFirstSeenMs < 180_000) {
             // S216: a deep lake (helmcap: y=9) cost 35min - a dark shaft then a stuck pillar-out. Keep
             // exploring the surface for up to 3 min before accepting one.
             Debug.logMessage("T2 [S216] deep lava lake at y=" + deepestFallback.getY() + " ignored, surface search first");
+            deepTarget = null;
             return null;
         }
         if (deepestFallback != null) {
             Debug.logMessage("T2 [" + T2Codes.S165_SURFACE_LAKE + "] only a deep lava lake at y="
                     + deepestFallback.getY() + " - expect a long dark shaft");
         }
+        deepTarget = deepestFallback;
         return deepestFallback;
     }
+
+    /** S256: the deep lake the portal build committed to (null if none). Pit solvers stand aside near it. */
+    public static volatile BlockPos deepTarget;
 
     private int getNumberOfBlocksAdjacent(HashSet<BlockPos> alreadyExplored, BlockPos start) {
         Queue<BlockPos> queue = new ArrayDeque<>();
@@ -568,6 +661,23 @@ public class ConstructNetherPortalBucketTask extends Task {
                             // Also check for at least 1 solid block for us to place on...
                             if (dy <= 1 && !solidFound && WorldHelper.isSolidBlock(toCheck)) {
                                 solidFound = true;
+                            }
+                        }
+                    }
+                }
+                // Casting water spreads up to 7 blocks; with a 1-block gap it ran into the lake and
+                // turned it to obsidian (pathbench portal pool1 rep0: 15/25 pool blocks solid, then
+                // 6 lava left < lake minimum, timeout). Keep lava at least LAVA_GAP blocks away.
+                if (found) {
+                    lavaGap:
+                    for (int dx = -LAVA_GAP; dx < sizeAllocation.getX() + LAVA_GAP; ++dx) {
+                        for (int dz = -LAVA_GAP; dz < sizeAllocation.getZ() + LAVA_GAP; ++dz) {
+                            for (int dy = -1; dy <= 1; ++dy) {
+                                BlockPos toCheck = lava.add(offset).add(sizeOffset).add(dx, dy, dz);
+                                if (MinecraftClient.getInstance().world.getBlockState(toCheck).getBlock() == Blocks.LAVA) {
+                                    found = false;
+                                    break lavaGap;
+                                }
                             }
                         }
                     }

@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to publish (e.g. v0.20.0)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        mc: ['1.21.4', '1.16.1']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Build ${{ matrix.mc }}
+        run: ./gradlew :${{ matrix.mc }}:build -x test --stacktrace
+      - name: Collect jar
+        run: |
+          mkdir -p out
+          for f in versions/${{ matrix.mc }}/build/libs/*.jar; do
+            case "$f" in *-sources.jar|*-dev.jar|*-javadoc.jar) continue;; esac
+            cp "$f" "out/tenorclef-mc${{ matrix.mc }}-${{ github.event.inputs.tag || github.ref_name }}.jar"
+          done
+          ls -la out
+          test -n "$(ls out)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jar-${{ matrix.mc }}
+          path: out/*.jar
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: TenorClef ${{ github.event.inputs.tag || github.ref_name }}
+          body_path: CHANGELOG.md
+          files: dist/*.jar

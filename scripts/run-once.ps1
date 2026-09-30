@@ -40,7 +40,7 @@ param(
   [int]$TimeoutSec = 600,
   [int]$MaxRunSec = 0,
   [string]$Command = 'testrun2',
-  [string]$Mover = 'baritone'
+  [string]$Mover = 'ostinato'
 )
 
 $ErrorActionPreference = 'Continue'
@@ -151,7 +151,7 @@ if ($MaxRunSec -gt 0) {
   while ((Get-Date) -lt $killAt -and -not $proc.HasExited) { Start-Sleep -Seconds 5 }
   if (-not $proc.HasExited) {
     Write-Host "MaxRunSec=$MaxRunSec reached - stopping client." -ForegroundColor Yellow
-    try { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue } catch {}
+    try { & taskkill.exe /T /F /PID $proc.Id | Out-Null } catch {}  # kill the tree: the MC java is a child of gradle
     Start-Sleep -Seconds 3
   }
   Write-Host "run finished. Now: bash scripts/analyze-run.sh logs/sim-run-$Tag.log" -ForegroundColor Green

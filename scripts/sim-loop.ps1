@@ -15,7 +15,7 @@ param(
   # Sim time warp (1 = off). The forked MC JVM inherits JAVA_TOOL_OPTIONS -> WarpClock.
   [double]$Warp = 1,
   # Travel mover for @testrun2: baritone | tungsten | auto
-  [string]$Mover = 'baritone',
+  [string]$Mover = 'ostinato',
   [switch]$MonitorOnly,
   [switch]$ForceKillStale
 )

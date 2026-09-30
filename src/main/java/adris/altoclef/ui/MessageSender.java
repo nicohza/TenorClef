@@ -21,10 +21,9 @@ public class MessageSender {
     private static final int SLOW_LIMIT = 3;
 
     private final PriorityQueue<BaseMessage> whisperQueue = new PriorityQueue<>(
-            Comparator.comparingInt((BaseMessage msg) -> msg.priority.getImportance())
+            Comparator.comparingInt((BaseMessage msg) -> msg.priority.getImportance()).reversed()
                     .thenComparingInt(msg -> msg.index)
     );
-    //private final Queue<Whisper> _whisperQueue = new ArrayDeque<>();
 
     private final BaseTimer fastSendTimer = new TimerReal(0.3f);
     private final BaseTimer bigSendTimer = new TimerReal(3.5);

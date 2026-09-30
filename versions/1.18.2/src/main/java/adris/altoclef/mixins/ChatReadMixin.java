@@ -4,6 +4,8 @@ import adris.altoclef.eventbus.EventBus;
 import adris.altoclef.eventbus.events.ChatMessageEvent;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.ChatHudListener;
+import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.MessageType;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
@@ -27,13 +29,8 @@ public final class ChatReadMixin {
             at = @At("HEAD")
     )
     private void onChatMessage(MessageType messageType, Text message, UUID senderUuid, CallbackInfo ci) {
+        String senderName = resolveSender(senderUuid);
         String msg;
-        String senderName;
-        if (MinecraftClient.getInstance().isInSingleplayer() || client.getNetworkHandler() == null) {
-            senderName = MinecraftClient.getInstance().player.getName().asString();
-        } else {
-            senderName = client.getNetworkHandler().getWorld().getPlayerByUuid(senderUuid).getName().asString();
-        }
 
         if (message instanceof TranslatableText translatable) {
             msg = "";
@@ -41,14 +38,29 @@ public final class ChatReadMixin {
             for (Object obj : translatable.getArgs()) {
                 if (!(obj instanceof Text text) || obj instanceof TranslatableText) continue;
                 String str = text.getString();
-                if (str.equals(senderName)) continue;
+                if (!senderName.isEmpty() && str.equals(senderName)) continue;
                 msg += str;
             }
         } else {
             msg = message.getString();
         }
 
-        ChatMessageEvent evt = new ChatMessageEvent(msg,senderName,messageType);
+        ChatMessageEvent evt = new ChatMessageEvent(msg, senderName, messageType);
         EventBus.publish(evt);
+    }
+
+    /** Tab list, not ClientWorld — world entries vanish out of tracking range. */
+    private String resolveSender(UUID senderUuid) {
+        if (senderUuid != null && client.getNetworkHandler() != null) {
+            PlayerListEntry entry = client.getNetworkHandler().getPlayerListEntry(senderUuid);
+            if (entry != null && entry.getProfile() != null && entry.getProfile().getName() != null) {
+                return entry.getProfile().getName();
+            }
+        }
+        PlayerEntity self = MinecraftClient.getInstance().player;
+        if (self != null && (senderUuid == null || senderUuid.equals(self.getUuid()))) {
+            return self.getName().asString();
+        }
+        return "";
     }
 }

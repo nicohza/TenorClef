@@ -220,12 +220,21 @@ public class CollectBucketLiquidTask extends ResourceTask {
                 }
                 timeoutTimer.reset();
 
+                // S330: s328o flipped Interact <-> GetClose every tick (isSafeToCancel toggles mid-path),
+                // restarting the search ~20x/s for 45s at 188,48,103. Keep a scoop attempt for 2s.
+                if (scoopTask != null && scoopPos != null && scoopPos.equals(blockPos) && !scoopTask.isFinished()
+                        && System.currentTimeMillis() - scoopSinceMs < 2000) {
+                    return scoopTask;
+                }
                 // Prefer scooping from shore/edge: grounded + reach beats swimming into the column.
                 if (LookHelper.getReach(blockPos).isPresent() &&
                         mod.getClientBaritone().getPathingBehavior().isSafeToCancel()
                         && ShoreStandSelector.canScoopFromFooting(playerWet, playerGround)) {
                     tries++;
-                    return new InteractWithBlockTask(new ItemTarget(Items.BUCKET, 1), blockPos, toCollect != Blocks.LAVA, new Vec3i(0, 1, 0));
+                    scoopTask = new InteractWithBlockTask(new ItemTarget(Items.BUCKET, 1), blockPos, toCollect != Blocks.LAVA, new Vec3i(0, 1, 0));
+                    scoopPos = blockPos;
+                    scoopSinceMs = System.currentTimeMillis();
+                    return scoopTask;
                 }
                 // Get close enough — stand next to the source on solid when possible (shore).
                 BlockPos shore = shoreStandNear(mod, blockPos);
@@ -248,6 +257,9 @@ public class CollectBucketLiquidTask extends ResourceTask {
         return new TimeoutWanderTask();
     }
     int tries = 0;
+    private Task scoopTask;
+    private BlockPos scoopPos;
+    private long scoopSinceMs;
     TimerGame timeoutTimer = new TimerGame(2);
 
     @Override

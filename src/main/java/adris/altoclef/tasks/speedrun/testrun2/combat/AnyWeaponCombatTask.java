@@ -337,7 +337,8 @@ public class AnyWeaponCombatTask extends Task {
 
     @Override
     protected boolean isEqual(Task other) {
-        return other instanceof AnyWeaponCombatTask;
+        return other instanceof AnyWeaponCombatTask
+                && !isFinished() && !other.isFinished();
     }
 
     @Override

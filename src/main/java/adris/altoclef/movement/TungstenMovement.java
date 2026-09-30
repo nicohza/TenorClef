@@ -20,7 +20,7 @@ import net.minecraft.util.math.BlockPos;
  * Travel mover preference ({@link #setTravelMover}):
  * - AUTO: Tungsten if bound, else Baritone
  * - TUNGSTEN: prefer Tungsten when available (falls back to Baritone if missing)
- * - BARITONE (default): force Baritone travel tasks
+ * - OSTINATO (default): force Ostinato (Baritone fork) travel tasks
  *
  * Preference only affects {@link #gotoBlock} / {@link #followEntity} travel helpers.
  * Mining and block-break pathing stay on Baritone regardless.
@@ -35,10 +35,10 @@ public final class TungstenMovement {
     public enum TravelMover {
         AUTO,
         TUNGSTEN,
-        BARITONE
+        OSTINATO
     }
 
-    private static volatile TravelMover travelMover = TravelMover.BARITONE;
+    private static volatile TravelMover travelMover = TravelMover.OSTINATO;
 
     private TungstenMovement() {}
 
@@ -54,7 +54,7 @@ public final class TungstenMovement {
         if (raw == null || raw.isBlank()) return TravelMover.AUTO;
         return switch (raw.trim().toLowerCase()) {
             case "tungsten", "tung", "physics" -> TravelMover.TUNGSTEN;
-            case "baritone", "bati", "bt" -> TravelMover.BARITONE;
+            case "ostinato", "osti", "baritone", "bati", "bt" -> TravelMover.OSTINATO;
             case "auto", "default" -> TravelMover.AUTO;
             default -> TravelMover.AUTO;
         };
@@ -66,7 +66,7 @@ public final class TungstenMovement {
 
     private static boolean preferTungstenTravel() {
         return switch (travelMover) {
-            case BARITONE -> false;
+            case OSTINATO -> false;
             case TUNGSTEN, AUTO -> isAvailable();
         };
     }

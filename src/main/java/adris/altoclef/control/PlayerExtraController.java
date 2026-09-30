@@ -48,6 +48,9 @@ public class PlayerExtraController {
     }
 
     public void attack(Entity entity) {
+        // S329: s327o hunted a sheep mid-bite; every swing cancelled the bite, mob defense stood aside for
+        // "eating" and a zombie killed the bot. Let the bite finish unless the target is hostile.
+        if (mod.getFoodChain().isTryingToEat() && !(entity instanceof net.minecraft.entity.mob.HostileEntity)) return;
         if (inRange(entity)) {
             mod.getController().attackEntity(mod.getPlayer(), entity);
             mod.getPlayer().swingHand(Hand.MAIN_HAND);

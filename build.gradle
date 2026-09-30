@@ -40,6 +40,21 @@ base {
 version = "${project.name}-${project.mod_version}"
 group = project.maven_group
 
+// TenorClef always runs on Ostinato. These are the Minecraft versions Ostinato is built for; every other
+// version stays in the preprocess chain (it cannot be trimmed, see settings.gradle.kts) but is not compiled.
+def ostinatoVersions = [11601, 12104, 12111]
+project.ext.ostinatoTarget = ostinatoVersions.contains(mcVersion)
+if (!project.ext.ostinatoTarget) {
+    def skipped = ['compileJava', 'compileTestJava', 'processTestResources', 'test', 'jar', 'shadowJar', 'remapJar',
+                   'downgradeJar', 'replaceJar', 'remapSourcesJar', 'sourcesJar', 'javadoc', 'javadocJar', 'runClient',
+                   'runServer'] as Set
+    tasks.configureEach { t ->
+        if (skipped.contains(t.name)) {
+            t.enabled = false
+        }
+    }
+}
+
 def mappingsVersions = [
         11601: "1.16.1+build.21",
         11605: "1.16.5+build.10",
@@ -98,6 +113,7 @@ def getJavaVersion() {
 repositories {
     mavenCentral()
     maven {
+        // upstream Baritone, compile-only on preprocess-only nodes (see dependencies)
         name = "MiranCZRepo"
         url = "https://mirancz.github.io/maven/"
         artifactUrls("https://mirancz.github.io/maven/cabaletta/baritone-unoptimized/${project.name}")
@@ -231,10 +247,9 @@ dependencies {
                 }
             }
         }
-        // 1.21.11 has no published cabaletta Baritone coordinate — Ostinato tip jar only.
-        // Without the jar, skip the dep so OTHER modules can still configure/compile on a
-        // clean tree; :1.21.11:compileJava itself will fail until the jar is staged.
-        if (mcVersion == 12111 && !project.hasProperty("altoclef.forceMiranczBaritone")) {
+        // 1.21.11 is built against Ostinato main. Without the jar, skip the dep so the other
+        // modules can still configure; :1.21.11:compileJava itself fails until the jar is staged.
+        if (mcVersion == 12111) {
             if (!ostinatoJars.isEmpty()) {
                 def jar = ostinatoJars[0]
                 println "[altoclef] Ostinato Baritone for ${project.name}: ${jar.name}"
@@ -243,16 +258,14 @@ dependencies {
             } else {
                 println "[altoclef] Ostinato tip jar not found for ${project.name} — configure continues without Baritone (stage ../Ostinato/dist or libs/; see docs/DEVELOPMENT.md)"
             }
-        } else {
-            def baritoneMcVersion = project.name
-            if (getProject().hasProperty("altoclef.development")) {
-                // Must run build from baritone-plus once
-                modImplementation "baritone-api-fabric:baritone-unoptimized-fabric-${baritoneMcVersion}"
-                include "baritone-api-fabric:baritone-unoptimized-fabric-${baritoneMcVersion}"
-            } else {
-                modImplementation "cabaletta:baritone-unoptimized-fabric:${baritoneMcVersion}"
-                include "cabaletta:baritone-unoptimized-fabric:${baritoneMcVersion}"
-            }
+        }
+        // Every other version is a preprocess-only node: TenorClef always runs on Ostinato, and
+        // Ostinato has no build for these versions, so they are never compiled or packaged. The
+        // preprocessor still resolves types on each node while remapping sources down the chain
+        // (without Baritone, calls on its return types such as player.setPitch are left unmapped
+        // and 1.16.1 fails), so the matching upstream jar is compile-only here, for that analysis.
+        if (mcVersion != 12111) {
+            modCompileOnly "cabaletta:baritone-unoptimized-fabric:${project.name}"
         }
     }
 

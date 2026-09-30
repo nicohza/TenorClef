@@ -10,17 +10,18 @@ the upstream history of this fork.
 
 ## Supported versions
 
-| Minecraft | Status | Movement engine | Notes |
-| --- | --- | --- | --- |
-| 1.21.1 | Primary | Matching Baritone artifact | Verified compile target |
-| 1.21.4 | Anarchy target | Ostinato `1.21.4` (`libs/baritone-unoptimized-fabric-1.21.4.jar`) | Compiles; vanilla recipe-book crafting disabled (1.21.2+ servers do not sync recipes) |
-| 1.21 | Maintained | Matching Baritone artifact | Build and test before use |
-| 1.21.11 | Experimental | Ostinato `main` | Source port is incomplete; not a release target |
-| 1.16.5 | Legacy | AltoClef-compatible Baritone | Legacy module |
-| 1.16.1 | Legacy | Ostinato `1.16.1` | Requires the legacy Ostinato artifact |
+TenorClef always runs on [Ostinato](https://github.com/vexrypt-rgb/Ostinato), so it is only built
+for the Minecraft versions Ostinato is built for:
 
-The complete, version-matched setup is in [the Ostinato wiring guide](docs/OSTINATO_WIRING.md).
-Older source trees may remain in the repository, but they are not a release promise.
+| Minecraft | Status | Ostinato | Notes |
+| --- | --- | --- | --- |
+| 1.21.4 | Primary | `main` (`libs/baritone-unoptimized-fabric-1.21.4.jar`) | Anarchy target; vanilla recipe-book crafting disabled (1.21.2+ servers do not sync recipes) |
+| 1.16.1 | Legacy | branch `1.16.1` (`libs/baritone-unoptimized-fabric-1.16.1.jar`) | Legacy pairing |
+| 1.21.11 | Experimental | branch `1.21.11` (built from source) | Not a release target |
+
+The other versions under `versions/` (1.21.1 down to 1.16.5) are only steps in the source
+preprocessor chain; they are not compiled or released. The complete, version-matched setup is in
+[the Ostinato wiring guide](docs/OSTINATO_WIRING.md).
 
 ## Install
 
@@ -32,7 +33,7 @@ Older source trees may remain in the repository, but they are not a release prom
 4. Start a single-player test world first. Include the game version, TenorClef and
    Ostinato versions, mod list, and `latest.log` when reporting a problem.
 
-No release jar is currently available if the Releases page is empty. In that case,
+Each release lists the matching Ostinato jar in its notes (see [CHANGELOG.md](CHANGELOG.md)). If the Releases page is empty,
 build from source using the instructions below rather than downloading an upstream
 AltoClef jar.
 
@@ -41,13 +42,13 @@ AltoClef jar.
 TenorClef uses Java 21 for the current modern modules. On Windows run:
 
 ```bat
-gradlew.bat :1.21.1:build
+gradlew.bat :1.21.4:build
 ```
 
 On macOS or Linux run:
 
 ```sh
-./gradlew :1.21.1:build
+./gradlew :1.21.4:build
 ```
 
 For a version that depends on a local Ostinato build, follow the wiring guide first.
@@ -55,10 +56,11 @@ The initial Gradle configuration can take a while because Minecraft is remapped.
 
 ## Movement backends
 
-The stable modern targets resolve a matching Baritone artifact. Ostinato supplies the
-AltoClef-compatible engine for the 1.16.1 pairing and is the engine being developed
-for the experimental 1.21.11 port. On the modern targets, Tungsten is an optional
-travel backend; mining, building, and inventory operations use Baritone processes.
+Every build uses Ostinato, the AltoClef-compatible Baritone fork. On the modern targets,
+Tungsten is an optional travel backend; mining, building, and inventory operations use
+Ostinato's Baritone processes. Ostinato also carries the encrypted `#swarm` link for
+multi-bot groups, including coordinated region builds (`#swarm build`); see Ostinato's
+`docs/REGION_BUILD.md`.
 
 When using an Ostinato-enabled pairing, its `movementBackend` setting selects
 `baritone`, `tungsten`, or `auto`; `auto` falls back to Baritone when Tungsten is not
@@ -74,20 +76,33 @@ The in-game `@pathbench` command measures the pathfinder and the movement layer:
 - `@pathbench travel [baritone|tungsten|kinematic] [reps]` runs end-to-end trials over a fixed
   set of goals and records reached/stalled and ticks per goal.
 
-Results are written as CSV to `run/pathbench/`. Latest 1.16.1 travel runs (16 goals; baritone and kinematic × 3 reps, physics × 1; kinematic from a later run):
+Results are written as CSV to `versions/<mc>/run/pathbench/` (not committed). The table below was
+recorded in earlier sessions; its Baritone and physics source CSVs were not retained, so treat it as
+historical, not reproducible from the repo. A local kinematic run at 09:34 on 2026-09-28 reached only 11/38; every miss
+never started moving (`firstMoveTicks=-1`), which points to the mover not starting, not to pathing. It did not reproduce:
+a fresh run on the same day, 1 rep, reached 16/16 (avg 415 ticks, first move 8.5 ticks).
+The kinematic row comes from a 3-rep run at 20:35 the same day (`pathbench_travel_kinematic_20260928_203533.csv`,
+first move after 8.9 ticks on average, 0 runs that never moved).
+The Baritone row comes from a 3-rep run at 20:56 the same day (`pathbench_travel_baritone_20260928_205606.csv`;
+the one miss was goal 15 rep 0, which stalled 44 blocks away). The physics row is still historical. Earlier 1.16.1 travel runs (16 goals; baritone and kinematic × 3 reps, physics × 1; kinematic from a later run):
 
 | Mover | Goals reached | Avg ticks (reached goals) |
 | --- | --- | --- |
-| Baritone | 48/48 | 418 |
-| Kinematic (experimental) | 47/48 | 457 |
+| Baritone | 47/48 | 368 |
+| Kinematic (experimental) | 46/48 | 383 |
 | Physics search (experimental, `physicsTravel`) | 15/16 | 401 |
 
-The averages only cover goals each mover reached. The bench origin moves between runs, so
-compare runs taken together; Baritone's misses here include all three tries at one goal
-where it stops 3 blocks short.
+Newer kinematic runs (2026-09-29, 16 goals × 3 reps, pinned origin, every trial fed to full hunger; one run each):
 
-`@pathbench gaps [baritone|kinematic] [reps]` runs a runway with 1–3 block gaps (parkour on):
-Baritone 3/3 (avg 250 ticks), kinematic 3/3 (avg 217 ticks), 0 falls. Single-rep runs are noisy; re-run with 3 reps before drawing conclusions.
+| Mover | Conditions | Goals reached | Avg ticks |
+| --- | --- | --- | --- |
+| Kinematic (experimental) | Mobs on | 48/48 | 233 |
+| Kinematic (experimental) | Peaceful | 48/48 | 230 |
+
+These replace the kinematic row above. Its lower score and higher tick count came mostly from hunger carrying over between trials. Baritone has not been re-run fed, so the two movers can't be compared yet. Details and logs are in [docs/BENCHMARKS.md](docs/BENCHMARKS.md).
+
+The averages only cover goals each mover reached. The bench origin moves between runs, so
+compare runs taken together. Single-rep runs are noisy; re-run with 3 reps before drawing conclusions.
 
 ## Project guides
 

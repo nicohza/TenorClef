@@ -50,7 +50,10 @@ public class CollectFoodTask extends Task {
             new CookableFoodTarget("porkchop", PigEntity.class),
             new CookableFoodTarget("chicken", ChickenEntity.class),
             new CookableFoodTarget("mutton", SheepEntity.class),
-            new CookableFoodTarget("rabbit", RabbitEntity.class)
+            new CookableFoodTarget("rabbit", RabbitEntity.class),
+            // S308: fish count too (island / ocean spawns with no land animals). Scored lower below.
+            new CookableFoodTargetFish("cod", CodEntity.class),
+            new CookableFoodTargetFish("salmon", SalmonEntity.class)
     };
 
     public static final Item[] ITEMS_TO_PICK_UP = new Item[]{
@@ -58,7 +61,8 @@ public class CollectFoodTask extends Task {
             Items.GOLDEN_APPLE,
             Items.GOLDEN_CARROT,
             Items.BREAD,
-            Items.BAKED_POTATO
+            Items.BAKED_POTATO,
+            Items.DRIED_KELP
     };
 
     public static final CropTarget[] CROPS = new CropTarget[]{
@@ -71,6 +75,16 @@ public class CollectFoodTask extends Task {
     // S232: was a final null smoker task with the cook loop commented out, so raw meat was
     // never cooked and callers counting real food score hunted forever.
     private Task smeltTask = null;
+    // S262: s260t sat on "Cooking..." 40s+ (never reached a furnace, wandered into water).
+    private long smeltStartMs, cookBanUntilMs;
+    // S303: s300t looped 7+ min on a cold-ocean island: the furnace needs cobble, the only stone was
+    // under the sea, so every dig-down flooded -> water bail -> retry. After two failed cooks, stop
+    // cooking for 10 min and count raw meat at its raw value so the bot just eats it.
+    // S310: set while chasing fish so the water-stall escape (T2Solve S102) leaves the swim alone.
+    public static volatile long fishingUntilMs;
+    private int cookFailures, lastCookedCount = Integer.MAX_VALUE;
+    private static volatile long rawOkUntilMs;
+    private static boolean rawOk() { return System.currentTimeMillis() < rawOkUntilMs; }
     private Task currentResourceTask = null;
 
     public CollectFoodTask(double unitsNeeded) {
@@ -84,7 +98,8 @@ public class CollectFoodTask extends Task {
         for (CookableFoodTarget cookable : COOKABLE_FOODS) {
             if (food.getItem() == cookable.getRaw()) {
                 assert ItemVer.getFoodComponent(cookable.getCooked()) != null;
-                return count * ItemVer.getFoodComponent(cookable.getCooked()).getHunger();
+                Item counted = rawOk() ? cookable.getRaw() : cookable.getCooked();
+                return count * ItemVer.getFoodComponent(counted).getHunger();
             }
         }
 
@@ -115,6 +130,8 @@ public class CollectFoodTask extends Task {
         }
         int potentialBread = (int) (mod.getItemStorage().getItemCount(Items.WHEAT) / 3) + mod.getItemStorage().getItemCount(Items.HAY_BLOCK) * 3;
         potentialFood += Objects.requireNonNull(ItemVer.getFoodComponent( Items.BREAD)).getHunger() * potentialBread;
+        // S302: raw kelp smelts 1:1 into dried kelp (last-resort island food).
+        if (!rawOk()) potentialFood += Objects.requireNonNull(ItemVer.getFoodComponent(Items.DRIED_KELP)).getHunger() * mod.getItemStorage().getItemCount(Items.KELP);
         // Check smelting
         ScreenHandler screen = mod.getPlayer().currentScreenHandler;
         if (screen instanceof SmokerScreenHandler) {
@@ -139,7 +156,7 @@ public class CollectFoodTask extends Task {
             mod.getBehaviour().addProtectedItems(crop.cropItem);
         }
          */
-        mod.getBehaviour().addProtectedItems(Items.HAY_BLOCK, Items.SWEET_BERRIES);
+        mod.getBehaviour().addProtectedItems(Items.HAY_BLOCK, Items.SWEET_BERRIES, Items.KELP);
     }
 
     @Override
@@ -157,6 +174,25 @@ public class CollectFoodTask extends Task {
             }
         }
         // If we were previously smelting, keep on smelting.
+        // S309: the 30s cap counted from the start, so s305t pulled one cooked item (10s each) and
+        // left with the rest raw. Measure 30s without a new cooked item instead.
+        if (smeltTask != null) {
+            int cooked = mod.getItemStorage().getItemCount(Items.DRIED_KELP);
+            for (CookableFoodTarget c : COOKABLE_FOODS) cooked += mod.getItemStorage().getItemCount(c.getCooked());
+            if (cooked > lastCookedCount) smeltStartMs = System.currentTimeMillis();
+            lastCookedCount = cooked;
+        }
+        if (smeltTask != null && smeltTask.isActive() && !smeltTask.isFinished()
+                && System.currentTimeMillis() - smeltStartMs > 30_000) {
+            Debug.logMessage("S262 cooking timed out after 30s - keeping raw food");
+            smeltTask = null;
+            cookBanUntilMs = System.currentTimeMillis() + 90_000;
+            if (++cookFailures >= 2) {
+                Debug.logMessage("S303 cooking failed twice - eating raw food for 10 min");
+                cookBanUntilMs = rawOkUntilMs = System.currentTimeMillis() + 600_000;
+                cookFailures = 0;
+            }
+        }
         if (smeltTask != null && smeltTask.isActive() && !smeltTask.isFinished()) {
             // TODO: If we don't have cooking materials, cancel.
             setDebugState("Cooking...");
@@ -169,6 +205,10 @@ public class CollectFoodTask extends Task {
             currentResourceTask = null;
         }
 
+        // S272: the cached-task early return below skipped hayStalled() forever (s268t: 25 min on one bale).
+        if (currentResourceTask != null && "Collecting Hay".equals(getDebugState()) && hayStalled(mod)) {
+            currentResourceTask = null;
+        }
         if (currentResourceTask != null && currentResourceTask.isActive() && !currentResourceTask.isFinished() && !currentResourceTask.thisOrChildAreTimedOut()) {
             return currentResourceTask;
         }
@@ -197,12 +237,20 @@ public class CollectFoodTask extends Task {
                 return currentResourceTask;
             }
             // Convert raw foods -> cooked foods
+            int kelp = mod.getItemStorage().getItemCount(Items.KELP);
+            if (kelp > 0 && System.currentTimeMillis() >= cookBanUntilMs) {
+                setDebugState("Smelting " + kelp + " kelp");
+                smeltStartMs = System.currentTimeMillis();
+                currentResourceTask = smeltTask = new SmeltInFurnaceTask(new SmeltTarget(new ItemTarget(Items.DRIED_KELP, kelp + mod.getItemStorage().getItemCount(Items.DRIED_KELP)), new ItemTarget(Items.KELP, kelp)));
+                return currentResourceTask;
+            }
 
-            for (CookableFoodTarget cookable : COOKABLE_FOODS) {
+            if (System.currentTimeMillis() >= cookBanUntilMs) for (CookableFoodTarget cookable : COOKABLE_FOODS) {
                 int rawCount = mod.getItemStorage().getItemCount(cookable.getRaw());
                 if (rawCount > 0) {
                     int toSmelt = rawCount + mod.getItemStorage().getItemCount(cookable.getCooked());
                     setDebugState("Cooking " + rawCount + " " + cookable.rawFood);
+                    smeltStartMs = System.currentTimeMillis();
                     smeltTask = new SmeltInFurnaceTask(new SmeltTarget(new ItemTarget(cookable.getCooked(), toSmelt), new ItemTarget(cookable.getRaw(), rawCount)));
                     return smeltTask;
                 }
@@ -229,6 +277,7 @@ public class CollectFoodTask extends Task {
             }
             // Hay blocks
             Task hayTaskBlock = this.pickupBlockTaskOrNull(mod, Blocks.HAY_BLOCK, Items.HAY_BLOCK, 300);
+            if (hayTaskBlock != null && hayStalled(mod)) hayTaskBlock = null;
             if (hayTaskBlock != null) {
                 setDebugState("Collecting Hay");
                 currentResourceTask = hayTaskBlock;
@@ -272,11 +321,17 @@ public class CollectFoodTask extends Task {
                 if (!mod.getEntityTracker().entityFound(cookable.mobToKill)) continue;
                 Optional<Entity> nearest = mod.getEntityTracker().getClosestEntity(mod.getPlayer().getPos(),notBaby ,cookable.mobToKill);
                 if (nearest.isEmpty()) continue; // ?? This crashed once?
+                // S310: s306t chased fish down to y=11 and got stuck; only hunt fish near the surface.
+                if (cookable.isFish() && nearest.get().getY() < 54) continue;
+                // S355: s354o hunted cod in open ocean and a trident Drowned killed it. No fishing near drowned.
+                if (cookable.isFish() && mod.getEntityTracker().getTrackedEntities(net.minecraft.entity.mob.DrownedEntity.class)
+                        .stream().anyMatch(d -> d.isAlive() && d.distanceTo(nearest.get()) < 32)) continue;
                 int hungerPerformance = cookable.getCookedUnits();
                 double sqDistance = nearest.get().squaredDistanceTo(mod.getPlayer());
                 double score = (double) 100 * hungerPerformance / (sqDistance);
                 if (cookable.isFish()) {
-                    score = 0;
+                    // S308: swimming after fish is slow; only pick them when no land animal scores higher.
+                    score *= 0.3;
                 }
                 if (score > bestScore) {
                     bestScore = score;
@@ -286,6 +341,7 @@ public class CollectFoodTask extends Task {
             }
             if (bestEntity != null) {
                 setDebugState("Killing " + bestEntity.getType().getTranslationKey());
+                if (bestEntity instanceof net.minecraft.entity.passive.FishEntity) fishingUntilMs = System.currentTimeMillis() + 3_000;
                 currentResourceTask = killTaskOrNull(bestEntity, notBaby, bestRawFood);
                 return currentResourceTask;
             }
@@ -295,6 +351,16 @@ public class CollectFoodTask extends Task {
             if (berryPickup != null) {
                 setDebugState("Getting sweet berries (no better foods are present)");
                 currentResourceTask = berryPickup;
+                return currentResourceTask;
+            }
+
+            // S302: last resort (e.g. stranded on an island with no animals) -- harvest kelp, then smelt it
+            // into dried kelp once the potential covers what we need (handled in the branch above).
+            Task kelpPickup = pickupBlockTaskOrNull(mod, Blocks.KELP_PLANT, Items.KELP, 64);
+            if (kelpPickup == null) kelpPickup = pickupBlockTaskOrNull(mod, Blocks.KELP, Items.KELP, 64);
+            if (kelpPickup != null) {
+                setDebugState("Harvesting kelp (last-resort food)");
+                currentResourceTask = kelpPickup;
                 return currentResourceTask;
             }
         }
@@ -350,6 +416,33 @@ public class CollectFoodTask extends Task {
      * Returns a task that mines a block and picks up its output.
      * Returns null if task cannot reasonably run.
      */
+    // S270: s266t stood still "Collecting Hay" for ~10 min (DestroyBlockTask made no progress,
+    // S200 wander reset it each time) until a zombie killed it. If the nearest bale has not
+    // yielded hay in 30s, mark it unreachable so food collection moves on.
+    private BlockPos hayTarget;
+    private long hayTargetSinceMs;
+    private int hayCountAtTarget;
+
+    private boolean hayStalled(AltoClef mod) {
+        Optional<BlockPos> near = mod.getBlockScanner().getNearestBlock(mod.getPlayer().getPos(), WorldHelper::canBreak, Blocks.HAY_BLOCK);
+        if (near.isEmpty()) return false;
+        int have = mod.getItemStorage().getItemCount(Items.HAY_BLOCK);
+        long now = System.currentTimeMillis();
+        if (!near.get().equals(hayTarget) || have > hayCountAtTarget) {
+            hayTarget = near.get();
+            hayTargetSinceMs = now;
+            hayCountAtTarget = have;
+            return false;
+        }
+        if (now - hayTargetSinceMs > 30_000) {
+            Debug.logMessage("S270 hay bale " + hayTarget.toShortString() + " no progress 30s - marking unreachable");
+            mod.getBlockScanner().requestBlockUnreachable(hayTarget, 0);
+            hayTarget = null;
+            return true;
+        }
+        return false;
+    }
+
     private Task pickupBlockTaskOrNull(AltoClef mod, Block blockToCheck, Item itemToGrab, Predicate<BlockPos> accept, double maxRange) {
         Predicate<BlockPos> acceptPlus = (blockPos) -> {
             if (!WorldHelper.canBreak(blockPos)) return false;

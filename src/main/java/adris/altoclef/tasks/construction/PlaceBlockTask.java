@@ -135,6 +135,14 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
         }
 
 
+        // S352: never start the builder with nothing to place â€” the schematic falls back to
+        // COBBLESTONE and Baritone then walks around trying to place a block we don't have.
+        if (getMaterialCount(mod) <= 0) {
+            setDebugState("No block to place in inventory.");
+            mod.getClientBaritone().getBuilderProcess().onLostControl();
+            return null;
+        }
+
         // Place block
         if (tryingAlternativeWay()) {
             setDebugState("Alternative way: Trying to go above block to place block.");
@@ -144,6 +152,10 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
             // Perform baritone placement
             if (!mod.getClientBaritone().getBuilderProcess().isActive()) {
                 Debug.logInternal("Run Structure Build");
+                // S353: Baritone only sees hotbar items — pull the block there first.
+                if (mod.getItemStorage().getItemCount(ItemHelper.blocksToItems(toPlace)) > 0) {
+                    mod.getSlotHandler().forceEquipItem(ItemHelper.blocksToItems(toPlace));
+                }
                 ISchematic schematic = new PlaceStructureSchematic(mod);
                 mod.getClientBaritone().getBuilderProcess().build("structure", schematic, target);
             }
@@ -210,8 +222,8 @@ public class PlaceBlockTask extends Task implements ITaskRequiresGrounded {
                     }
                 }
                 Debug.logInternal("Failed to find throwaway block");
-                // No throwaways available!!
-                return Blocks.COBBLESTONE.getDefaultState();
+                // No throwaways available!! S353: ask for the block we mean to place, not cobblestone.
+                return toPlace.length > 0 ? toPlace[0].getDefaultState() : Blocks.COBBLESTONE.getDefaultState();
             }
             // Don't care.
             return blockState;

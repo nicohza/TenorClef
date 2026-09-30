@@ -31,7 +31,7 @@ public final class MoverStats {
         if (tungsten) tungSpb = tungSpb < 0 ? spb : tungSpb + ALPHA * (spb - tungSpb);
         else barSpb = barSpb < 0 ? spb : barSpb + ALPHA * (spb - barSpb);
         Debug.logMessage(String.format(java.util.Locale.ROOT,
-                "MOVER leg %s %.1fs/%.0fb%s -> tung=%.3f bar=%.3f s/b", tungsten ? "tungsten" : "baritone",
+                "MOVER leg %s %.1fs/%.0fb%s -> tung=%.3f bar=%.3f s/b", tungsten ? "tungsten" : "ostinato",
                 seconds, blocks, gaveUp ? " (gave up)" : "", tungSpb, barSpb));
     }
 }

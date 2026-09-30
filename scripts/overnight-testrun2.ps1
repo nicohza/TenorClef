@@ -155,16 +155,16 @@ function Ensure-BaritoneSettings {
         if ("$($obj.idleCommand)".Trim().Length -gt 0) { $obj.idleCommand = ""; $changed = $true }
       }
       if ($obj.PSObject.Properties.Name -contains "speedrunMoverPreference") {
-        if ("$($obj.speedrunMoverPreference)" -ne "baritone") {
-          $obj.speedrunMoverPreference = "baritone"; $changed = $true
+        if ("$($obj.speedrunMoverPreference)" -ne "ostinato") {
+          $obj.speedrunMoverPreference = "ostinato"; $changed = $true
         }
       } else {
-        $obj | Add-Member -NotePropertyName speedrunMoverPreference -NotePropertyValue "baritone" -Force
+        $obj | Add-Member -NotePropertyName speedrunMoverPreference -NotePropertyValue "ostinato" -Force
         $changed = $true
       }
       if ($changed) {
         Write-Utf8NoBom $SettingsPath ($obj | ConvertTo-Json -Depth 30)
-        Write-Host "OK patched altoclef_settings.json (idleCommand='', speedrunMoverPreference=baritone)"
+        Write-Host "OK patched altoclef_settings.json (idleCommand='', speedrunMoverPreference=ostinato)"
       } else {
         Write-Host "OK settings already idle empty + baritone"
       }
@@ -172,7 +172,7 @@ function Ensure-BaritoneSettings {
       Write-Host "NOTE: settings patch failed: $_"
     }
   } else {
-    $seed = @{ idleCommand = ""; speedrunMoverPreference = "baritone" } | ConvertTo-Json
+    $seed = @{ idleCommand = ""; speedrunMoverPreference = "ostinato" } | ConvertTo-Json
     Write-Utf8NoBom $SettingsPath $seed
     Write-Host "OK wrote seed altoclef_settings.json"
   }

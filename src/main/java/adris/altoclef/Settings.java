@@ -485,9 +485,9 @@ public class Settings implements IFailableConfigFile {
     private boolean speedrunSkipFood = false;
 
     /**
-     * @testrun travel mover: auto | tungsten | baritone (default baritone; mining stays Baritone).
+     * @testrun travel mover: auto | tungsten | ostinato (default ostinato, the Baritone fork; "baritone" still accepted).
      */
-    private String speedrunMoverPreference = "baritone";
+    private String speedrunMoverPreference = "ostinato";
 
     /**
      * @testrun: extra phase/subgoal Debug.logMessage (rate-limited).

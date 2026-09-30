@@ -27,6 +27,7 @@ public final class T2Solve {
 
     private static String lastFix = "";
     private static int cool;
+    private static int calcGrace;
     private static int sameXz;
     private static int lastX = Integer.MIN_VALUE;
     private static int lastZ;
@@ -123,12 +124,25 @@ public final class T2Solve {
             ground = mod.getPlayer().isOnGround();
             wet = mod.getPlayer().isTouchingWater() || mod.getPlayer().isSubmergedInWater();
         } catch (Throwable ignored) {}
+        // S271: s267t spawned in plains with trees ~178 blocks off; each Baritone search took
+        // 5s+ and S140 swapped the child after 8s "same xz", discarding the path every time —
+        // the bot never left spawn. Standing still while a search is in progress is not a stall
+        // (bounded: at most 20s of such grace per stand).
+        boolean calculating = false;
+        try {
+            calculating = mod.getClientBaritone().getPathingBehavior().getInProgress().isPresent();
+        } catch (Throwable ignored) {}
         if (x == lastX && z == lastZ) {
-            sameXz++;
+            if (calculating && calcGrace < 20 * 20) {
+                calcGrace++;
+            } else {
+                sameXz++;
+            }
             if (ground != lastGround) flips++;
         } else {
             sameXz = 0;
             flips = 0;
+            calcGrace = 0;
         }
         lastX = x;
         lastZ = z;
@@ -223,7 +237,13 @@ public final class T2Solve {
         // Critical: if already in GetOutOfWater / WaterBail, do NOT cancelPath or
         // re-nudge swim. cancelPath every tick kept spd≈0 and thrashed S102 forever.
         double spd = speed(mod);
-        if (wet && spd < 0.03 && sameXz > 20 * 3) {
+        // S305: s302t bailed mid-log over and over while chopping a shore tree from shallow water;
+        // hand-mining a log takes >3s. Standing still to break a block with head above water is fine.
+        boolean miningInShallows = mod.getControllerExtras().isBreakingBlock()
+                && !mod.getPlayer().isSubmergedInWater() && mod.getPlayer().getAir() > 200;
+        boolean fishing = System.currentTimeMillis() < adris.altoclef.tasks.resources.CollectFoodTask.fishingUntilMs
+                && mod.getPlayer().getAir() > 150;
+        if (wet && spd < 0.03 && sameXz > 20 * 3 && !miningInShallows && !fishing) {
             boolean alreadyEscaping = childName.contains("GetOutOfWater")
                     || childName.contains("WaterBail");
             if (alreadyEscaping) {
@@ -363,7 +383,12 @@ public final class T2Solve {
         }
 
         // 5. Jump in place - walk. Do not pillar a tunnel.
-        if (!wet && !digging && flips >= 6 && sameXz > 20 * 2 && !"BOOTSTRAP".equals(phase)
+        // S256: s255t dug toward a y=9 lava lake and this pillar fired 4x in 60s, lifting the bot
+        // out of its own shaft each time (Construct<->HolePillar loop, 3 min, then a skeleton).
+        BlockPos deep = adris.altoclef.tasks.construction.compound.ConstructNetherPortalBucketTask.deepTarget;
+        boolean descendingToLake = "PORTAL".equals(phase) && deep != null && y > deep.getY()
+                && Math.abs(x - deep.getX()) + Math.abs(z - deep.getZ()) <= 24;
+        if (!wet && !digging && !descendingToLake && flips >= 6 && sameXz > 20 * 2 && !"BOOTSTRAP".equals(phase)
                 && !childName.contains("StepOff") && !walking) {
             // S147 guard applies here too - this is the second S130 arming site.
             if (HolePillar.stickyBlocked(mod) || HolePillar.hopBlocked(mod, sameXz)) {
@@ -415,7 +440,24 @@ public final class T2Solve {
             // only way to break a collector's re-path loop from outside.
             if (!portalWork && !"PORTAL".equals(phase) && !"BOOTSTRAP".equals(phase)) {
                 s100Escalations++;
+                // S267: s264t — CollectBlazeRodsTask was retreating at hp 7-10 (RunAwayFromHostiles,
+                // jumping against cover while regenerating). S144 swapped it for a wander that walked
+                // straight back into the blazes: "burnt to a crisp". A low-hp retreat is not a stall.
+                if (s100Escalations >= 2 && mod.getPlayer().getHealth() < 14
+                        && !mod.getEntityTracker().getTrackedEntities(net.minecraft.entity.mob.HostileEntity.class).isEmpty()) {
+                    act("S267", "low-hp retreat, keep " + childName + " (no wander swap) hp=" + mod.getPlayer().getHealth());
+                    s100Escalations = 0;
+                    return null;
+                }
                 if (s100Escalations >= 2) {
+                    // S344: s343o held 10 iron for 10 min: CraftInTableTask kept pathing to a table on a ledge
+                    // 8 blocks above its pit and S144 swapped it for a wander each time. Blacklist that table so
+                    // the next craft places a fresh one where the bot stands.
+                    if (childName.contains("CraftInTable")) {
+                        mod.getBlockScanner().getNearestBlock(mod.getPlayer().getPos(), net.minecraft.block.Blocks.CRAFTING_TABLE)
+                                .ifPresent(t -> { mod.getBlockScanner().requestBlockUnreachable(t, 0);
+                                    act("S344", "unreachable crafting table " + t.toShortString() + " blacklisted"); });
+                    }
                     act("S144", "jump-stuck collector — replace " + childName
                             + " with wander (esc=" + s100Escalations + ")");
                     s100Escalations = 0;

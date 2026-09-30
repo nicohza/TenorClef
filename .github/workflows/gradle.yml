@@ -9,15 +9,16 @@ on:
 permissions:
   contents: read
 
-# Ostinato endpoints + verified primary release target.
+# TenorClef always runs on Ostinato, so only the versions Ostinato is built for are compiled:
+# 1.21.4 and 1.16.1 (jars committed in libs/) and 1.21.11 (Ostinato main, built here).
+# The other versions are preprocess-only nodes (see build.gradle).
 # Tungsten is OPTIONAL — jobs must pass without a tungsten jar.
 #
-# Required green: 1.21.1 (primary) + 1.16.1 (legacy).
-# Experimental / non-blocking: 1.21.11 (Ostinato tip) — continue-on-error until tip is stable.
+# Required green: 1.21.4 + 1.16.1. Experimental / non-blocking: 1.21.11 (Ostinato branch 1.21.11).
 
 jobs:
-  build-1211:
-    name: Compile Fabric 1.21.1 (primary)
+  build-1214:
+    name: Compile Fabric 1.21.4 (Ostinato 1.21.4)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,23 +27,24 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: gradle
-      - name: Compile primary module
-        run: ./gradlew :1.21.1:compileJava --stacktrace
-      # Unit tests are pure Java (no Minecraft client) and run against the main project.
-      # :1.16.1:test is not usable here: it compiles every preprocess ancestor up to 1.21.1.
-      - name: Unit tests (primary module)
-        run: ./gradlew :1.21.1:test --stacktrace
-      - name: Upload primary jars (if produced)
+      - name: Verify staged Ostinato 1.21.4 jar
+        run: ls -la libs/baritone-unoptimized-fabric-1.21.4.jar
+      - name: Compile 1.21.4 module
+        run: ./gradlew :1.21.4:compileJava --stacktrace
+      # Unit tests are pure Java (no Minecraft client).
+      - name: Unit tests
+        run: ./gradlew :1.21.4:test --stacktrace
+      - name: Upload jars (if produced)
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: tenorclef-1.21.1
-          path: versions/1.21.1/build/libs/*.jar
+          name: tenorclef-1.21.4
+          path: versions/1.21.4/build/libs/*.jar
           if-no-files-found: ignore
           retention-days: 14
 
   build-12111:
-    name: Compile Fabric 1.21.11 (Ostinato tip)
+    name: Compile Fabric 1.21.11 (Ostinato 1.21.11)
     # Tip Ostinato + Item/ItemStack drift still red intermittently; do not block PRs.
     continue-on-error: true
     runs-on: ubuntu-latest
@@ -59,7 +61,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: vexrypt-rgb/Ostinato
-          ref: main
+          ref: '1.21.11'
           path: _ostinato_tip
 
       - name: Build Ostinato Fabric jar into sibling dist
@@ -68,8 +70,8 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x _ostinato_tip/gradlew
-          if ! (cd _ostinato_tip && ./gradlew build -x test --stacktrace); then
-            echo "::warning::Ostinato tip build failed; 1.21.11 has no Maven Baritone — skipping compile"
+          if ! (cd _ostinato_tip && ./gradlew :fabric:build -x test --stacktrace); then
+            echo "::warning::Ostinato tip build failed; 1.21.11 needs the Ostinato jar — skipping compile"
             echo "staged=false" >> "$GITHUB_OUTPUT"
             exit 1
           fi
