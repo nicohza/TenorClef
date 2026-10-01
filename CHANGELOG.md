@@ -5,7 +5,7 @@ Every build runs on [Ostinato](https://github.com/vexrypt-rgb/Ostinato) v1.0.3.
 - Ostinato PvP (`#pvp`): sword, axe, shield, bow, crossbow, cobweb, potion, crystal, anchor and mace styles,
   multi-opponent retargeting and automatic fight recording.
 - Freecam enemy list: middle-click a player in freecam to mark an enemy.
-- 1.21.4 build updated to the new Ostinato jar; 1.21.11 and 26.3 builds pair with Ostinato v1.0.3.
+- 1.21.4 build updated to the new Ostinato jar; 1.21.11 and 26.3 builds pair with Ostinato v1.0.4.
 
 # TenorClef 0.22.2
 
