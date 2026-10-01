@@ -2,9 +2,12 @@ package adris.altoclef.tasks.pvp;
 
 import adris.altoclef.AltoClef;
 import adris.altoclef.tasksystem.Task;
+//#if MC >= 12104 && MC < 260000
 import baritone.process.PvpProcess;
+//#endif
 import net.minecraft.entity.LivingEntity;
 
+//#if MC >= 12104 && MC < 260000
 /**
  * Thin wrapper over Ostinato's {@code PvpProcess}, which owns the fighting movement (crits,
  * W-tap, strafe, jump reset, shield, axe, bow, gapples, totem). This task only starts it, keeps
@@ -105,3 +108,39 @@ public class PvpTask extends Task {
         return "PvP " + name;
     }
 }
+//#else
+//$$ /**
+//$$  * PvP needs Ostinato's PvpProcess, which only ships in the 1.21.4 and 1.21.11 builds. Other versions get an
+//$$  * inert stand-in with the same API so the rest of TenorClef still compiles.
+//$$  */
+//$$ public class PvpTask extends Task {
+//$$     public int attacks, crits, sprintHits, blocks, gapples, pots, axeHits;
+//$$     public float damageTaken;
+//$$
+//$$     public static PvpTask player(String name) { return new PvpTask(); }
+//$$     public static PvpTask nearestPlayer() { return new PvpTask(); }
+//$$     public static PvpTask hostiles() { return new PvpTask(); }
+//$$     public static void touch() { }
+//$$     public static boolean anyActive() { return false; }
+//$$     public LivingEntity getTarget() { return null; }
+//$$     public String stats() { return "PvP is not available on this Minecraft version"; }
+//$$
+//$$     @Override
+//$$     protected void onStart() { }
+//$$
+//$$     @Override
+//$$     protected Task onTick() { return null; }
+//$$
+//$$     @Override
+//$$     protected void onStop(Task interruptTask) { }
+//$$
+//$$     @Override
+//$$     public boolean isFinished() { return true; }
+//$$
+//$$     @Override
+//$$     protected boolean isEqual(Task other) { return other instanceof PvpTask; }
+//$$
+//$$     @Override
+//$$     protected String toDebugString() { return "PvP (unavailable)"; }
+//$$ }
+//#endif
