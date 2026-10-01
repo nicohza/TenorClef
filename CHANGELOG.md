@@ -1,3 +1,10 @@
+# TenorClef 0.23.3
+
+Pairs with Ostinato v1.0.8.
+
+- Elytra mace modes now work: the elytra is equipped from the hotbar by inventory swap, takeoff uses a wind-charge boost when there are no rockets, gliding starts with a real jump press, and the chestplate is swapped back after landing.
+- All combat actions go through real mouse/keyboard inputs (from v1.0.7).
+
 # TenorClef 0.23.2
 
 Pairs with Ostinato v1.0.7.
