@@ -159,7 +159,9 @@ public class PlaceObsidianBucketTask extends Task {
                     if (throwaway != null) {
                         for (Direction d : Direction.values()) {
                             BlockPos support = _currentCastTarget.offset(d);
-                            if (WorldHelper.isSolidBlock(support)) {
+                            // diag1: a face hidden from the eye (e.g. top face above eye level) gives CANT_REACH,
+                            // and InteractWithBlockTask then re-plans a path into the cast cell forever.
+                            if (WorldHelper.isSolidBlock(support) && adris.altoclef.util.helpers.LookHelper.getReach(support, d.getOpposite()).isPresent()) {
                                 Debug.logHarness("CAST direct castTarget=" + _currentCastTarget.toShortString() + " support=" + support.toShortString());
                                 return new InteractWithBlockTask(new ItemTarget(throwaway, 1), d.getOpposite(), support, false);
                             }
