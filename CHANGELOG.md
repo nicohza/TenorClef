@@ -1,3 +1,11 @@
+# TenorClef 0.23.1
+
+Every build runs on [Ostinato](https://github.com/vexrypt-rgb/Ostinato) (the Baritone fork); 1.21.11 and 26.3 pair with Ostinato v1.0.5.
+
+- PvP: raises the shield between its own swings, and follows an axe shield-breach with a fast sword hit.
+- PvP: the crossbow now loads properly and aims over arrow drop instead of firing into the ground; the bow aims the same way.
+- Fight recorder: counts landed hits from the hurt flash when a server hides player health, and no longer logs a death or a vanished target as a win.
+
 # TenorClef 0.23.0
 
 Every build runs on [Ostinato](https://github.com/vexrypt-rgb/Ostinato) v1.0.3.
