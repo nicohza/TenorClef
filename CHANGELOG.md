@@ -1,3 +1,11 @@
+# TenorClef 0.23.2
+
+Pairs with Ostinato v1.0.7.
+
+- Target velocity is derived from per-tick position deltas (remote players report zero), so shield/deflect counters against mace dives now fire.
+- Pearl strike throws with lead on the target; the wind-charge pop of the pearl is kept.
+- No jump-crits while the target is diving.
+
 # TenorClef 0.23.1
 
 Every build runs on [Ostinato](https://github.com/vexrypt-rgb/Ostinato) (the Baritone fork); 1.21.11 and 26.3 pair with Ostinato v1.0.5.
