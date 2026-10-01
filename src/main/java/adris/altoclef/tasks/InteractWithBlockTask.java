@@ -393,8 +393,10 @@ public class InteractWithBlockTask extends Task {
 
         // Don't interact if baritone can't interact.
         if (mod.getExtraBaritoneSettings().isInteractionPaused() || mod.getFoodChain().needsToEat() ||
-                mod.getPlayer().isBlocking())
+                mod.getPlayer().isBlocking()) {
+            Debug.logHarness("CLICKWAIT reason=paused target=" + target.toShortString());
             return ClickResponse.WAIT_FOR_CLICK;
+        }
 
         // We can't interact while a screen is open.
         if (!StorageHelper.isPlayerInventoryOpen()) {
@@ -437,8 +439,9 @@ public class InteractWithBlockTask extends Task {
                     }
                     return ClickResponse.CLICK_ATTEMPTED;
                 }
-                //mod.getClientBaritone().getInputOverrideHandler().setInputForceState(_interactInput, true);
+                Debug.logHarness("CLICKWAIT reason=not-held target=" + target.toShortString());
             } else {
+                Debug.logHarness("CLICKWAIT reason=not-looking target=" + target.toShortString());
                 LookHelper.lookAt(reachable.get());
             }
             return ClickResponse.WAIT_FOR_CLICK;
