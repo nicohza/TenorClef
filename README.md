@@ -55,6 +55,12 @@ Do not install a second Baritone or another TenorClef jar. Start with a single-p
 
 ### Build (26.3)
 
+> [!IMPORTANT]
+> Run Gradle itself on **JDK 21** (set `JAVA_HOME` to a JDK 21 install, and run `gradlew.bat --stop`
+> first if a daemon on another JDK is still running). Gradle on JDK 25 fails in
+> `:1.21.4:preprocessCode` with the message `25.0.4.1`. The Java 25 toolchain is used
+> automatically to compile 26.3.
+
 Run:
 
 ```bat
