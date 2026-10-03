@@ -1,0 +1,41 @@
+package adris.altoclef.multiversion.item;
+
+import adris.altoclef.mixins.AxeItemAccessor;
+import adris.altoclef.mixins.MiningToolItemAccessor;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+//#if MC < 260000
+import net.minecraft.item.AxeItem;
+//#endif
+import net.minecraft.item.Item;
+//#if MC < 12102
+import net.minecraft.item.MiningToolItem;
+import net.minecraft.item.PickaxeItem;
+//#endif
+
+import java.util.Set;
+
+public class ItemHelper {
+
+
+    //#if MC <= 11605
+    //$$ public static boolean isSuitableFor(Item item, BlockState state){
+    //$$     if (item instanceof PickaxeItem pickaxe) {
+    //$$         return pickaxe.isSuitableFor(state);
+    //$$     }
+    //$$
+    //$$     if (item instanceof MiningToolItem) {
+    //$$         boolean isInEffectiveBlocks = ((MiningToolItemAccessor)item).getEffectiveBlocks().contains(state.getBlock());
+    //$$
+    //$$         if (item instanceof AxeItem) {
+    //$$             return isInEffectiveBlocks || ((AxeItemAccessor)item).getEffectiveMaterials().contains(state.getMaterial());
+    //$$         }
+    //$$         return isInEffectiveBlocks;
+    //$$     }
+    //$$
+    //$$     return item.isSuitableFor(state);
+    //$$ }
+    //$$
+    //#endif
+
+}
